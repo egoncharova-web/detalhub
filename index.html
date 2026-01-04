@@ -51,8 +51,26 @@
     <h1>DetalHub</h1>
     <h2>Точность. Скорость. Без посредников.</h2>
     <p>Онлайн-платформа для заказа деталей по чертежу</p>
-    <p>Загрузите чертёж(и) — получите расчёт за 1 час. Поддерживаем ЧПУ, 3D-печать, лазер.</p>
-    <p>Можно отправить до 25 файлов: .step, .stp, .dxf, .pdf, .sldprt, .ipt</p>
+    <div id="calculator" style="max-width: 500px; margin: 2rem auto;">
+  <h3 style="margin-bottom: 1rem;">Рассчитайте стоимость</h3>
+  
+  <select id="tech" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem;">
+    <option value="">Выберите технологию</option>
+    <option value="cnc">ЧПУ</option>
+    <option value="3d">3D-печать</option>
+    <option value="laser">Лазерная резка</option>
+  </select>
+
+  <select id="material" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display:none;">
+    <!-- Материалы подставятся автоматически -->
+  </select>
+
+  <input type="number" id="volume" placeholder="Объём детали (см³)" min="0.1" step="0.1" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display:none;">
+
+  <div id="price" style="font-size: 1.2rem; font-weight: 600; color: #000; min-height: 1.5rem;"></div>
+
+  <a href="https://tally.so/r/ja6LOY" target="_blank" class="btn" style="margin-top: 1rem;">Отправить чертёж</a>
+</div>
   <div class="services">
   <div class="service">⚙️ ЧПУ</div>
   <div class="service">🖨️ 3D-печать</div>
@@ -63,6 +81,102 @@
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
+<script>
+  const techSelect = document.getElementById('tech');
+  const materialSelect = document.getElementById('material');
+  const volumeInput = document.getElementById('volume');
+  const priceDiv = document.getElementById('price');
 
+  // Цены (в рублях за см³)
+  const prices = {
+    cnc: {
+      aluminium: 15,
+      steel: 12,
+      plastic: 8
+    },
+    '3d': {
+      pla: 5,
+      abs: 6,
+      resin: 10
+    },
+    laser: {
+      steel1: 3,   // 1 мм
+      steel2: 4,   // 2 мм
+      steel5: 6    // 5 мм
+    }
+  };
+
+  const materials = {
+    cnc: [
+      { value: 'aluminium', label: 'Алюминий' },
+      { value: 'steel', label: 'Сталь' },
+      { value: 'plastic', label: 'Пластик' }
+    ],
+    '3d': [
+      { value: 'pla', label: 'PLA' },
+      { value: 'abs', label: 'ABS' },
+      { value: 'resin', label: 'Фотополимер' }
+    ],
+    laser: [
+      { value: 'steel1', label: 'Сталь 1 мм' },
+      { value: 'steel2', label: 'Сталь 2 мм' },
+      { value: 'steel5', label: 'Сталь 5 мм' }
+    ]
+  };
+
+  techSelect.addEventListener('change', () => {
+    const tech = techSelect.value;
+    materialSelect.innerHTML = '';
+    materialSelect.style.display = 'none';
+    volumeInput.style.display = 'none';
+    priceDiv.textContent = '';
+
+    if (tech) {
+      materialSelect.style.display = 'block';
+      materials[tech].forEach(m => {
+        const option = document.createElement('option');
+        option.value = m.value;
+        option.textContent = m.label;
+        materialSelect.appendChild(option);
+      });
+    }
+  });
+
+  materialSelect.addEventListener('change', () => {
+    const tech = techSelect.value;
+    if (tech === 'laser') {
+      // Для лазера не нужен объём — цена за лист, но упростим: будем считать по "условной единице"
+      calculatePrice(1);
+      volumeInput.style.display = 'none';
+    } else {
+      volumeInput.style.display = 'block';
+    }
+    priceDiv.textContent = '';
+  });
+
+  volumeInput.addEventListener('input', () => {
+    const volume = parseFloat(volumeInput.value);
+    if (volume > 0) {
+      calculatePrice(volume);
+    } else {
+      priceDiv.textContent = '';
+    }
+  });
+
+  function calculatePrice(volume) {
+    const tech = techSelect.value;
+    const material = materialSelect.value;
+    if (!tech || !material) return;
+
+    const rate = prices[tech][material];
+    if (tech === 'laser') {
+      // Для лазера покажем фиксированную цену за "заказ"
+      priceDiv.textContent = `Примерная стоимость: от ${rate * 100} ₽`;
+    } else {
+      const total = Math.round(rate * volume);
+      priceDiv.textContent = `Примерная стоимость: ${total} ₽`;
+    }
+  }
+</script>
 </body>
 </html>
