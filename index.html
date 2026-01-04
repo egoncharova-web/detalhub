@@ -43,6 +43,19 @@
   color: #222;
   font-weight: 500;
 }
+    .upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 2rem 1rem;
+  margin: 2rem auto;
+  max-width: 500px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.upload-area:hover {
+  border-color: #000;
+}
   </style>
 </head>
 <body>
@@ -51,6 +64,11 @@
     <h2>Точность. Скорость. Без посредников.</h2>
     <p>Онлайн-платформа для заказа деталей по чертежу</p>
     <p>Загрузите чертёж — получите расчёт за 1 час. Поддерживаем ЧПУ, 3D-печать, лазер.</p>
+<div class="upload-area" id="dropZone">
+  <p id="uploadText">Перетащите чертёж сюда</p>
+  <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf</small>
+  <input type="file" id="fileInput" accept=".step,.stp,.dxf, .sldrpt, .ipt, .pdf" style="display:none">
+</div>
   <div class="services">
   <div class="service">⚙️ ЧПУ</div>
   <div class="service">🖨️ 3D-печать</div>
@@ -61,5 +79,22 @@
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
+  <script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadText = document.getElementById('uploadText');
+
+  // Открыть выбор файла по клику
+  dropZone.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Показать имя файла после выбора
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      uploadText.textContent = `Выбран файл: ${e.target.files[0].name}`;
+    }
+  });
+</script>
 </body>
 </html>
