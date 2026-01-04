@@ -69,39 +69,11 @@
   <div class="service">🖨️ 3D-печать</div>
   <div class="service">✂️ Лазер</div>
 </div>
-<form id="uploadForm" action="https://submit-form.com/fq0pV02bR" method="POST" enctype="multipart/form-data">
-  <input type="file" name="file" id="fileInput" accept=".step,.stp,.dxf,.pdf,.sldprt,.ipt,.iam,.iges,.igs" style="display:none" required>
-  <div class="upload-area" id="dropZone">
-    <p id="uploadText">Перетащите чертёж сюда</p>
-    <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf, .sldprt, .ipt и др.</small>
-  </div>
-  <input type="text" name="name" placeholder="Ваше имя" required style="margin-top: 1rem; padding: 0.5rem; width: 100%; max-width: 500px;">
-  <input type="text" name="email" placeholder="Email или телефон" required style="margin-top: 0.5rem; padding: 0.5rem; width: 100%; max-width: 500px;">
-  <button type="submit" class="btn" style="margin-top: 1rem;">Отправить чертёж</button>
-</form>
+<a href="https://tally.so/r/ja6LOY" target="_blank" class="btn">Отправить чертёж</a>
   </header>
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadText = document.getElementById('uploadText');
-
-    // Открыть выбор файла при клике по зоне
-    dropZone.addEventListener('click', () => {
-      fileInput.click();
-    });
-
-    // Показать имя файла после выбора
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        const fileName = e.target.files[0].name;
-        uploadText.textContent = `Выбран файл: ${fileName}`;
-      }
-    });
-  });
-</script>  
+ 
 </body>
 </html>
