@@ -66,8 +66,8 @@
     <p>Загрузите чертёж — получите расчёт за 1 час. Поддерживаем ЧПУ, 3D-печать, лазер.</p>
 <div class="upload-area" id="dropZone">
   <p id="uploadText">Перетащите чертёж сюда</p>
-  <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf</small>
-  <input type="file" id="fileInput" accept=".step,.stp,.dxf,.sldrpt,.ipt,.pdf" style="display:none">
+  <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf, .sldprt, .ipt и др.</small>
+  <input type="file" id="fileInput" accept=".step,.stp,.dxf,.pdf,.sldprt,.ipt,.iam,.iges,.igs" style="display:none">
 </div>
   <div class="services">
   <div class="service">⚙️ ЧПУ</div>
@@ -84,15 +84,24 @@
   const fileInput = document.getElementById('fileInput');
   const uploadText = document.getElementById('uploadText');
 
-  // Открыть выбор файла по клику
+  const allowedExtensions = ['step', 'stp', 'dxf', 'pdf', 'sldprt', 'sldrpt', 'ipt', 'iam', 'iges', 'igs'];
+
   dropZone.addEventListener('click', () => {
     fileInput.click();
   });
 
-  // Показать имя файла после выбора
   fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      uploadText.textContent = `Выбран файл: ${e.target.files[0].name}`;
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
+
+    if (allowedExtensions.includes(extension)) {
+      uploadText.textContent = `Выбран файл: ${fileName}`;
+    } else {
+      uploadText.textContent = `❌ Неподдерживаемый формат: .${extension}`;
+      fileInput.value = ''; // сбросить выбор
     }
   });
 </script>
