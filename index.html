@@ -83,6 +83,13 @@
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
-  
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => {
+    fileInput.click();
+  });
+</script>  
 </body>
 </html>
