@@ -63,60 +63,6 @@
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadText = document.getElementById('uploadText');
-    const submitBtn = document.getElementById('submitBtn');
 
-    // Разрешённые расширения
-    const allowedExtensions = ['step', 'stp', 'dxf', 'pdf', 'sldprt', 'sldrpt', 'ipt', 'iam', 'iges', 'igs'];
-
-    // Открыть выбор файла при клике по зоне
-    dropZone.addEventListener('click', () => {
-      fileInput.click();
-    });
-
-    // Показать имя файла после выбора
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const fileName = file.name;
-      const extension = fileName.split('.').pop().toLowerCase();
-
-      if (allowedExtensions.includes(extension)) {
-        uploadText.textContent = `Выбран файл: ${fileName}`;
-        submitBtn.classList.remove('disabled');
-      } else {
-        uploadText.textContent = `❌ Неподдерживаемый формат: .${extension}`;
-        fileInput.value = ''; // сбросить выбор
-        submitBtn.classList.add('disabled');
-      }
-    });
-
-    // Поддержка drag & drop
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.style.borderColor = '#000';
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.style.borderColor = '#ccc';
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.style.borderColor = '#ccc';
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        fileInput.files = files;
-        const event = new Event('change', { bubbles: true });
-        fileInput.dispatchEvent(event);
-      }
-    });
-  });
-</script>
 </body>
 </html>
