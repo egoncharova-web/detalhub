@@ -87,9 +87,19 @@
   document.addEventListener('DOMContentLoaded', () => {
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
+    const uploadText = document.getElementById('uploadText');
 
+    // Открыть выбор файла при клике по зоне
     dropZone.addEventListener('click', () => {
       fileInput.click();
+    });
+
+    // Показать имя файла после выбора
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        const fileName = e.target.files[0].name;
+        uploadText.textContent = `Выбран файл: ${fileName}`;
+      }
     });
   });
 </script>  
