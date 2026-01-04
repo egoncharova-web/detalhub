@@ -74,36 +74,20 @@
   <div class="service">🖨️ 3D-печать</div>
   <div class="service">✂️ Лазер</div>
 </div>
-    <a href="https://airtable.com/appHnCJd9zrc3IqWn/pagUWTy4yGp0iAyqf/form" target="_blank" class="btn">Отправить чертёж</a>
+<form id="uploadForm" action="https://submit-form.com/fq0pV02bR" method="POST" enctype="multipart/form-data">
+  <input type="file" name="file" id="fileInput" accept=".step,.stp,.dxf,.pdf,.sldprt,.ipt,.iam,.iges,.igs" style="display:none" required>
+  <div class="upload-area" id="dropZone">
+    <p id="uploadText">Перетащите чертёж сюда</p>
+    <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf, .sldprt, .ipt и др.</small>
+  </div>
+  <input type="text" name="name" placeholder="Ваше имя" required style="margin-top: 1rem; padding: 0.5rem; width: 100%; max-width: 500px;">
+  <input type="text" name="email" placeholder="Email или телефон" required style="margin-top: 0.5rem; padding: 0.5rem; width: 100%; max-width: 500px;">
+  <button type="submit" class="btn" style="margin-top: 1rem;">Отправить чертёж</button>
+</form>
   </header>
   <footer>
     © 2026 DetalHub. Все права защищены.
   </footer>
-  <script>
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
-  const uploadText = document.getElementById('uploadText');
-
-  const allowedExtensions = ['step', 'stp', 'dxf', 'pdf', 'sldprt', 'sldrpt', 'ipt', 'iam', 'iges', 'igs'];
-
-  dropZone.addEventListener('click', () => {
-    fileInput.click();
-  });
-
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const fileName = file.name;
-    const extension = fileName.split('.').pop().toLowerCase();
-
-    if (allowedExtensions.includes(extension)) {
-      uploadText.textContent = `Выбран файл: ${fileName}`;
-    } else {
-      uploadText.textContent = `❌ Неподдерживаемый формат: .${extension}`;
-      fileInput.value = ''; // сбросить выбор
-    }
-  });
-</script>
+  
 </body>
 </html>
