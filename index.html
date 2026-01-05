@@ -52,8 +52,8 @@
   <header>
     <h1>Изготовление деталей по чертежу — быстро и точно</h1>
      <p>Закажите ЧПУ-обработку, 3D-печать или лазерную резку онлайн. Присылайте чертёж в формате .step, .dxf или .pdf — получите коммерческое предложение в течение 1 часа.</p>
-    <div id="calculator" style="max-width: 500px; margin: 2rem auto;">
-  <h3 style="margin-bottom: 1rem;">Рассчитайте стоимость</h3>
+    <div id="calculator" style="max-width: 500px; margin: 2rem auto; text-align: left;">
+  <h3 style="margin-bottom: 1rem; text-align: center;">Рассчитайте стоимость</h3>
   
   <select id="tech" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem;">
     <option value="">Выберите технологию</option>
@@ -62,15 +62,32 @@
     <option value="laser">Лазерная резка</option>
   </select>
 
-  <select id="material" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display:none;">
-    <!-- Материалы подставятся автоматически -->
+  <select id="material" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display: none;">
+    <!-- Материалы подставятся -->
   </select>
 
-  <input type="number" id="volume" placeholder="Объём детали (см³)" min="0.1" step="0.1" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display:none;">
+  <!-- Габариты вместо объёма -->
+  <div id="dimensions" style="display: none; margin-bottom: 1rem;">
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <input type="number" id="x" placeholder="X, мм" min="0.1" step="0.1" style="flex:1; padding: 0.5rem;">
+      <input type="number" id="y" placeholder="Y, мм" min="0.1" step="0.1" style="flex:1; padding: 0.5rem;">
+      <input type="number" id="z" placeholder="Z, мм" min="0.1" step="0.1" style="flex:1; padding: 0.5rem;">
+    </div>
+    <small style="color: #666;">Укажите габариты детали в миллиметрах</small>
+  </div>
 
-  <div id="price" style="font-size: 1.2rem; font-weight: 600; color: #000; min-height: 1.5rem;"></div>
+  <!-- Сложность (только для ЧПУ и 3D) -->
+  <select id="complexity" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; display: none;">
+    <option value="1">Простая (до 3 отверстий, без резьбы)</option>
+    <option value="1.5">Средняя (резьба, пазы, фаски)</option>
+    <option value="2">Сложная (3D-форма, тонкие стенки)</option>
+  </select>
 
-  <a href="https://tally.so/r/ja6LOY" target="_blank" class="btn" style="margin-top: 1rem;">Отправить чертёж</a>
+  <div id="price" style="font-size: 1.2rem; font-weight: 600; color: #000; min-height: 1.5rem; text-align: center;"></div>
+
+  <a href="https://tally.so/r/ja6LOY" target="_blank" class="btn" style="margin-top: 1rem; display: block; width: fit-content; margin-left: auto; margin-right: auto;">
+    Отправить чертёж
+  </a>
 </div>
   <div class="services">
   <div class="service">⚙️ ЧПУ</div>
@@ -100,10 +117,14 @@
 <script>
   const techSelect = document.getElementById('tech');
   const materialSelect = document.getElementById('material');
-  const volumeInput = document.getElementById('volume');
+  const dimensionsDiv = document.getElementById('dimensions');
+  const complexitySelect = document.getElementById('complexity');
   const priceDiv = document.getElementById('price');
 
-  // Цены (в рублях за см³)
+  const xInput = document.getElementById('x');
+  const yInput = document.getElementById('y');
+  const zInput = document.getElementById('z');
+
   const prices = {
     cnc: {
       aluminium: 15,
@@ -116,9 +137,9 @@
       resin: 10
     },
     laser: {
-      steel1: 3,   // 1 мм
-      steel2: 4,   // 2 мм
-      steel5: 6    // 5 мм
+      steel1: 300,
+      steel2: 400,
+      steel5: 700
     }
   };
 
@@ -140,58 +161,68 @@
     ]
   };
 
-  techSelect.addEventListener('change', () => {
+  techSelect.addEventListener('change', updateUI);
+  materialSelect.addEventListener('change', updateUI);
+  xInput.addEventListener('input', updateUI);
+  yInput.addEventListener('input', updateUI);
+  zInput.addEventListener('input', updateUI);
+  complexitySelect.addEventListener('change', updateUI);
+
+  function updateUI() {
     const tech = techSelect.value;
     materialSelect.innerHTML = '';
     materialSelect.style.display = 'none';
-    volumeInput.style.display = 'none';
+    dimensionsDiv.style.display = 'none';
+    complexitySelect.style.display = 'none';
     priceDiv.textContent = '';
 
-    if (tech) {
-      materialSelect.style.display = 'block';
-      materials[tech].forEach(m => {
-        const option = document.createElement('option');
-        option.value = m.value;
-        option.textContent = m.label;
-        materialSelect.appendChild(option);
-      });
-    }
-  });
+    if (!tech) return;
 
-  materialSelect.addEventListener('change', () => {
-    const tech = techSelect.value;
+    materialSelect.style.display = 'block';
+    materials[tech].forEach(m => {
+      const option = document.createElement('option');
+      option.value = m.value;
+      option.textContent = m.label;
+      materialSelect.appendChild(option);
+    });
+
     if (tech === 'laser') {
-      // Для лазера не нужен объём — цена за лист, но упростим: будем считать по "условной единице"
-      calculatePrice(1);
-      volumeInput.style.display = 'none';
+      calculatePrice();
     } else {
-      volumeInput.style.display = 'block';
+      dimensionsDiv.style.display = 'block';
+      complexitySelect.style.display = 'block';
+      calculatePrice();
     }
-    priceDiv.textContent = '';
-  });
+  }
 
-  volumeInput.addEventListener('input', () => {
-    const volume = parseFloat(volumeInput.value);
-    if (volume > 0) {
-      calculatePrice(volume);
-    } else {
-      priceDiv.textContent = '';
-    }
-  });
-
-  function calculatePrice(volume) {
+  function calculatePrice() {
     const tech = techSelect.value;
     const material = materialSelect.value;
     if (!tech || !material) return;
 
-    const rate = prices[tech][material];
     if (tech === 'laser') {
-      // Для лазера покажем фиксированную цену за "заказ"
-      priceDiv.textContent = `Примерная стоимость: от ${rate * 100} ₽`;
-    } else {
-      const total = Math.round(rate * volume);
-      priceDiv.textContent = `Примерная стоимость: ${total} ₽`;
+      const base = prices[tech][material] || 300;
+      priceDiv.textContent = `Примерная стоимость: от ${base} ₽`;
+      return;
     }
+
+    const x = parseFloat(xInput.value) || 0;
+    const y = parseFloat(yInput.value) || 0;
+    const z = parseFloat(zInput.value) || 0;
+
+    if (x <= 0 || y <= 0 || z <= 0) {
+      priceDiv.textContent = '';
+      return;
+    }
+
+    const volume = (x * y * z) / 1000;
+    const rate = prices[tech][material];
+    const complexity = parseFloat(complexitySelect.value) || 1;
+    let total = Math.round(rate * volume * complexity);
+    const minPrice = 500;
+    if (total < minPrice) total = minPrice;
+
+    priceDiv.textContent = `Примерная стоимость: ${total} ₽`;
   }
 </script>
 </body>
