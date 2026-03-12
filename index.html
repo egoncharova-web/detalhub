@@ -19,8 +19,22 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background: #fff; color: #111; line-height: 1.6; }
     
-    header { padding: 4rem 2rem; text-align: center; max-width: 800px; margin: 0 auto; }
-    h1 { font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700; }
+    header { padding: 3rem 2rem; text-align: center; max-width: 900px; margin: 0 auto; }
+    
+    /* ЛОГОТИП */
+    .logo {
+      max-width: 280px;
+      height: auto;
+      margin: 0 auto 1.5rem;
+      display: block;
+    }
+    
+    h1 { 
+      font-size: 2.5rem; 
+      margin-bottom: 1rem; 
+      font-weight: 700;
+      color: #333;
+    }
     p { font-size: 1.2rem; color: #444; margin-bottom: 2rem; }
     
     .btn {
@@ -101,11 +115,38 @@
     
     .viewer-info strong { color: #333; }
     
-    #fileInput {
+    .file-upload-wrapper {
       margin: 0 auto 1rem;
+      max-width: 500px;
+    }
+    
+    #fileInput {
       display: block;
       padding: 0.5rem;
+      width: 100%;
       max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .file-type-info {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.5rem;
+    }
+    
+    .step-notice {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 0.75rem 1rem;
+      margin: 1rem auto;
+      max-width: 500px;
+      text-align: left;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .step-notice.show {
+      display: block;
     }
     
     #dimensions {
@@ -124,13 +165,36 @@
       margin-top: 0.5rem;
     }
     
-    #material {
-      padding: 0.5rem 1rem;
+    .form-group {
+      margin-bottom: 1rem;
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-size: 0.95rem;
+    }
+    
+    #material-viewer, #technology-select {
+      width: 100%;
+      padding: 0.6rem 1rem;
       font-size: 0.95rem;
       border: 1px solid #ddd;
-      border-radius: 4px;
+      border-radius: 6px;
       background: white;
-      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+    
+    #material-viewer:focus, #technology-select:focus {
+      outline: none;
+      border-color: #0070D7;
+      box-shadow: 0 0 0 3px rgba(0, 112, 215, 0.1);
     }
     
     .info-text { color: #999; font-size: 0.95rem; font-style: italic; }
@@ -139,6 +203,7 @@
     @media (max-width: 768px) {
       header { padding: 2rem 1rem; }
       h1 { font-size: 2rem; }
+      .logo { max-width: 220px; }
       #viewer { height: 300px; }
       .btn { width: 100%; }
     }
@@ -148,9 +213,9 @@
 
   <!-- === ГЛАВНЫЙ БЛОК === -->
   <header>
-    <div style="text-align: center; margin-bottom: 1rem;">
-      <h1 style="font-size: 2.8rem; font-weight: 700; display: inline-block;">DetalHub</h1>
-    </div>
+    <!-- ЛОГОТИП -->
+    <img src="logo.png" alt="DetalHub" class="logo">
+    
     <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.4rem; color: #666; font-weight: 400;">
       Изготовление деталей по чертежу (ЧПУ, 3D-печать, лазер)
     </h2>
@@ -203,20 +268,70 @@
   <!-- === СЕКЦИЯ 3D-ПРОСМОТРА === -->
   <section id="viewer-section">
     <h3>🔍 Предпросмотр детали</h3>
-    <p class="viewer-info">Загрузите <strong>.stl</strong> файл — увидите 3D-модель, габариты и расчётный вес</p>
+    <p class="viewer-info">Загрузите файл — увидите 3D-модель, габариты и расчётный вес</p>
     
-    <input type="file" id="fileInput" accept=".stl">
+    <div class="file-upload-wrapper">
+      <input type="file" id="fileInput" accept=".stl,.step,.stp">
+      <div class="file-type-info">Поддерживаемые форматы: .stl, .step, .stp</div>
+    </div>
+    
+    <!-- Уведомление для STEP файлов -->
+    <div id="stepNotice" class="step-notice">
+      <strong>📄 STEP файл загружен</strong><br>
+      3D-просмотр доступен только для STL файлов. Для просмотра STEP файла сконвертируйте его в STL или загрузите сразу STL файл.
+    </div>
     
     <div id="viewer"></div>
     
-    <div style="margin-top: 1rem;">
-      <label for="material-viewer" style="font-weight: 500; color: #333;">Материал для расчёта веса:</label><br>
+    <!-- Выбор технологии -->
+    <div class="form-group">
+      <label for="technology-select">🛠 Технология изготовления:</label>
+      <select id="technology-select">
+        <option value="">Выберите технологию</option>
+        <optgroup label="Обработка">
+          <option value="cnc">ЧПУ фрезерование</option>
+          <option value="cnc-turning">ЧПУ токарная обработка</option>
+          <option value="sheet-metal">Sheet Metal (листовая обработка)</option>
+        </optgroup>
+        <optgroup label="3D-печать">
+          <option value="fdm">3D-печать FDM</option>
+          <option value="sla">3D-печать SLA (фотополимер)</option>
+          <option value="sls">3D-печать SLS</option>
+          <option value="mjf">3D-печать MJF</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <!-- Выбор материала -->
+    <div class="form-group">
+      <label for="material-viewer">⚙️ Материал для расчёта веса:</label>
       <select id="material-viewer">
-        <option value="2.7">Алюминий (2.7 g/cm³)</option>
-        <option value="7.8">Сталь (7.8 g/cm³)</option>
-        <option value="8.0">Нержавеющая сталь (8.0 g/cm³)</option>
-        <option value="4.5">Титан (4.5 g/cm³)</option>
-        <option value="8.9">Медь (8.9 g/cm³)</option>
+        <option value="">Выберите материал</option>
+        <optgroup label="🔩 Металлы">
+          <option value="2.7">Алюминий (Al) — 2.7 g/cm³</option>
+          <option value="2.8">Дюралюминий (D16) — 2.8 g/cm³</option>
+          <option value="7.8">Сталь конструкционная — 7.8 g/cm³</option>
+          <option value="7.85">Сталь 45 — 7.85 g/cm³</option>
+          <option value="8.0">Нержавеющая сталь (304) — 8.0 g/cm³</option>
+          <option value="8.0">Нержавеющая сталь (316) — 8.0 g/cm³</option>
+          <option value="7.9">Нержавеющая сталь (430) — 7.9 g/cm³</option>
+          <option value="4.5">Титан (Ti-6Al-4V) — 4.5 g/cm³</option>
+          <option value="8.9">Медь (Cu) — 8.9 g/cm³</option>
+          <option value="8.5">Латунь (CuZn) — 8.5 g/cm³</option>
+          <option value="8.7">Бронза — 8.7 g/cm³</option>
+          <option value="11.3">Свинец (Pb) — 11.3 g/cm³</option>
+          <option value="7.1">Цинк (Zn) — 7.1 g/cm³</option>
+          <option value="10.5">Серебро (Ag) — 10.5 g/cm³</option>
+          <option value="19.3">Золото (Au) — 19.3 g/cm³</option>
+        </optgroup>
+        <optgroup label="🧪 Пластики (3D-печать)">
+          <option value="1.24">PLA — 1.24 g/cm³</option>
+          <option value="1.04">ABS — 1.04 g/cm³</option>
+          <option value="1.27">PETG — 1.27 g/cm³</option>
+          <option value="1.25">TPU — 1.25 g/cm³</option>
+          <option value="1.15">Nylon (PA) — 1.15 g/cm³</option>
+          <option value="1.18">ASA — 1.18 g/cm³</option>
+        </optgroup>
       </select>
     </div>
     
@@ -234,7 +349,7 @@
     <h3 style="text-align: left; margin-bottom: 1rem;">Часто задаваемые вопросы</h3>
     
     <p><strong>Какие форматы чертежей принимаете?</strong><br>
-    Лучше всего — .step, .stp, .dxf. Также принимаем .pdf, .sldprt, .ipt.</p>
+    Лучше всего — .step, .stp, .dxf. Также принимаем .pdf, .sldprt, .ipt, .stl.</p>
 
     <p><strong>Сколько стоит изготовление?</strong><br>
     Цена зависит от технологии, материала и объёма. Воспользуйтесь калькулятором на сайте для оценки.</p>
@@ -372,6 +487,7 @@
 
     let currentMesh = null;
     let currentVolume = 0;
+    let currentFileName = '';
 
     // Анимация
     function animate() {
@@ -385,6 +501,20 @@
     document.getElementById("fileInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      currentFileName = file.name.toLowerCase();
+      const isSTEP = currentFileName.endsWith('.step') || currentFileName.endsWith('.stp');
+      
+      // Показываем уведомление для STEP файлов
+      const stepNotice = document.getElementById('stepNotice');
+      if (isSTEP) {
+        stepNotice.classList.add('show');
+        document.getElementById("dimensions").innerHTML = 
+          '<span class="info-text">STEP файл загружен. Для 3D-просмотра сконвертируйте в STL или загрузите STL файл.</span>';
+        return;
+      } else {
+        stepNotice.classList.remove('show');
+      }
 
       const loader = new THREE.STLLoader();
       const reader = new FileReader();
@@ -440,27 +570,49 @@
 
     // Обновление текста
     function updateDimensionsDisplay(x, y, z, volume) {
-      const density = parseFloat(document.getElementById("material-viewer").value);
-      const weightGrams = (volume * density / 1000).toFixed(2);
-      const weightKg = (weightGrams / 1000).toFixed(3);
-
-      document.getElementById("dimensions").innerHTML = 
-        '<div><span class="dimension-label">Длина (X):</span> <span class="dimension-value">' + x + ' мм</span></div>' +
-        '<div><span class="dimension-label">Ширина (Y):</span> <span class="dimension-value">' + y + ' мм</span></div>' +
-        '<div><span class="dimension-label">Высота (Z):</span> <span class="dimension-value">' + z + ' мм</span></div>' +
-        '<div style="margin-top:12px; padding-top:12px; border-top:1px solid #e0e0e0;">' +
-        '<span class="dimension-label">Объём:</span> <span class="dimension-value">' + volume.toFixed(0) + ' мм³</span></div>' +
-        '<div class="weight-value">⚖ Вес: ' + weightGrams + ' г (' + weightKg + ' кг)</div>';
+      const materialSelect = document.getElementById("material-viewer");
+      const density = parseFloat(materialSelect.value) || 0;
+      
+      if (density === 0) {
+        document.getElementById("dimensions").innerHTML = 
+          '<div><span class="dimension-label">Длина (X):</span> <span class="dimension-value">' + x + ' мм</span></div>' +
+          '<div><span class="dimension-label">Ширина (Y):</span> <span class="dimension-value">' + y + ' мм</span></div>' +
+          '<div><span class="dimension-label">Высота (Z):</span> <span class="dimension-value">' + z + ' мм</span></div>' +
+          '<div style="margin-top:12px; padding-top:12px; border-top:1px solid #e0e0e0;">' +
+          '<span class="dimension-label">Объём:</span> <span class="dimension-value">' + volume.toFixed(0) + ' мм³</span></div>' +
+          '<div style="color:#888; font-style:italic; margin-top:10px;">Выберите материал для расчёта веса</div>';
+      } else {
+        const weightGrams = (volume * density / 1000).toFixed(2);
+        const weightKg = (weightGrams / 1000).toFixed(3);
+        
+        document.getElementById("dimensions").innerHTML = 
+          '<div><span class="dimension-label">Длина (X):</span> <span class="dimension-value">' + x + ' мм</span></div>' +
+          '<div><span class="dimension-label">Ширина (Y):</span> <span class="dimension-value">' + y + ' мм</span></div>' +
+          '<div><span class="dimension-label">Высота (Z):</span> <span class="dimension-value">' + z + ' мм</span></div>' +
+          '<div style="margin-top:12px; padding-top:12px; border-top:1px solid #e0e0e0;">' +
+          '<span class="dimension-label">Объём:</span> <span class="dimension-value">' + volume.toFixed(0) + ' мм³</span></div>' +
+          '<div class="weight-value">⚖ Вес: ' + weightGrams + ' г (' + weightKg + ' кг)</div>';
+      }
     }
 
     // Пересчёт веса при смене материала
     document.getElementById("material-viewer").addEventListener("change", function() {
       if (currentVolume > 0) {
         const density = parseFloat(this.value);
-        const weightGrams = (currentVolume * density / 1000).toFixed(2);
-        const weightKg = (weightGrams / 1000).toFixed(3);
-        const weightDiv = document.querySelector('.weight-value');
-        if (weightDiv) weightDiv.textContent = '⚖ Вес: ' + weightGrams + ' г (' + weightKg + ' кг)';
+        if (density === 0) {
+          const dimsDiv = document.getElementById("dimensions");
+          const dims = dimsDiv.innerHTML.match(/<span class="dimension-value">(\d+\.?\d*) мм<\/span>/g);
+          if (dims) {
+            dimsDiv.innerHTML += '<div style="color:#888; font-style:italic; margin-top:10px;">Выберите материал для расчёта веса</div>';
+          }
+        } else {
+          updateDimensionsDisplay(
+            document.querySelector('.dimension-value').textContent,
+            document.querySelectorAll('.dimension-value')[1].textContent,
+            document.querySelectorAll('.dimension-value')[2].textContent,
+            currentVolume
+          );
+        }
       }
     });
 
