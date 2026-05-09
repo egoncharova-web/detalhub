@@ -25,8 +25,9 @@
     .logo {
       max-width: 280px;
       height: auto;
-      margin: 0 auto 1.5rem;
-      display: block;
+      display: inline-block;
+      margin: 0;
+      vertical-align: middle;
     }
     
     h1 { 
@@ -38,21 +39,23 @@
     p { font-size: 1.2rem; color: #444; margin-bottom: 2rem; }
     
     .btn {
-      display: inline-block;
-      background: #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #2563EB;
       color: #fff;
-      padding: 0.8rem 2rem;
+      padding: 0.8rem 1.8rem;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 8px;
       font-weight: 600;
-      transition: opacity 0.2s;
+      transition: background 0.2s;
       cursor: pointer;
       border: none;
       font-size: 1rem;
     }
-    .btn:hover { opacity: 0.9; }
-    .btn-primary { background: #0070D7; }
-    .btn-primary:hover { background: #005BB5; }
+    .btn:hover { background: #1D4ED8; }
+    .btn-primary { background: #2563EB; }
+    .btn-primary:hover { background: #1D4ED8; }
     
     footer { text-align: center; padding: 2rem; color: #777; font-size: 0.9rem; }
     
@@ -96,7 +99,6 @@
       background: white;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
-      /* CSS-сетка на фоне — не вращается! */
       background-image: 
         linear-gradient(#e8e8e8 1px, transparent 1px),
         linear-gradient(90deg, #e8e8e8 1px, transparent 1px);
@@ -157,7 +159,7 @@
     }
     
     .dimension-label { color: #888; font-size: 0.95rem; }
-    .dimension-value { color: #0070D7; font-weight: 600; }
+    .dimension-value { color: #2563EB; font-weight: 600; }
     .weight-value {
       color: #059669;
       font-weight: 700;
@@ -193,13 +195,12 @@
     
     #material-viewer:focus, #technology-select:focus {
       outline: none;
-      border-color: #0070D7;
-      box-shadow: 0 0 0 3px rgba(0, 112, 215, 0.1);
+      border-color: #2563EB;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
     
     .info-text { color: #999; font-size: 0.95rem; font-style: italic; }
     
-    /* Адаптив */
     @media (max-width: 768px) {
       header { padding: 2rem 1rem; }
       h1 { font-size: 2rem; }
@@ -211,16 +212,15 @@
 </head>
 <body>
 
- <!-- === ГЛАВНЫЙ БЛОК === -->
+  <!-- === ГЛАВНЫЙ БЛОК === -->
   <header>
     <!-- ЛОГОТИП И КНОПКА ВХОДА -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-      <img src="logo.svg" alt="DetalHub" class="logo" style="margin: 0;">
-      <a href="login.html" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; width: auto; display: inline-block;">
-     Войти в кабинет →</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; width: 100%;">
+      <img src="logo.svg" alt="DetalHub" class="logo">
+      <a href="login.html" class="btn">Войти в кабинет →</a>
     </div>
     
-        <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.4rem; color: #666; font-weight: 400;">
+    <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.4rem; color: #666; font-weight: 400;">
       Изготовление деталей по чертежу (ЧПУ, 3D-печать, лазер)
     </h2>
     <p style="font-size: 1.2rem; color: #444; margin-bottom: 2rem; text-align: center;">
@@ -279,7 +279,6 @@
       <div class="file-type-info">Поддерживаемые форматы: .stl, .step, .stp</div>
     </div>
     
-    <!-- Уведомление для STEP файлов -->
     <div id="stepNotice" class="step-notice">
       <strong>📄 STEP файл загружен</strong><br>
       3D-просмотр доступен только для STL файлов. Для просмотра STEP файла сконвертируйте его в STL или загрузите сразу STL файл.
@@ -287,7 +286,6 @@
     
     <div id="viewer"></div>
     
-    <!-- Выбор технологии -->
     <div class="form-group">
       <label for="technology-select">🛠 Технология изготовления:</label>
       <select id="technology-select">
@@ -306,7 +304,6 @@
       </select>
     </div>
     
-    <!-- Выбор материала -->
     <div class="form-group">
       <label for="material-viewer">⚙️ Материал для расчёта веса:</label>
       <select id="material-viewer">
@@ -463,9 +460,8 @@
 
   <!-- === СКРИПТ 3D-ПРОСМОТРА === -->
   <script>
-    // === THREE.JS SETUP ===
     const scene = new THREE.Scene();
-    scene.background = null; // Прозрачный фон — видна CSS-сетка
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(75, 800/400, 0.1, 10000);
     camera.position.z = 200;
@@ -475,12 +471,10 @@
     renderer.shadowMap.enabled = true;
     document.getElementById("viewer").appendChild(renderer.domElement);
 
-    // OrbitControls — вращение мышкой
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // Свет
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -494,7 +488,6 @@
     let currentVolume = 0;
     let currentFileName = '';
 
-    // Анимация
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -502,7 +495,6 @@
     }
     animate();
 
-    // Загрузка файла
     document.getElementById("fileInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -510,7 +502,6 @@
       currentFileName = file.name.toLowerCase();
       const isSTEP = currentFileName.endsWith('.step') || currentFileName.endsWith('.stp');
       
-      // Показываем уведомление для STEP файлов
       const stepNotice = document.getElementById('stepNotice');
       if (isSTEP) {
         stepNotice.classList.add('show');
@@ -556,7 +547,6 @@
       reader.readAsArrayBuffer(file);
     });
 
-    // Расчёт объёма
     function calculateVolume(geometry) {
       let volume = 0;
       const positions = geometry.attributes.position.array;
@@ -573,7 +563,6 @@
       return p1.dot(p2.cross(p3)) / 6.0;
     }
 
-    // Обновление текста
     function updateDimensionsDisplay(x, y, z, volume) {
       const materialSelect = document.getElementById("material-viewer");
       const density = parseFloat(materialSelect.value) || 0;
@@ -600,7 +589,6 @@
       }
     }
 
-    // Пересчёт веса при смене материала
     document.getElementById("material-viewer").addEventListener("change", function() {
       if (currentVolume > 0) {
         const density = parseFloat(this.value);
@@ -621,7 +609,6 @@
       }
     });
 
-    // Адаптив при ресайзе
     window.addEventListener('resize', function() {
       const viewer = document.getElementById("viewer");
       const width = viewer.clientWidth;
