@@ -211,12 +211,16 @@
 </head>
 <body>
 
-  <!-- === ГЛАВНЫЙ БЛОК === -->
+ <!-- === ГЛАВНЫЙ БЛОК === -->
   <header>
-    <!-- ЛОГОТИП -->
-    <img src="logo.svg" alt="DetalHub" class="logo">
+    <!-- ЛОГОТИП И КНОПКА ВХОДА -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <img src="logo.svg" alt="DetalHub" class="logo" style="margin: 0;">
+      <a href="login.html" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; width: auto; display: inline-block;">
+     Войти в кабинет →</a>
+    </div>
     
-    <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.4rem; color: #666; font-weight: 400;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.4rem; color: #666; font-weight: 400;">
       Изготовление деталей по чертежу (ЧПУ, 3D-печать, лазер)
     </h2>
     <p style="font-size: 1.2rem; color: #444; margin-bottom: 2rem; text-align: center;">
@@ -363,7 +367,8 @@
 
   <footer>
     © 2026 DetalHub. Все права защищены.<br>
-    <a href="/about.html" class="footer-link">О нас</a>
+    <a href="/about.html" class="footer-link">О нас</a> | 
+    <a href="/login.html" class="footer-link">Войти в кабинет</a>
   </footer>
 
   <!-- === СКРИПТ КАЛЬКУЛЯТОРА === -->
