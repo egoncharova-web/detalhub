@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Вход — DetalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .auth-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 450px;
+      padding: 3rem;
+    }
+    .logo {
+      max-width: 200px;
+      margin: 0 auto 2rem;
+      display: block;
+    }
+    h1 {
+      color: #333;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #666;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: #0066CC;
+      border-bottom: 3px solid #0066CC;
+      margin-bottom: -2px;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #0066CC;
+    }
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      background: #0066CC;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0052A3; }
+    .divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #999;
+      font-size: 0.85rem;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 45%;
+      height: 1px;
+      background: #e9ecef;
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .social-login {
+      display: flex;
+      gap: 1rem;
+    }
+    .social-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: 2px solid #e9ecef;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .social-btn:hover {
+      background: #f8f9fa;
+      border-color: #0066CC;
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .back-link a {
+      color: #0066CC;
+      text-decoration: none;
+    }
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <img src="logo.svg" alt="DetalHub" class="logo">
+    <h1>С возвращением!</h1>
+    <p class="subtitle">Войдите или создайте аккаунт для продолжения</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Вход</button>
+      <button class="tab" onclick="switchTab('register')">Регистрация</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="form-section active">
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" required placeholder="you@company.com">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn">Войти</button>
+      </form>
+
+      <div class="divider">или войдите через</div>
+      
+      <div class="social-login">
+        <button class="social-btn">🔵 Google</button>
+        <button class="social-btn">🔷 LinkedIn</button>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="form-section">
+      <form onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" required placeholder="Иван">
+        </div>
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input type="text" required placeholder="Иванов">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" required placeholder="you@company.com">
+        </div>
+        <div class="form-group">
+          <label>Телефон</label>
+          <input type="tel" placeholder="+7 (999) 999-99-99">
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" required placeholder="Минимум 8 символов">
+        </div>
+        <button type="submit" class="btn">Создать аккаунт</button>
+      </form>
+    </div>
+
+    <div class="back-link">
+      <a href="index.html">← Вернуться на главную</a>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      
+      if (tab === 'login') {
+        document.querySelector('.tab:first-child').classList.add('active');
+        document.getElementById('loginForm').classList.add('active');
+      } else {
+        document.querySelector('.tab:last-child').classList.add('active');
+        document.getElementById('registerForm').classList.add('active');
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      localStorage.setItem('isLoggedIn', 'true');
+      window.location.href = 'dashboard.html';
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      alert('Регистрация успешна! Теперь войдите в систему.');
+      switchTab('login');
+    }
+  </script>
+</body>
+</html>
