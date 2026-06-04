@@ -10,10 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
   
-  <!-- jsPDF для PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- html2pdf для поддержки кириллицы -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -536,8 +535,6 @@
   </div>
 
   <script>
-    const { jsPDF } = window.jspdf;
-    
     // Проверка авторизации
     if (!localStorage.getItem('isLoggedIn')) {
       window.location.href = 'auth.html';
@@ -1053,73 +1050,137 @@
       window.location.href = 'orders.html';
     }
 
-    function downloadPDF() {
-      if (parts.length === 0) {
-        alert('Загрузите хотя бы одну деталь');
-        return;
-      }
+  function downloadPDF() {
+  if (parts.length === 0) {
+    alert('Загрузите хотя бы одну деталь');
+    return;
+  }
+  
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const totalParts = parts.length;
+  const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+  const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
+  const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
+  
+  let rowsHtml = '';
+  parts.forEach((part, index) => {
+    const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+    const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+    
+    rowsHtml += `
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${index + 1}</td>
+        <td style="padding: 8px; border: 1px solid #ccc;">${part.name}</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${techName}</td>
+        <td style="padding: 8px; border: 1px solid #ccc;">${matName}</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.weight} г</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.qty} шт.</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: right;">${part.price.toLocaleString('ru-RU')} ₽</td>
+      </tr>
+    `;
+  });
+  
+  const template = document.createElement('div');
+  template.innerHTML = `
+    <div style="font-family: Arial, sans-serif; color: #000; padding: 15mm; background: #fff;">
       
-      const doc = new jsPDF();
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #0066CC; padding-bottom: 15px;">
+        <div>
+          <h1 style="color: #0066CC; font-size: 24px; margin: 0 0 5px 0;">DetalHub</h1>
+          <div style="color: #666; font-size: 11px;">Изготовление деталей по чертежу</div>
+          <div style="color: #666; font-size: 11px;">detalhub.com</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 18px; font-weight: bold; color: #0066CC;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</div>
+          <div style="font-size: 13px; margin-top: 5px;">№ ${quoteNumber} от ${quoteDate}</div>
+        </div>
+      </div>
       
-      // Заголовок
-      doc.setFontSize(20);
-      doc.setTextColor(0, 102, 204);
-      doc.text('DetalHub', 20, 20);
+      <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
+          <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОСТАВЩИК:</div>
+          <div style="font-size: 11px; line-height: 1.5;">
+            <strong>DetalHub</strong><br>
+            Инженер: Наталия<br>
+            Email: info@detalhub.com<br>
+            Сайт: detalhub.com
+          </div>
+        </div>
+        <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
+          <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОКУПАТЕЛЬ:</div>
+          <div style="font-size: 11px; line-height: 1.5;">
+            <strong>${profile.name || '—'}</strong><br>
+            ${profile.company ? 'Компания: ' + profile.company + '<br>' : ''}
+            ${profile.address ? 'Адрес: ' + profile.address + '<br>' : ''}
+            ${profile.phone ? 'Тел: ' + profile.phone + '<br>' : ''}
+            ${profile.email ? 'Email: ' + profile.email : ''}
+          </div>
+        </div>
+      </div>
       
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Коммерческое предложение', 20, 35);
+      <h2 style="color: #0066CC; font-size: 14px; margin-bottom: 10px;">Спецификация деталей:</h2>
       
-      // Номер и дата
-      doc.setFontSize(11);
-      doc.text(`Запрос №${quoteNumber}`, 20, 50);
-      doc.text(`Дата: ${quoteDate}`, 20, 57);
+      <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px;">
+        <thead>
+          <tr style="background: #0066CC; color: white;">
+            <th style="padding: 8px; border: 1px solid #ccc;">№</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Наименование</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Технология</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Материал</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Размеры</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Вес</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Кол-во</th>
+            <th style="padding: 8px; border: 1px solid #ccc;">Сумма</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #f5f8ff; font-weight: bold;">
+            <td colspan="5" style="padding: 8px; border: 1px solid #ccc; text-align: right;">ИТОГО:</td>
+            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalWeight.toFixed(1)} г</td>
+            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalQty} шт.</td>
+            <td style="padding: 8px; border: 1px solid #ccc; text-align: right; font-size: 12px; color: #0066CC;">${totalPrice.toLocaleString('ru-RU')} ₽</td>
+          </tr>
+        </tfoot>
+      </table>
       
-      // Таблица с деталями
-      let y = 70;
-      doc.setFontSize(14);
-      doc.text('Детали:', 20, y);
-      y += 10;
+      <div style="margin-bottom: 20px; padding: 12px; background: #fff8e1; border-left: 4px solid #f59e0b;">
+        <div style="font-weight: bold; color: #d97706; margin-bottom: 6px;">УСЛОВИЯ:</div>
+        <div style="font-size: 11px; line-height: 1.7;">
+          ✓ Срок изготовления: ${document.getElementById('leadTime').textContent}<br>
+          ✓ Общий вес деталей: ${totalWeight.toFixed(1)} г<br>
+          ✓ Количество позиций: ${totalParts}<br>
+          ✓ Срок действия предложения: 14 дней<br>
+          ✓ Доставка: по всей России транспортными компаниями
+        </div>
+      </div>
       
-      parts.forEach((part, index) => {
-        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-        
-        doc.setFontSize(11);
-        doc.text(`${index + 1}. ${part.name}`, 20, y);
-        y += 7;
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Технология: ${techName} | Материал: ${matName}`, 25, y);
-        y += 6;
-        doc.text(`Размеры: ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм`, 25, y);
-        y += 6;
-        doc.text(`Вес: ${part.weight} г | Объем: ${part.volume.toFixed(2)} см³`, 25, y);
-        y += 6;
-        doc.text(`Количество: ${part.qty} шт. | Цена: ${part.price.toLocaleString()} ₽`, 25, y);
-        y += 12;
-        doc.setTextColor(0, 0, 0);
-      });
+      <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;">
+        <div>
+          <div style="font-size: 11px; color: #666;">С уважением,</div>
+          <div style="font-weight: bold;">Инженер DetalHub</div>
+          <div style="font-size: 11px; color: #666;">Наталия</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 11px; color: #666;">Документ сформирован автоматически</div>
+          <div style="font-size: 10px; color: #999;">detalhub.com</div>
+        </div>
+      </div>
       
-      // Итого
-      y += 5;
-      doc.setFontSize(12);
-      doc.setTextColor(0, 102, 204);
-      doc.text(`Общий вес: ${document.getElementById('totalWeight').textContent}`, 20, y);
-      y += 8;
-      doc.text(`Срок изготовления: ${document.getElementById('leadTime').textContent}`, 20, y);
-      y += 10;
-      doc.setFontSize(14);
-      doc.text(`Итого: ${document.getElementById('totalPrice').textContent}`, 20, y);
-      
-      // Footer
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text('DetalHub — изготовление деталей по чертежу', 20, 280);
-      doc.text('detalhub.com', 20, 285);
-      
-      doc.save(`KP_${quoteNumber}.pdf`);
-    }
+    </div>
+  `;
+  
+  html2pdf().from(template).set({
+    margin: 0,
+    filename: 'KP_' + quoteNumber + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).save();
+}
 
     function logout() {
       localStorage.removeItem('isLoggedIn');
