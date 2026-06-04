@@ -598,4 +598,246 @@
             const geometry = loader.parse(e.target.result);
             geometry.computeBoundingBox();
             const box = geometry.boundingBox;
-            part
+            part.dimensions = {
+              x: (box.max.x - box.min.x).toFixed(1),
+              y: (box.max.y - box.min.y).toFixed(1),
+              z: (box.max.z - box.min.z).toFixed(1)
+            };
+            part.geometry = geometry;
+            calculatePrice(part);
+            renderPart(part);
+          };
+          reader.readAsArrayBuffer(file);
+        } else {
+          part.dimensions = { x: '—', y: '—', z: '—' };
+          renderPart(part);
+        }
+
+        parts.push(part);
+      });
+
+      updateSummary();
+      input.value = '';
+    }
+
+    function calculatePrice(part) {
+      const volume = parseFloat(part.dimensions.x) * parseFloat(part.dimensions.y) * parseFloat(part.dimensions.z);
+      part.price = Math.max(500, Math.round(volume * 0.5 * part.qty));
+    }
+
+    function renderPart(part) {
+      const container = document.getElementById('partsList');
+      const empty = container.querySelector('.empty-state');
+      if (empty) empty.remove();
+
+      const partDiv = document.createElement('div');
+      partDiv.className = 'part-item';
+      partDiv.id = `part-${part.id}`;
+      
+      partDiv.innerHTML = `
+        <div class="part-grid">
+          <div class="part-preview" id="preview-${part.id}"></div>
+          <div class="part-info">
+            <h3>📄 ${part.name}</h3>
+            <div class="part-meta">
+              <div><strong>Размер:</strong> ${part.size}</div>
+              <div><strong>Загружено:</strong> ${part.uploadDate}</div>
+              <div><strong>Габариты:</strong> ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм</div>
+              <div><strong>Технология:</strong> ${getTechName(part.params.technology)}</div>
+              <div><strong>Материал:</strong> ${getMaterialName(part.params.material)}</div>
+            </div>
+            
+            <div class="qty-control">
+              <label>Количество:</label>
+              <input type="number" value="${part.qty}" min="1" onchange="updateQty(${part.id}, this.value)">
+            </div>
+            
+            <div class="part-actions">
+              <button class="btn btn-primary btn-small" onclick="openParams(${part.id})">✏️ Параметры</button>
+              <button class="btn btn-secondary btn-small" onclick="duplicatePart(${part.id})">📋 Дублировать</button>
+              <button class="btn btn-danger btn-small" onclick="deletePart(${part.id})">🗑 Удалить</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(partDiv);
+      
+      if (part.geometry) render3DPreview(part.id, part.geometry);
+      document.getElementById('partsCount').textContent = parts.length;
+    }
+
+    function render3DPreview(partId, geometry) {
+      const container = document.getElementById(`preview-${partId}`);
+      if (!container) return;
+      
+      container.innerHTML = '';
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(220, 170);
+      container.appendChild(renderer.domElement);
+
+      const material = new THREE.MeshPhongMaterial({ color: 0x808080, flatShading: true });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(1, 1, 1);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+      const maxDim = Math.max(
+        geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+        geometry.boundingBox.max.y - geometry.boundingBox.min.y,
+        geometry.boundingBox.max.z - geometry.boundingBox.min.z
+      );
+      camera.position.z = maxDim * 2.5;
+
+      function animate() {
+        if (!document.getElementById(`preview-${partId}`)) return;
+        requestAnimationFrame(animate);
+        mesh.rotation.x += 0.01;
+        mesh.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    function updateQty(partId, qty) {
+      const part = parts.find(p => p.id === partId);
+      if (part) {
+        part.qty = parseInt(qty);
+        calculatePrice(part);
+        updateSummary();
+      }
+    }
+
+    function openParams(partId) {
+      currentPartId = partId;
+      const part = parts.find(p => p.id === partId);
+      if (!part) return;
+
+      document.getElementById('technology').value = part.params.technology;
+      document.getElementById('material').value = part.params.material;
+      document.getElementById('tolerance').value = part.params.tolerance;
+      document.getElementById('roughness').value = part.params.roughness;
+      document.getElementById('quantity').value = part.qty;
+      document.getElementById('marking').checked = part.params.marking;
+      
+      document.getElementById('paramsModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('paramsModal').classList.remove('show');
+      currentPartId = null;
+    }
+
+    function saveParams() {
+      if (!currentPartId) return;
+      const part = parts.find(p => p.id === currentPartId);
+      if (!part) return;
+
+      const postprocess = [];
+      ['anodizing', 'painting', 'nickel', 'polishing'].forEach(id => {
+        if (document.getElementById(id).checked) postprocess.push(id);
+      });
+
+      part.params = {
+        technology: document.getElementById('technology').value,
+        material: document.getElementById('material').value,
+        tolerance: document.getElementById('tolerance').value,
+        roughness: document.getElementById('roughness').value,
+        postprocess: postprocess,
+        marking: document.getElementById('marking').checked,
+        markingText: document.getElementById('markingText').value,
+        quantity: parseInt(document.getElementById('quantity').value) || 1
+      };
+
+      part.qty = part.params.quantity;
+      calculatePrice(part);
+      
+      const oldDiv = document.getElementById(`part-${part.id}`);
+      if (oldDiv) oldDiv.remove();
+      renderPart(part);
+      updateSummary();
+      closeModal();
+    }
+
+    function deletePart(partId) {
+      if (confirm('Удалить деталь?')) {
+        parts = parts.filter(p => p.id !== partId);
+        const div = document.getElementById(`part-${partId}`);
+        if (div) div.remove();
+        
+        if (parts.length === 0) {
+          document.getElementById('partsList').innerHTML = `
+            <div class="empty-state">
+              <p>Пока нет загруженных деталей</p>
+              <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+            </div>
+          `;
+        }
+        
+        document.getElementById('partsCount').textContent = parts.length;
+        updateSummary();
+      }
+    }
+
+    function duplicatePart(partId) {
+      const part = parts.find(p => p.id === partId);
+      if (!part) return;
+
+      const newPart = {
+        ...part,
+        id: Date.now() + Math.random(),
+        name: 'Копия: ' + part.name,
+        qty: 1
+      };
+
+      parts.push(newPart);
+      renderPart(newPart);
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const totalParts = parts.length;
+      const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+      const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
+      
+      document.getElementById('totalParts').textContent = totalParts;
+      document.getElementById('totalQty').textContent = totalQty + ' шт.';
+      document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + ' ₽';
+      document.getElementById('leadTime').textContent = totalParts > 0 ? '5-7 дней' : '—';
+    }
+
+    function getTechName(tech) {
+      const names = { 'cnc': 'ЧПУ фрезерование', 'cnc-turning': 'ЧПУ токарная', '3d-fdm': '3D FDM', '3d-sla': '3D SLA', 'laser': 'Лазер' };
+      return names[tech] || tech;
+    }
+
+    function getMaterialName(mat) {
+      const names = { 'aluminum': 'Алюминий', 'steel': 'Сталь', 'stainless': 'Нержавейка', 'titanium': 'Титан', 'pla': 'PLA', 'abs': 'ABS' };
+      return names[mat] || mat;
+    }
+
+    function checkout() {
+      if (parts.length === 0) {
+        alert('Загрузите хотя бы одну деталь');
+        return;
+      }
+      alert('Переход к оформлению заказа...');
+    }
+
+    function logout() {
+      localStorage.removeItem('isLoggedIn');
+      window.location.href = 'auth.html';
+    }
+
+    document.getElementById('paramsModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+
+</body>
+</html>
