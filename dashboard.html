@@ -10,13 +10,15 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
   
+  <!-- jsPDF для PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
     body { background: #f8f9fa; color: #1a1a1a; }
     
-    /* HEADER */
     .header {
       background: white;
       padding: 1rem 2rem;
@@ -28,11 +30,7 @@
     
     .logo { max-width: 160px; height: auto; }
     
-    .nav-menu {
-      display: flex;
-      gap: 2rem;
-    }
-    
+    .nav-menu { display: flex; gap: 2rem; }
     .nav-menu a {
       color: #666;
       text-decoration: none;
@@ -42,21 +40,14 @@
       padding: 0.5rem 0;
       border-bottom: 2px solid transparent;
     }
-    
     .nav-menu a:hover, .nav-menu a.active {
       color: #0066CC;
       border-bottom-color: #0066CC;
     }
     
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    
+    .user-menu { display: flex; align-items: center; gap: 1rem; }
     .avatar {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       background: #0066CC;
       color: white;
       border-radius: 50%;
@@ -68,78 +59,59 @@
       cursor: pointer;
     }
     
-    /* MAIN */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
     
-    .page-header {
+    .page-header { margin-bottom: 2rem; }
+    .page-title { font-size: 1.8rem; color: #0066CC; margin-bottom: 0.5rem; }
+    .page-subtitle { color: #666; }
+    
+    .quote-info {
+      background: #e3f2fd;
+      border-left: 4px solid #0066CC;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
       margin-bottom: 2rem;
     }
     
-    .page-title {
-      font-size: 1.8rem;
+    .quote-number {
+      font-size: 1.1rem;
+      font-weight: 600;
       color: #0066CC;
-      margin-bottom: 0.5rem;
     }
     
-    .page-subtitle {
-      color: #666;
+    .upload-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e9ecef;
     }
     
-    /* UPLOAD */
-/* UPLOAD */
-.upload-section {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border: 1px solid #e9ecef;
-}
-
-.upload-area {
-  border: 2px dashed #0066CC !important;
-  border-radius: 12px;
-  padding: 3rem 2rem;
-  text-align: center;
-  background: #f0f7ff;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: block;
-  width: 100%;
-}
-
-.upload-area:hover {
-  background: #e0f0ff;
-  border-color: #0052A3 !important;
-}
-
-.upload-area input[type="file"] { display: none; }
-.upload-icon { font-size: 3rem; margin-bottom: 1rem; }
-
-.upload-area h3 {
-  color: #333;
-  margin-bottom: 0.5rem;
-  font-size: 1.3rem;
-}
-
-.upload-area p {
-  color: #666;
-  font-size: 0.95rem;
-  margin: 0;
-}
-    
-    /* CONTENT GRID */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 2rem;
+    .upload-area {
+      border: 2px dashed #0066CC !important;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      background: #f0f7ff;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: block;
+      width: 100%;
     }
     
-    /* PARTS */
+    .upload-area:hover {
+      background: #e0f0ff;
+      border-color: #0052A3 !important;
+    }
+    
+    .upload-area input[type="file"] { display: none; }
+    .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .upload-area h3 { color: #333; margin-bottom: 0.5rem; font-size: 1.3rem; }
+    .upload-area p { color: #666; font-size: 0.95rem; margin: 0; }
+    
+    .content-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; }
+    
     .parts-section {
       background: white;
       border-radius: 12px;
@@ -156,10 +128,7 @@
       border-bottom: 2px solid #f0f0f0;
     }
     
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
+    .section-title { font-size: 1.2rem; font-weight: 600; }
     
     .part-item {
       background: #f8f9fa;
@@ -169,11 +138,7 @@
       border: 1px solid #e9ecef;
     }
     
-    .part-grid {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 1.5rem;
-    }
+    .part-grid { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; }
     
     .part-preview {
       background: white;
@@ -182,34 +147,27 @@
       height: 170px;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }
     
-    .part-preview canvas {
-      width: 100%;
-      height: 100%;
+    .part-preview canvas { width: 100%; height: 100%; }
+    .preview-hint {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      background: rgba(0,102,204,0.9);
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
     }
     
-    .part-info h3 {
-      color: #333;
-      margin-bottom: 0.75rem;
-      font-size: 1rem;
-    }
-    
-    .part-meta {
-      font-size: 0.85rem;
-      color: #666;
-      line-height: 1.8;
-    }
-    
+    .part-info h3 { color: #333; margin-bottom: 0.75rem; font-size: 1rem; }
+    .part-meta { font-size: 0.85rem; color: #666; line-height: 1.8; }
     .part-meta strong { color: #333; }
     
-    .qty-control {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 1rem 0;
-    }
-    
+    .qty-control { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
     .qty-control input {
       width: 80px;
       padding: 0.4rem;
@@ -218,14 +176,8 @@
       text-align: center;
     }
     
-    .part-actions {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
+    .part-actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
     
-    /* BUTTONS */
     .btn {
       padding: 0.6rem 1.2rem;
       border: none;
@@ -234,6 +186,8 @@
       cursor: pointer;
       transition: all 0.2s;
       font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
     }
     
     .btn-primary { background: #0066CC; color: white; }
@@ -242,14 +196,12 @@
     .btn-secondary:hover { background: #dee2e6; }
     .btn-danger { background: #dc3545; color: white; }
     .btn-danger:hover { background: #c82333; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
     .btn-small { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+    .btn-icon { padding: 0.5rem; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
     
-    /* SIDEBAR */
-    .sidebar {
-      position: sticky;
-      top: 100px;
-      height: fit-content;
-    }
+    .sidebar { position: sticky; top: 100px; height: fit-content; }
     
     .order-summary {
       background: white;
@@ -258,19 +210,13 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     
-    .summary-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-    }
-    
+    .summary-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; }
     .summary-row {
       display: flex;
       justify-content: space-between;
       padding: 0.75rem 0;
       border-bottom: 1px solid #f0f0f0;
     }
-    
     .summary-row.total {
       font-size: 1.2rem;
       font-weight: 700;
@@ -295,7 +241,6 @@
     
     .btn-checkout:hover { background: #0052A3; }
     
-    /* MODAL */
     .modal {
       display: none;
       position: fixed;
@@ -321,6 +266,8 @@
       overflow-y: auto;
     }
     
+    .modal-large { max-width: 900px; }
+    
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -330,31 +277,14 @@
       border-bottom: 2px solid #f0f0f0;
     }
     
-    .modal-header h3 { color: #0066CC; }
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: #999;
-    }
+    .modal-header h3 { color: #0066CC; font-size: 1.3rem; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
     
     .form-section { margin-bottom: 1.5rem; }
-    .form-section h4 {
-      color: #333;
-      margin-bottom: 1rem;
-      font-size: 1rem;
-      font-weight: 600;
-    }
+    .form-section h4 { color: #333; margin-bottom: 1rem; font-size: 1rem; font-weight: 600; }
     
     .form-group { margin-bottom: 1rem; }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.4rem;
-      font-weight: 500;
-      color: #555;
-    }
-    
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; color: #555; }
     .form-group select, .form-group input {
       width: 100%;
       padding: 0.6rem;
@@ -362,11 +292,7 @@
       border-radius: 6px;
     }
     
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     
     .checkbox-group {
       display: flex;
@@ -375,10 +301,24 @@
       margin-bottom: 0.5rem;
     }
     
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #999;
+    .viewer-container {
+      width: 100%;
+      height: 500px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    
+    .viewer-container canvas { width: 100% !important; height: 100% !important; }
+    
+    .empty-state { text-align: center; padding: 3rem; color: #999; }
+    
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e9ecef;
     }
     
     @media (max-width: 1024px) {
@@ -407,16 +347,23 @@
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">Панель управления</h1>
-      <p class="page-subtitle">Загрузите чертёж и рассчитайте стоимость изготовления</p>
+      <p class="page-subtitle">Загрузите чертёж для 3D-печати и получите расчёт стоимости</p>
+    </div>
+
+    <div class="quote-info">
+      <div class="quote-number">📋 Запрос на КП №<span id="quoteNumber">-</span></div>
+      <div style="font-size: 0.85rem; color: #666; margin-top: 0.3rem;">
+        Создан: <span id="quoteDate">-</span>
+      </div>
     </div>
 
     <div class="upload-section">
       <label class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <input type="file" id="fileInput" accept=".step,.stp,.dxf,.pdf,.stl" onchange="handleFileUpload(this)" multiple>
+        <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" onchange="handleFileUpload(this)" multiple>
         <div class="upload-icon">📁</div>
-        <h3>Загрузить файлы</h3>
+        <h3>Загрузить файлы для 3D-печати</h3>
         <p>Перетащите файлы сюда или нажмите для выбора<br>
-        <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf, .stl</small></p>
+        <small>Поддерживаемые форматы: .stl, .obj, .step, .stp</small></p>
       </label>
     </div>
 
@@ -435,7 +382,7 @@
 
       <div class="sidebar">
         <div class="order-summary">
-          <h3 class="summary-title">Итого заказа:</h3>
+          <h3 class="summary-title">Итого запроса:</h3>
           
           <div class="summary-row">
             <span>Деталей:</span>
@@ -446,6 +393,10 @@
             <span id="totalQty">0 шт.</span>
           </div>
           <div class="summary-row">
+            <span>Общий вес:</span>
+            <span id="totalWeight">0 г</span>
+          </div>
+          <div class="summary-row">
             <span>Срок изготовления:</span>
             <span id="leadTime">—</span>
           </div>
@@ -454,70 +405,63 @@
             <span id="totalPrice">0 ₽</span>
           </div>
 
-          <button class="btn-checkout" onclick="checkout()">
-            Оформить заказ →
-          </button>
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="downloadPDF()" style="flex:1;">📥 КП</button>
+            <button class="btn btn-primary" onclick="saveToProjects()" style="flex:2;">💾 В проекты</button>
+          </div>
+          <button class="btn-checkout" onclick="checkout()">🛒 Оформить заказ</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal для параметров -->
   <div id="paramsModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Параметры изготовления</h3>
+        <h3>Параметры 3D-печати</h3>
         <button class="close-btn" onclick="closeModal()">&times;</button>
       </div>
       
       <form id="paramsForm">
         <div class="form-section">
-          <h4>🔧 Технология и материал</h4>
+          <h4>🖨️ Технология 3D-печати</h4>
           <div class="form-group">
             <label>Технология изготовления</label>
-            <select id="technology">
-              <option value="cnc">ЧПУ фрезерование</option>
-              <option value="cnc-turning">ЧПУ токарная обработка</option>
-              <option value="3d-fdm">3D-печать FDM</option>
-              <option value="3d-sla">3D-печать SLA</option>
-              <option value="laser">Лазерная резка</option>
+            <select id="technology" onchange="updateMaterials()">
+              <option value="fdm">FDM (послойное наплавление)</option>
+              <option value="sla">SLA (фотополимерная)</option>
+              <option value="sls">SLS (селективное лазерное спекание)</option>
+              <option value="mjf">MJF (Multi Jet Fusion)</option>
             </select>
           </div>
           
           <div class="form-group">
             <label>Материал</label>
             <select id="material">
-              <option value="aluminum">Алюминий АД31</option>
-              <option value="aluminum-d16">Дюралюминий Д16</option>
-              <option value="steel">Сталь Ст3</option>
-              <option value="steel-45">Сталь 45</option>
-              <option value="stainless">Нержавеющая сталь 304</option>
-              <option value="titanium">Титан</option>
-              <option value="brass">Латунь</option>
-              <option value="pla">PLA (3D-печать)</option>
-              <option value="abs">ABS (3D-печать)</option>
+              <!-- Заполняется JS -->
             </select>
           </div>
         </div>
 
         <div class="form-section">
-          <h4>📐 Допуски и качество</h4>
+          <h4>⚙️ Параметры печати</h4>
           <div class="form-row">
             <div class="form-group">
-              <label>Допуски</label>
-              <select id="tolerance">
-                <option value="standard">Стандартные (±0.1 мм)</option>
-                <option value="precise">Повышенные (±0.05 мм)</option>
-                <option value="high">Высокие (±0.02 мм)</option>
+              <label>Толщина слоя</label>
+              <select id="layerHeight">
+                <option value="0.1">0.1 мм (высокое качество)</option>
+                <option value="0.2" selected>0.2 мм (стандарт)</option>
+                <option value="0.3">0.3 мм (быстро)</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Шероховатость поверхности</label>
-              <select id="roughness">
-                <option value="Ra3.2">Ra 3.2 (стандарт)</option>
-                <option value="Ra1.6">Ra 1.6 (улучшенная)</option>
-                <option value="Ra0.8">Ra 0.8 (высокая)</option>
-                <option value="Ra0.4">Ra 0.4 (прецизионная)</option>
+              <label>Заполнение</label>
+              <select id="infill">
+                <option value="20">20% (стандарт)</option>
+                <option value="40">40% (повышенное)</option>
+                <option value="80">80% (высокое)</option>
+                <option value="100">100% (сплошное)</option>
               </select>
             </div>
           </div>
@@ -526,20 +470,28 @@
         <div class="form-section">
           <h4>🎨 Постобработка</h4>
           <div class="checkbox-group">
-            <input type="checkbox" id="anodizing">
-            <label for="anodizing">Анодирование</label>
+            <input type="checkbox" id="supportRemoval">
+            <label for="supportRemoval">Удаление поддержек</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="sanding">
+            <label for="sanding">Шлифовка</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="priming">
+            <label for="priming">Грунтовка</label>
           </div>
           <div class="checkbox-group">
             <input type="checkbox" id="painting">
             <label for="painting">Покраска</label>
           </div>
           <div class="checkbox-group">
-            <input type="checkbox" id="nickel">
-            <label for="nickel">Никелирование</label>
+            <input type="checkbox" id="vaporSmoothing">
+            <label for="vaporSmoothing">Сглаживание парами (для SLS/MJF)</label>
           </div>
           <div class="checkbox-group">
-            <input type="checkbox" id="polishing">
-            <label for="polishing">Полировка</label>
+            <input type="checkbox" id="dyeing">
+            <label for="dyeing">Окрашивание (для нейлона)</label>
           </div>
         </div>
 
@@ -547,7 +499,7 @@
           <h4>🏷️ Маркировка</h4>
           <div class="checkbox-group">
             <input type="checkbox" id="marking">
-            <label for="marking">Нанести маркировку/гравировку</label>
+            <label for="marking">Нанести маркировку</label>
           </div>
           <div class="form-group" id="markingTextGroup" style="display:none;">
             <input type="text" id="markingText" placeholder="Текст маркировки">
@@ -569,19 +521,106 @@
     </div>
   </div>
 
+  <!-- Modal для 3D просмотра -->
+  <div id="viewerModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>3D просмотр детали</h3>
+        <button class="close-btn" onclick="closeViewerModal()">&times;</button>
+      </div>
+      <div id="viewerContainer" class="viewer-container"></div>
+      <p style="color: #666; font-size: 0.9rem; text-align: center;">
+        🖱️ Левая кнопка мыши — вращение | Колесо — масштаб | Правая кнопка — перемещение
+      </p>
+    </div>
+  </div>
+
   <script>
-    // Check auth
+    const { jsPDF } = window.jspdf;
+    
+    // Проверка авторизации
     if (!localStorage.getItem('isLoggedIn')) {
       window.location.href = 'auth.html';
     }
 
     let parts = [];
     let currentPartId = null;
+    let currentViewerPart = null;
+    let quoteNumber = null;
+    let quoteDate = null;
+
+    // Инициализация номера запроса
+    function initQuoteNumber() {
+      const savedQuote = localStorage.getItem('currentQuote');
+      if (savedQuote) {
+        const quote = JSON.parse(savedQuote);
+        quoteNumber = quote.number;
+        quoteDate = quote.date;
+      } else {
+        // Генерируем новый номер
+        const lastQuote = localStorage.getItem('lastQuoteNumber');
+        const newNumber = lastQuote ? parseInt(lastQuote) + 1 : 1000;
+        quoteNumber = newNumber;
+        quoteDate = new Date().toLocaleString('ru-RU');
+        
+        localStorage.setItem('lastQuoteNumber', quoteNumber);
+        localStorage.setItem('currentQuote', JSON.stringify({
+          number: quoteNumber,
+          date: quoteDate
+        }));
+      }
+      
+      document.getElementById('quoteNumber').textContent = quoteNumber;
+      document.getElementById('quoteDate').textContent = quoteDate;
+    }
+
+    // Материалы для каждой технологии
+    const materials = {
+      fdm: [
+        { value: 'pla', name: 'PLA', density: 1.24, price: 15 },
+        { value: 'abs', name: 'ABS', density: 1.04, price: 18 },
+        { value: 'petg', name: 'PETG', density: 1.27, price: 20 },
+        { value: 'nylon', name: 'Nylon (PA)', density: 1.15, price: 25 },
+        { value: 'tpu', name: 'TPU (гибкий)', density: 1.25, price: 30 }
+      ],
+      sla: [
+        { value: 'standard-resin', name: 'Стандартная смола', density: 1.1, price: 35 },
+        { value: 'tough-resin', name: 'Прочная смола', density: 1.15, price: 45 },
+        { value: 'flexible-resin', name: 'Гибкая смола', density: 1.1, price: 50 },
+        { value: 'castable-resin', name: 'Литьевая смола', density: 1.2, price: 55 }
+      ],
+      sls: [
+        { value: 'pa12', name: 'PA12 (нейлон)', density: 1.01, price: 60 },
+        { value: 'pa11', name: 'PA11 (нейлон)', density: 1.03, price: 65 },
+        { value: 'pa-gf', name: 'PA12 GF (стеклонаполненный)', density: 1.25, price: 75 }
+      ],
+      mjf: [
+        { value: 'pa12-mjf', name: 'PA12 (HP MJF)', density: 1.01, price: 70 },
+        { value: 'pa11-mjf', name: 'PA11 (HP MJF)', density: 1.03, price: 80 }
+      ]
+    };
+
+    // Инициализация
+    initQuoteNumber();
+    updateMaterials();
 
     document.getElementById('marking')?.addEventListener('change', function() {
       const group = document.getElementById('markingTextGroup');
       if (group) group.style.display = this.checked ? 'block' : 'none';
     });
+
+    function updateMaterials() {
+      const tech = document.getElementById('technology').value;
+      const materialSelect = document.getElementById('material');
+      materialSelect.innerHTML = '';
+      
+      materials[tech].forEach(mat => {
+        const option = document.createElement('option');
+        option.value = mat.value;
+        option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
+        materialSelect.appendChild(option);
+      });
+    }
 
     function handleFileUpload(input) {
       const files = input.files;
@@ -595,37 +634,44 @@
           uploadDate: new Date().toLocaleDateString('ru-RU'),
           qty: 1,
           params: {
-            technology: 'cnc',
-            material: 'aluminum',
-            tolerance: 'standard',
-            roughness: 'Ra3.2',
+            technology: 'fdm',
+            material: 'pla',
+            layerHeight: '0.2',
+            infill: '20',
             postprocess: [],
             marking: false,
             quantity: 1
           },
           dimensions: { x: 0, y: 0, z: 0 },
-          price: 1000
+          volume: 0,
+          weight: 0,
+          price: 0
         };
 
-        if (file.name.toLowerCase().endsWith('.stl')) {
+        if (file.name.toLowerCase().endsWith('.stl') || file.name.toLowerCase().endsWith('.obj')) {
           const reader = new FileReader();
           reader.onload = function(e) {
             const loader = new THREE.STLLoader();
             const geometry = loader.parse(e.target.result);
             geometry.computeBoundingBox();
             const box = geometry.boundingBox;
+            
             part.dimensions = {
               x: (box.max.x - box.min.x).toFixed(1),
               y: (box.max.y - box.min.y).toFixed(1),
               z: (box.max.z - box.min.z).toFixed(1)
             };
+            
+            part.volume = calculateVolume(geometry);
             part.geometry = geometry;
-            calculatePrice(part);
+            
+            calculatePartData(part);
             renderPart(part);
           };
           reader.readAsArrayBuffer(file);
         } else {
           part.dimensions = { x: '—', y: '—', z: '—' };
+          part.price = 1000;
           renderPart(part);
         }
 
@@ -636,9 +682,35 @@
       input.value = '';
     }
 
-    function calculatePrice(part) {
-      const volume = parseFloat(part.dimensions.x) * parseFloat(part.dimensions.y) * parseFloat(part.dimensions.z);
-      part.price = Math.max(500, Math.round(volume * 0.5 * part.qty));
+    function calculateVolume(geometry) {
+      let volume = 0;
+      const positions = geometry.attributes.position.array;
+      
+      for (let i = 0; i < positions.length; i += 9) {
+        const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
+        const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
+        const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
+        
+        volume += p1.dot(p2.cross(p3)) / 6.0;
+      }
+      
+      return Math.abs(volume);
+    }
+
+    function calculatePartData(part) {
+      const tech = part.params.technology;
+      const matValue = part.params.material;
+      const material = materials[tech].find(m => m.value === matValue);
+      
+      if (!material) return;
+      
+      // Вес = объем * плотность * заполнение / 100
+      const infill = parseInt(part.params.infill) / 100;
+      part.weight = (part.volume * material.density * infill).toFixed(2);
+      
+      // Цена = объем * цена материала * заполнение * количество
+      const basePrice = part.volume * material.price * infill;
+      part.price = Math.max(500, Math.round(basePrice * part.qty));
     }
 
     function renderPart(part) {
@@ -650,17 +722,22 @@
       partDiv.className = 'part-item';
       partDiv.id = `part-${part.id}`;
       
+      const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+      const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+      
       partDiv.innerHTML = `
         <div class="part-grid">
-          <div class="part-preview" id="preview-${part.id}"></div>
+          <div class="part-preview" id="preview-${part.id}" onclick="openViewer(${part.id})">
+            <div class="preview-hint">🔍 Нажми для просмотра</div>
+          </div>
           <div class="part-info">
             <h3>📄 ${part.name}</h3>
             <div class="part-meta">
-              <div><strong>Размер:</strong> ${part.size}</div>
-              <div><strong>Загружено:</strong> ${part.uploadDate}</div>
+              <div><strong>Размер файла:</strong> ${part.size}</div>
               <div><strong>Габариты:</strong> ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм</div>
-              <div><strong>Технология:</strong> ${getTechName(part.params.technology)}</div>
-              <div><strong>Материал:</strong> ${getMaterialName(part.params.material)}</div>
+              <div><strong>Объем:</strong> ${part.volume.toFixed(2)} см³</div>
+              <div><strong>Вес:</strong> ${part.weight} г</div>
+              <div><strong>Технология:</strong> ${techName} | <strong>Материал:</strong> ${matName}</div>
             </div>
             
             <div class="qty-control">
@@ -679,15 +756,16 @@
       
       container.appendChild(partDiv);
       
-      if (part.geometry) render3DPreview(part.id, part.geometry);
+      if (part.geometry) renderSmallPreview(part.id, part.geometry);
       document.getElementById('partsCount').textContent = parts.length;
     }
 
-    function render3DPreview(partId, geometry) {
+    function renderSmallPreview(partId, geometry) {
       const container = document.getElementById(`preview-${partId}`);
       if (!container) return;
       
-      container.innerHTML = '';
+      container.innerHTML = '<div class="preview-hint">🔍 Нажми для просмотра</div>';
+      
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -710,21 +788,90 @@
       );
       camera.position.z = maxDim * 2.5;
 
+      // НЕ вращаем автоматически!
       function animate() {
         if (!document.getElementById(`preview-${partId}`)) return;
         requestAnimationFrame(animate);
-        mesh.rotation.x += 0.01;
-        mesh.rotation.y += 0.01;
         renderer.render(scene, camera);
       }
       animate();
+    }
+
+    function openViewer(partId) {
+      const part = parts.find(p => p.id === partId);
+      if (!part || !part.geometry) {
+        alert('3D просмотр доступен только для STL/OBJ файлов');
+        return;
+      }
+      
+      currentViewerPart = part;
+      document.getElementById('viewerModal').classList.add('show');
+      
+      const container = document.getElementById('viewerContainer');
+      container.innerHTML = '';
+      
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf8f9fa);
+      
+      const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      const material = new THREE.MeshPhongMaterial({ color: 0x0066CC, flatShading: true });
+      const mesh = new THREE.Mesh(part.geometry, material);
+      mesh.castShadow = true;
+      scene.add(mesh);
+
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(5, 5, 5);
+      light.castShadow = true;
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+      const maxDim = Math.max(
+        part.geometry.boundingBox.max.x - part.geometry.boundingBox.min.x,
+        part.geometry.boundingBox.max.y - part.geometry.boundingBox.min.y,
+        part.geometry.boundingBox.max.z - part.geometry.boundingBox.min.z
+      );
+      camera.position.z = maxDim * 3;
+      camera.position.y = maxDim;
+      controls.target.set(0, 0, 0);
+
+      function animate() {
+        if (!document.getElementById('viewerModal').classList.contains('show')) return;
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+      
+      window.addEventListener('resize', function onResize() {
+        if (!document.getElementById('viewerModal').classList.contains('show')) {
+          window.removeEventListener('resize', onResize);
+          return;
+        }
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+    }
+
+    function closeViewerModal() {
+      document.getElementById('viewerModal').classList.remove('show');
+      currentViewerPart = null;
     }
 
     function updateQty(partId, qty) {
       const part = parts.find(p => p.id === partId);
       if (part) {
         part.qty = parseInt(qty);
-        calculatePrice(part);
+        calculatePartData(part);
         updateSummary();
       }
     }
@@ -735,11 +882,12 @@
       if (!part) return;
 
       document.getElementById('technology').value = part.params.technology;
+      updateMaterials();
       document.getElementById('material').value = part.params.material;
-      document.getElementById('tolerance').value = part.params.tolerance;
-      document.getElementById('roughness').value = part.params.roughness;
+      document.getElementById('layerHeight').value = part.params.layerHeight || '0.2';
+      document.getElementById('infill').value = part.params.infill || '20';
       document.getElementById('quantity').value = part.qty;
-      document.getElementById('marking').checked = part.params.marking;
+      document.getElementById('marking').checked = part.params.marking || false;
       
       document.getElementById('paramsModal').classList.add('show');
     }
@@ -755,15 +903,15 @@
       if (!part) return;
 
       const postprocess = [];
-      ['anodizing', 'painting', 'nickel', 'polishing'].forEach(id => {
+      ['supportRemoval', 'sanding', 'priming', 'painting', 'vaporSmoothing', 'dyeing'].forEach(id => {
         if (document.getElementById(id).checked) postprocess.push(id);
       });
 
       part.params = {
         technology: document.getElementById('technology').value,
         material: document.getElementById('material').value,
-        tolerance: document.getElementById('tolerance').value,
-        roughness: document.getElementById('roughness').value,
+        layerHeight: document.getElementById('layerHeight').value,
+        infill: document.getElementById('infill').value,
         postprocess: postprocess,
         marking: document.getElementById('marking').checked,
         markingText: document.getElementById('markingText').value,
@@ -771,7 +919,7 @@
       };
 
       part.qty = part.params.quantity;
-      calculatePrice(part);
+      calculatePartData(part);
       
       const oldDiv = document.getElementById(`part-${part.id}`);
       if (oldDiv) oldDiv.remove();
@@ -819,22 +967,52 @@
     function updateSummary() {
       const totalParts = parts.length;
       const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+      const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
       const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
       
       document.getElementById('totalParts').textContent = totalParts;
       document.getElementById('totalQty').textContent = totalQty + ' шт.';
+      document.getElementById('totalWeight').textContent = totalWeight.toFixed(1) + ' г';
       document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + ' ₽';
-      document.getElementById('leadTime').textContent = totalParts > 0 ? '5-7 дней' : '—';
+      document.getElementById('leadTime').textContent = totalParts > 0 ? '3-7 дней' : '—';
     }
 
-    function getTechName(tech) {
-      const names = { 'cnc': 'ЧПУ фрезерование', 'cnc-turning': 'ЧПУ токарная', '3d-fdm': '3D FDM', '3d-sla': '3D SLA', 'laser': 'Лазер' };
-      return names[tech] || tech;
-    }
-
-    function getMaterialName(mat) {
-      const names = { 'aluminum': 'Алюминий', 'steel': 'Сталь', 'stainless': 'Нержавейка', 'titanium': 'Титан', 'pla': 'PLA', 'abs': 'ABS' };
-      return names[mat] || mat;
+    function saveToProjects() {
+      if (parts.length === 0) {
+        alert('Загрузите хотя бы одну деталь');
+        return;
+      }
+      
+      const project = {
+        id: Date.now(),
+        quoteNumber: quoteNumber,
+        date: quoteDate,
+        parts: JSON.parse(JSON.stringify(parts)),
+        totalWeight: document.getElementById('totalWeight').textContent,
+        totalPrice: document.getElementById('totalPrice').textContent,
+        leadTime: document.getElementById('leadTime').textContent,
+        status: 'Черновик'
+      };
+      
+      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+      projects.push(project);
+      localStorage.setItem('projects', JSON.stringify(projects));
+      
+      // Сброс текущего запроса
+      localStorage.removeItem('currentQuote');
+      parts = [];
+      document.getElementById('partsList').innerHTML = `
+        <div class="empty-state">
+          <p>Пока нет загруженных деталей</p>
+          <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+        </div>
+      `;
+      document.getElementById('partsCount').textContent = '0';
+      updateSummary();
+      initQuoteNumber();
+      
+      alert('Запрос сохранён в "Мои проекты"');
+      window.location.href = 'projects.html';
     }
 
     function checkout() {
@@ -842,7 +1020,105 @@
         alert('Загрузите хотя бы одну деталь');
         return;
       }
-      alert('Переход к оформлению заказа...');
+      
+      const order = {
+        id: Date.now(),
+        quoteNumber: quoteNumber,
+        date: quoteDate,
+        parts: JSON.parse(JSON.stringify(parts)),
+        totalWeight: document.getElementById('totalWeight').textContent,
+        totalPrice: document.getElementById('totalPrice').textContent,
+        leadTime: document.getElementById('leadTime').textContent,
+        status: 'Новый',
+        orderDate: new Date().toLocaleString('ru-RU')
+      };
+      
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      orders.push(order);
+      localStorage.setItem('orders', JSON.stringify(orders));
+      
+      localStorage.removeItem('currentQuote');
+      parts = [];
+      document.getElementById('partsList').innerHTML = `
+        <div class="empty-state">
+          <p>Пока нет загруженных деталей</p>
+          <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+        </div>
+      `;
+      document.getElementById('partsCount').textContent = '0';
+      updateSummary();
+      initQuoteNumber();
+      
+      alert('Заказ оформлен! Переход в "Мои заказы"');
+      window.location.href = 'orders.html';
+    }
+
+    function downloadPDF() {
+      if (parts.length === 0) {
+        alert('Загрузите хотя бы одну деталь');
+        return;
+      }
+      
+      const doc = new jsPDF();
+      
+      // Заголовок
+      doc.setFontSize(20);
+      doc.setTextColor(0, 102, 204);
+      doc.text('DetalHub', 20, 20);
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Коммерческое предложение', 20, 35);
+      
+      // Номер и дата
+      doc.setFontSize(11);
+      doc.text(`Запрос №${quoteNumber}`, 20, 50);
+      doc.text(`Дата: ${quoteDate}`, 20, 57);
+      
+      // Таблица с деталями
+      let y = 70;
+      doc.setFontSize(14);
+      doc.text('Детали:', 20, y);
+      y += 10;
+      
+      parts.forEach((part, index) => {
+        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+        
+        doc.setFontSize(11);
+        doc.text(`${index + 1}. ${part.name}`, 20, y);
+        y += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Технология: ${techName} | Материал: ${matName}`, 25, y);
+        y += 6;
+        doc.text(`Размеры: ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм`, 25, y);
+        y += 6;
+        doc.text(`Вес: ${part.weight} г | Объем: ${part.volume.toFixed(2)} см³`, 25, y);
+        y += 6;
+        doc.text(`Количество: ${part.qty} шт. | Цена: ${part.price.toLocaleString()} ₽`, 25, y);
+        y += 12;
+        doc.setTextColor(0, 0, 0);
+      });
+      
+      // Итого
+      y += 5;
+      doc.setFontSize(12);
+      doc.setTextColor(0, 102, 204);
+      doc.text(`Общий вес: ${document.getElementById('totalWeight').textContent}`, 20, y);
+      y += 8;
+      doc.text(`Срок изготовления: ${document.getElementById('leadTime').textContent}`, 20, y);
+      y += 10;
+      doc.setFontSize(14);
+      doc.text(`Итого: ${document.getElementById('totalPrice').textContent}`, 20, y);
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text('DetalHub — изготовление деталей по чертежу', 20, 280);
+      doc.text('detalhub.com', 20, 285);
+      
+      doc.save(`KP_${quoteNumber}.pdf`);
     }
 
     function logout() {
@@ -852,6 +1128,10 @@
 
     document.getElementById('paramsModal')?.addEventListener('click', function(e) {
       if (e.target === this) closeModal();
+    });
+    
+    document.getElementById('viewerModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeViewerModal();
     });
   </script>
 
