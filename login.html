@@ -1,139 +1,595 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вход в DetalHub — мгновенный расчёт деталей</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет — DetalHub</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background: #f5f7fa; min-height: 100vh; display: flex; flex-direction: column; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #f8f9fa; color: #111; line-height: 1.6; }
     
-    header { background: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e1e4e8; }
-    .logo { font-size: 1.5rem; font-weight: 700; color: #2563eb; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
-    .language { color: #666; font-size: 0.9rem; }
+    .header {
+      background: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
     
-    .main-container { flex: 1; display: flex; max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; gap: 3rem; width: 100%; }
+    .logo {
+      max-width: 200px;
+      height: auto;
+    }
     
-    .left-section { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .hero-text h1 { font-size: 2.2rem; color: #1a1a1a; margin-bottom: 1rem; line-height: 1.3; }
-    .hero-text p { font-size: 1.1rem; color: #666; margin-bottom: 2rem; line-height: 1.6; }
+    .header-nav a {
+      color: #0066CC;
+      text-decoration: none;
+      margin-left: 2rem;
+      font-weight: 500;
+    }
     
-    .features { list-style: none; }
-    .features li { padding: 0.8rem 0; display: flex; align-items: flex-start; gap: 0.8rem; }
-    .features li strong { color: #1a1a1a; font-weight: 600; }
-    .features li span { color: #666; }
-    .icon { width: 24px; height: 24px; background: #2563eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; flex-shrink: 0; }
+    .header-nav a:hover { text-decoration: underline; }
     
-    .right-section { flex: 1; max-width: 450px; }
-    .login-box { background: #fff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .login-box h2 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #1a1a1a; }
-    .login-box p { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
     
-    .form-group { margin-bottom: 1.2rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #333; font-size: 0.9rem; }
-    .form-group input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
-    .form-group input:focus { outline: none; border-color: #2563eb; }
+    .page-title {
+      font-size: 1.8rem;
+      color: #0066CC;
+      margin-bottom: 0.5rem;
+    }
     
-    .btn-primary { width: 100%; padding: 0.9rem; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 0.5rem; }
-    .btn-primary:hover { background: #1d4ed8; }
+    .page-subtitle {
+      color: #666;
+      margin-bottom: 2rem;
+    }
     
-    .divider { text-align: center; margin: 1.5rem 0; color: #999; font-size: 0.9rem; position: relative; }
-    .divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e1e4e8; }
-    .divider span { background: #fff; padding: 0 1rem; position: relative; }
+    .upload-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
     
-    .btn-google { width: 100%; padding: 0.75rem; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.2s; }
-    .btn-google:hover { background: #f9fafb; }
+    .upload-area {
+      border: 2px dashed #0066CC;
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      text-align: center;
+      background: #f0f7ff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
     
-    .trust-badge { text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: #666; display: flex; align-items: center; justify-content: center; gap: 0.3rem; }
-    .trust-badge svg { width: 16px; height: 16px; color: #10b981; }
+    .upload-area:hover {
+      background: #e0f0ff;
+      border-color: #0052A3;
+    }
     
-    footer { text-align: center; padding: 2rem; color: #999; font-size: 0.85rem; }
-    footer a { color: #2563eb; text-decoration: none; }
+    .upload-area input[type="file"] {
+      display: none;
+    }
     
-    @media (max-width: 968px) {
-      .main-container { flex-direction: column; padding: 2rem 1rem; }
-      .right-section { max-width: 100%; }
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .parts-list {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    .part-item {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    
+    .part-item:last-child { border-bottom: none; }
+    
+    .part-info h3 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    
+    .part-meta {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .part-actions {
+      display: flex;
+      gap: 0.7rem;
+    }
+    
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: #0066CC;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0052A3;
+    }
+    
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+    
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal.show { display: flex; }
+    
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-header h3 { color: #0066CC; }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+    
+    .close-btn:hover { color: #333; }
+    
+    .form-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-section h4 {
+      color: #333;
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+    
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 1rem; text-align: center; }
+      .header-nav a { margin: 0 0.5rem; }
+      .part-item { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <a href="/" class="logo">⚙️ DetalHub</a>
-    <div class="language">RU | <a href="#" style="color:#999;text-decoration:none;margin-left:0.5rem;">EN</a></div>
-  </header>
+  <div class="header">
+    <img src="logo.svg" alt="DetalHub" class="logo">
+    <nav class="header-nav">
+      <a href="index.html">← На главную</a>
+      <a href="#" onclick="logout()">Выйти</a>
+    </nav>
+  </div>
 
-  <div class="main-container">
-    <div class="left-section">
-      <div class="hero-text">
-        <h1>Получите мгновенный расчёт стоимости деталей</h1>
-        <p>Загрузите 3D-модель — получите цену за секунды. ЧПУ, 3D-печать, лазерная резка.</p>
-      </div>
-      
-      <ul class="features">
-        <li>
-          <div class="icon">⚡</div>
-          <div><strong>Мгновенный расчёт</strong><br><span>AI-алгоритм анализирует геометрию и подбирает оптимальную технологию</span></div>
-        </li>
-        <li>
-          <div class="icon"></div>
-          <div><strong>Полная конфиденциальность</strong><br><span>Все файлы защищены NDA и шифрованием</span></div>
-        </li>
-        <li>
-          <div class="icon">👥</div>
-          <div><strong>Командная работа</strong><br><span>Делитесь проектами с коллегами и управляйте заказами вместе</span></div>
-        </li>
-      </ul>
+  <div class="container">
+    <h1 class="page-title">Личный кабинет</h1>
+    <p class="page-subtitle">Загрузите чертёж и рассчитайте стоимость изготовления</p>
+
+    <div class="upload-section">
+      <label class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".step,.stp,.dxf,.pdf,.stl" onchange="handleFileUpload(this)">
+        <div class="upload-icon">📁</div>
+        <h3>Загрузить файл</h3>
+        <p>Перетащите файл сюда или нажмите для выбора<br>
+        <small>Поддерживаемые форматы: .step, .stp, .dxf, .pdf, .stl</small></p>
+      </label>
     </div>
 
-    <div class="right-section">
-      <div class="login-box">
-        <h2>Вход в личный кабинет</h2>
-        <p>Войдите или создайте аккаунт для расчёта стоимости</p>
-        
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="you@company.com" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="password">Пароль</label>
-            <input type="password" id="password" placeholder="••••••••" required>
-          </div>
-          
-          <button type="submit" class="btn-primary">Войти</button>
-        </form>
-        
-        <div class="divider"><span>или</span></div>
-        
-        <button class="btn-google">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.252-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.355l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.159 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
-          Войти через Google
-        </button>
-        
-        <div class="trust-badge">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-          Все загрузки защищены и конфиденциальны
-        </div>
+    <h2 style="margin-bottom: 1rem; color: #333;">Ваши детали</h2>
+    
+    <div id="partsList" class="parts-list">
+      <div class="empty-state">
+        <p>Пока нет загруженных деталей</p>
+        <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
       </div>
     </div>
   </div>
 
-  <footer>
-    © 2026 DetalHub. Все права защищены. | <a href="/about.html">О нас</a> | <a href="#">Политика конфиденциальности</a>
-  </footer>
+  <!-- Модальное окно параметров -->
+  <div id="paramsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Параметры изготовления</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      
+      <form id="paramsForm">
+        <div class="form-section">
+          <h4>🔧 Технология и материал</h4>
+          <div class="form-group">
+            <label>Технология изготовления</label>
+            <select id="technology">
+              <option value="cnc">ЧПУ фрезерование</option>
+              <option value="cnc-turning">ЧПУ токарная обработка</option>
+              <option value="3d-fdm">3D-печать FDM</option>
+              <option value="3d-sla">3D-печать SLA</option>
+              <option value="laser">Лазерная резка</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Материал</label>
+            <select id="material">
+              <option value="aluminum">Алюминий АД31</option>
+              <option value="aluminum-d16">Дюралюминий Д16</option>
+              <option value="steel">Сталь Ст3</option>
+              <option value="steel-45">Сталь 45</option>
+              <option value="stainless">Нержавеющая сталь 304</option>
+              <option value="titanium">Титан</option>
+              <option value="brass">Латунь</option>
+              <option value="pla">PLA (3D-печать)</option>
+              <option value="abs">ABS (3D-печать)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>📐 Допуски и качество</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Допуски</label>
+              <select id="tolerance">
+                <option value="standard">Стандартные (±0.1 мм)</option>
+                <option value="precise">Повышенные (±0.05 мм)</option>
+                <option value="high">Высокие (±0.02 мм)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Шероховатость поверхности</label>
+              <select id="roughness">
+                <option value="Ra3.2">Ra 3.2 (стандарт)</option>
+                <option value="Ra1.6">Ra 1.6 (улучшенная)</option>
+                <option value="Ra0.8">Ra 0.8 (высокая)</option>
+                <option value="Ra0.4">Ra 0.4 (прецизионная)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>🎨 Постобработка</h4>
+          <div class="checkbox-group">
+            <input type="checkbox" id="anodizing" name="postprocess">
+            <label for="anodizing">Анодирование</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="painting" name="postprocess">
+            <label for="painting">Покраска</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="nickel" name="postprocess">
+            <label for="nickel">Никелирование</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="polishing" name="postprocess">
+            <label for="polishing">Полировка</label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>🏷️ Маркировка</h4>
+          <div class="checkbox-group">
+            <input type="checkbox" id="marking" name="marking">
+            <label for="marking">Нанести маркировку/гравировку</label>
+          </div>
+          <div class="form-group" id="markingTextGroup" style="display:none; margin-top: 0.5rem;">
+            <input type="text" id="markingText" placeholder="Текст маркировки">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h4>📊 Количество</h4>
+          <div class="form-group">
+            <label>Количество деталей</label>
+            <input type="number" id="quantity" min="1" value="1">
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="saveParams()" style="width: 100%;">
+          Сохранить параметры
+        </button>
+      </form>
+    </div>
+  </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      // Временная имитация входа — позже подключим реальную авторизацию
-      localStorage.setItem('detalhub_user', JSON.stringify({
-        email: document.getElementById('email').value,
-        loggedIn: true
-      }));
-      window.location.href = 'dashboard.html';
+    let parts = [];
+    let currentPartId = null;
+
+    // Показ/скрытие поля для текста маркировки
+    document.getElementById('marking')?.addEventListener('change', function() {
+      const textGroup = document.getElementById('markingTextGroup');
+      if (textGroup) {
+        textGroup.style.display = this.checked ? 'block' : 'none';
+      }
+    });
+
+    function handleFileUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const part = {
+        id: Date.now(),
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        uploadDate: new Date().toLocaleDateString('ru-RU'),
+        params: {
+          technology: 'cnc',
+          material: 'aluminum',
+          tolerance: 'standard',
+          roughness: 'Ra3.2',
+          postprocess: [],
+          marking: false,
+          markingText: '',
+          quantity: 1
+        }
+      };
+
+      parts.push(part);
+      renderParts();
+      input.value = '';
+    }
+
+    function renderParts() {
+      const container = document.getElementById('partsList');
+      
+      if (parts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Пока нет загруженных деталей</p>
+            <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = parts.map(part => `
+        <div class="part-item" data-id="${part.id}">
+          <div class="part-info">
+            <h3>📄 ${part.name}</h3>
+            <div class="part-meta">
+              Размер: ${part.size} | Загружено: ${part.uploadDate}<br>
+              <strong>Технология:</strong> ${getTechName(part.params.technology)} | 
+              <strong>Материал:</strong> ${getMaterialName(part.params.material)} | 
+              <strong>Кол-во:</strong> ${part.params.quantity} шт.
+            </div>
+          </div>
+          <div class="part-actions">
+            <button class="btn btn-primary btn-small" onclick="openParams(${part.id})">
+              Изменить параметры
+            </button>
+            <button class="btn btn-secondary btn-small" onclick="duplicatePart(${part.id})">
+              Дублировать
+            </button>
+            <button class="btn btn-danger btn-small" onclick="deletePart(${part.id})">
+              Удалить
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getTechName(tech) {
+      const names = {
+        'cnc': 'ЧПУ фрезерование',
+        'cnc-turning': 'ЧПУ токарная',
+        '3d-fdm': '3D-печать FDM',
+        '3d-sla': '3D-печать SLA',
+        'laser': 'Лазерная резка'
+      };
+      return names[tech] || tech;
+    }
+
+    function getMaterialName(material) {
+      const names = {
+        'aluminum': 'Алюминий',
+        'aluminum-d16': 'Дюралюминий',
+        'steel': 'Сталь Ст3',
+        'steel-45': 'Сталь 45',
+        'stainless': 'Нержавейка 304',
+        'titanium': 'Титан',
+        'brass': 'Латунь',
+        'pla': 'PLA',
+        'abs': 'ABS'
+      };
+      return names[material] || material;
+    }
+
+    function openParams(partId) {
+      currentPartId = partId;
+      const part = parts.find(p => p.id === partId);
+      if (!part) return;
+
+      document.getElementById('technology').value = part.params.technology;
+      document.getElementById('material').value = part.params.material;
+      document.getElementById('tolerance').value = part.params.tolerance;
+      document.getElementById('roughness').value = part.params.roughness;
+      document.getElementById('quantity').value = part.params.quantity;
+      document.getElementById('marking').checked = part.params.marking;
+      document.getElementById('markingText').value = part.params.markingText || '';
+      
+      document.getElementById('paramsModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('paramsModal').classList.remove('show');
+      currentPartId = null;
+    }
+
+    function saveParams() {
+      if (!currentPartId) return;
+      
+      const part = parts.find(p => p.id === currentPartId);
+      if (!part) return;
+
+      const postprocess = [];
+      document.querySelectorAll('input[name="postprocess"]:checked').forEach(cb => {
+        postprocess.push(cb.id);
+      });
+
+      part.params = {
+        technology: document.getElementById('technology').value,
+        material: document.getElementById('material').value,
+        tolerance: document.getElementById('tolerance').value,
+        roughness: document.getElementById('roughness').value,
+        postprocess: postprocess,
+        marking: document.getElementById('marking').checked,
+        markingText: document.getElementById('markingText').value,
+        quantity: parseInt(document.getElementById('quantity').value) || 1
+      };
+
+      renderParts();
+      closeModal();
+    }
+
+    function deletePart(partId) {
+      if (confirm('Удалить эту деталь?')) {
+        parts = parts.filter(p => p.id !== partId);
+        renderParts();
+      }
+    }
+
+    function duplicatePart(partId) {
+      const part = parts.find(p => p.id === partId);
+      if (!part) return;
+
+      const newPart = {
+        ...part,
+        id: Date.now(),
+        name: 'Копия: ' + part.name
+      };
+
+      parts.push(newPart);
+      renderParts();
+    }
+
+    function logout() {
+      if (confirm('Выйти из кабинета?')) {
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Закрытие модального окна при клике вне его
+    document.getElementById('paramsModal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
     });
   </script>
 
