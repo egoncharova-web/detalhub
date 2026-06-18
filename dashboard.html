@@ -534,667 +534,879 @@
     </div>
   </div>
 
-  <script>
-    // Проверка авторизации
-    if (!localStorage.getItem('isLoggedIn')) {
-      window.location.href = 'auth.html';
-    }
+<script>
+    // ==========================================
+    // КОНФИГУРАЦИЯ
+    // ==========================================
+    const UPLOAD_FUNCTION_URL = 'https://functions.yandexcloud.net/d4eqokbiu4la1oanhl8n';
+    const CALCULATE_FUNCTION_URL = 'https://functions.yandexcloud.net/d4e755lj4gn6mkc75ags';
+    
+    // Настройки базы данных
+    const DB_CONFIG = {
+        host: 'rc1a-8f0h7v8g9d91c84k.mdb.yandexcloud.net',
+        port: 6432,
+        database: 'detalhub',
+        user: 'detalhub_admin',
+        password: 'En2468@!' // ЗАМЕНИ на свой пароль!
+    };
 
+    // ==========================================
+    // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+    // ==========================================
     let parts = [];
     let currentPartId = null;
     let currentViewerPart = null;
     let quoteNumber = null;
     let quoteDate = null;
 
-    // Инициализация номера запроса
-    function initQuoteNumber() {
-      const savedQuote = localStorage.getItem('currentQuote');
-      if (savedQuote) {
-        const quote = JSON.parse(savedQuote);
-        quoteNumber = quote.number;
-        quoteDate = quote.date;
-      } else {
-        // Генерируем новый номер
-        const lastQuote = localStorage.getItem('lastQuoteNumber');
-        const newNumber = lastQuote ? parseInt(lastQuote) + 1 : 1000;
-        quoteNumber = newNumber;
-        quoteDate = new Date().toLocaleString('ru-RU');
-        
-        localStorage.setItem('lastQuoteNumber', quoteNumber);
-        localStorage.setItem('currentQuote', JSON.stringify({
-          number: quoteNumber,
-          date: quoteDate
-        }));
-      }
-      
-      document.getElementById('quoteNumber').textContent = quoteNumber;
-      document.getElementById('quoteDate').textContent = quoteDate;
+    // ==========================================
+    // ПРОВЕРКА АВТОРИЗАЦИИ
+    // ==========================================
+    if (!localStorage.getItem('isLoggedIn')) {
+        window.location.href = 'auth.html';
     }
 
-    // Материалы для каждой технологии
+    // ==========================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ==========================================
+    function initQuoteNumber() {
+        const savedQuote = localStorage.getItem('currentQuote');
+        if (savedQuote) {
+            const quote = JSON.parse(savedQuote);
+            quoteNumber = quote.number;
+            quoteDate = quote.date;
+        } else {
+            const lastQuote = localStorage.getItem('lastQuoteNumber');
+            const newNumber = lastQuote ? parseInt(lastQuote) + 1 : 1000;
+            quoteNumber = newNumber;
+            quoteDate = new Date().toLocaleString('ru-RU');
+            
+            localStorage.setItem('lastQuoteNumber', quoteNumber);
+            localStorage.setItem('currentQuote', JSON.stringify({
+                number: quoteNumber,
+                date: quoteDate
+            }));
+        }
+        
+        document.getElementById('quoteNumber').textContent = quoteNumber;
+        document.getElementById('quoteDate').textContent = quoteDate;
+    }
+
+    // ==========================================
+    // МАТЕРИАЛЫ И ТЕХНОЛОГИИ
+    // ==========================================
     const materials = {
-      fdm: [
-        { value: 'pla', name: 'PLA', density: 1.24, price: 15 },
-        { value: 'abs', name: 'ABS', density: 1.04, price: 18 },
-        { value: 'petg', name: 'PETG', density: 1.27, price: 20 },
-        { value: 'nylon', name: 'Nylon (PA)', density: 1.15, price: 25 },
-        { value: 'tpu', name: 'TPU (гибкий)', density: 1.25, price: 30 }
-      ],
-      sla: [
-        { value: 'standard-resin', name: 'Стандартная смола', density: 1.1, price: 35 },
-        { value: 'tough-resin', name: 'Прочная смола', density: 1.15, price: 45 },
-        { value: 'flexible-resin', name: 'Гибкая смола', density: 1.1, price: 50 },
-        { value: 'castable-resin', name: 'Литьевая смола', density: 1.2, price: 55 }
-      ],
-      sls: [
-        { value: 'pa12', name: 'PA12 (нейлон)', density: 1.01, price: 60 },
-        { value: 'pa11', name: 'PA11 (нейлон)', density: 1.03, price: 65 },
-        { value: 'pa-gf', name: 'PA12 GF (стеклонаполненный)', density: 1.25, price: 75 }
-      ],
-      mjf: [
-        { value: 'pa12-mjf', name: 'PA12 (HP MJF)', density: 1.01, price: 70 },
-        { value: 'pa11-mjf', name: 'PA11 (HP MJF)', density: 1.03, price: 80 }
-      ]
+        fdm: [
+            { value: 'pla', name: 'PLA', density: 1.24, price: 15 },
+            { value: 'abs', name: 'ABS', density: 1.04, price: 18 },
+            { value: 'petg', name: 'PETG', density: 1.27, price: 20 },
+            { value: 'nylon', name: 'Nylon (PA)', density: 1.15, price: 25 },
+            { value: 'tpu', name: 'TPU (гибкий)', density: 1.25, price: 30 }
+        ],
+        sla: [
+            { value: 'standard-resin', name: 'Стандартная смола', density: 1.1, price: 35 },
+            { value: 'tough-resin', name: 'Прочная смола', density: 1.15, price: 45 },
+            { value: 'flexible-resin', name: 'Гибкая смола', density: 1.1, price: 50 },
+            { value: 'castable-resin', name: 'Литьевая смола', density: 1.2, price: 55 }
+        ],
+        sls: [
+            { value: 'pa12', name: 'PA12 (нейлон)', density: 1.01, price: 60 },
+            { value: 'pa11', name: 'PA11 (нейлон)', density: 1.03, price: 65 },
+            { value: 'pa-gf', name: 'PA12 GF (стеклонаполненный)', density: 1.25, price: 75 }
+        ],
+        mjf: [
+            { value: 'pa12-mjf', name: 'PA12 (HP MJF)', density: 1.01, price: 70 },
+            { value: 'pa11-mjf', name: 'PA11 (HP MJF)', density: 1.03, price: 80 }
+        ]
     };
 
-    // Инициализация
+    // ==========================================
+    // ОБРАБОТКА ЗАГРУЗКИ ФАЙЛОВ
+    // ==========================================
+    async function handleFileUpload(input) {
+        const files = input.files;
+        if (!files.length) return;
+
+        for (const file of files) {
+            try {
+                showLoading(file.name);
+                
+                // Читаем файл как Base64
+                const fileData = await readFileAsBase64(file);
+                
+                // Отправляем в Object Storage
+                const uploadResult = await uploadToStorage(file.name, fileData, file.type);
+                
+                // Создаём объект детали
+                const part = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                    uploadDate: new Date().toLocaleDateString('ru-RU'),
+                    qty: 1,
+                    fileUrl: uploadResult.fileUrl || uploadResult.Location,
+                    params: {
+                        technology: 'fdm',
+                        material: 'pla',
+                        layerHeight: '0.2',
+                        infill: '20',
+                        postprocess: [],
+                        marking: false,
+                        quantity: 1
+                    },
+                    dimensions: { x: 0, y: 0, z: 0 },
+                    volume: 0,
+                    weight: 0,
+                    price: 0,
+                    quoteId: null
+                };
+
+                // Если STL — читаем размеры
+                if (file.name.toLowerCase().endsWith('.stl') || file.name.toLowerCase().endsWith('.obj')) {
+                    const dimensions = await getSTLDimensions(fileData);
+                    part.dimensions = dimensions;
+                    part.volume = await calculateVolumeFromSTL(fileData);
+                }
+
+                // Считаем стоимость через функцию
+                await calculatePrice(part);
+                
+                parts.push(part);
+                renderPart(part);
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                alert('Ошибка загрузки файла: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        updateSummary();
+        input.value = '';
+    }
+
+    // ==========================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ==========================================
+    function readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function uploadToStorage(fileName, fileData, contentType) {
+        const response = await fetch(UPLOAD_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                body: fileData,
+                fileName: fileName,
+                contentType: contentType
+            })
+        });
+
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        return await response.json();
+    }
+
+    async function getSTLDimensions(fileData) {
+        return new Promise((resolve) => {
+            const binaryString = atob(fileData);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const loader = new THREE.STLLoader();
+                    const geometry = loader.parse(e.target.result);
+                    geometry.computeBoundingBox();
+                    const box = geometry.boundingBox;
+                    
+                    resolve({
+                        x: (box.max.x - box.min.x).toFixed(1),
+                        y: (box.max.y - box.min.y).toFixed(1),
+                        z: (box.max.z - box.min.z).toFixed(1)
+                    });
+                } catch (err) {
+                    resolve({ x: '—', y: '—', z: '—' });
+                }
+            };
+            
+            reader.readAsArrayBuffer(blob);
+        });
+    }
+
+    async function calculateVolumeFromSTL(fileData) {
+        return new Promise((resolve) => {
+            const binaryString = atob(fileData);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const loader = new THREE.STLLoader();
+                    const geometry = loader.parse(e.target.result);
+                    let volume = 0;
+                    const positions = geometry.attributes.position.array;
+                    
+                    for (let i = 0; i < positions.length; i += 9) {
+                        const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
+                        const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
+                        const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
+                        
+                        volume += p1.dot(p2.cross(p3)) / 6.0;
+                    }
+                    
+                    resolve(Math.abs(volume));
+                } catch (err) {
+                    resolve(0);
+                }
+            };
+            
+            reader.readAsArrayBuffer(blob);
+        });
+    }
+
+    async function calculatePrice(part) {
+        try {
+            const response = await fetch(CALCULATE_FUNCTION_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    volume: part.volume,
+                    weight: 0,
+                    technology: part.params.technology,
+                    material: part.params.material,
+                    quantity: part.qty,
+                    fileName: part.name,
+                    userId: getCurrentUserId()
+                })
+            });
+
+            if (!response.ok) throw new Error('Ошибка расчёта');
+
+            const result = await response.json();
+            part.price = parseFloat(result.price) || 0;
+            part.quoteId = result.quoteId;
+            
+        } catch (error) {
+            console.error('Ошибка расчёта:', error);
+            // Fallback на локальный расчёт
+            const tech = part.params.technology;
+            const matValue = part.params.material;
+            const material = materials[tech].find(m => m.value === matValue);
+            
+            if (material) {
+                const infill = parseInt(part.params.infill) / 100;
+                part.weight = (part.volume * material.density * infill).toFixed(2);
+                const basePrice = part.volume * material.price * infill;
+                part.price = Math.max(500, Math.round(basePrice * part.qty));
+            } else {
+                part.price = 1000;
+            }
+        }
+    }
+
+    function getCurrentUserId() {
+        return localStorage.getItem('userId') || null;
+    }
+
+    function showLoading(fileName) {
+        const container = document.getElementById('partsList');
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-indicator';
+        loadingDiv.className = 'part-item';
+        loadingDiv.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #666;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                <p>Загрузка файла: ${fileName}</p>
+                <p style="font-size: 0.9rem; color: #999;">Пожалуйста, подождите...</p>
+            </div>
+        `;
+        container.appendChild(loadingDiv);
+    }
+
+    function hideLoading() {
+        const loading = document.getElementById('loading-indicator');
+        if (loading) loading.remove();
+    }
+
+    // ==========================================
+    // ОТРИСОВКА ДЕТАЛЕЙ
+    // ==========================================
+    function renderPart(part) {
+        const container = document.getElementById('partsList');
+        const empty = container.querySelector('.empty-state');
+        if (empty) empty.remove();
+
+        const partDiv = document.createElement('div');
+        partDiv.className = 'part-item';
+        partDiv.id = `part-${part.id}`;
+        
+        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+        
+        partDiv.innerHTML = `
+            <div class="part-grid">
+                <div class="part-preview" id="preview-${part.id}" onclick="openViewer(${part.id})">
+                    <div class="preview-hint">🔍 Нажми для просмотра</div>
+                </div>
+                <div class="part-info">
+                    <h3>📄 ${part.name}</h3>
+                    <div class="part-meta">
+                        <div><strong>Размер файла:</strong> ${part.size}</div>
+                        <div><strong>Габариты:</strong> ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм</div>
+                        <div><strong>Объем:</strong> ${part.volume.toFixed(2)} см³</div>
+                        <div><strong>Вес:</strong> ${part.weight} г</div>
+                        <div><strong>Технология:</strong> ${techName} | <strong>Материал:</strong> ${matName}</div>
+                        <div><strong>Цена:</strong> <span id="price-${part.id}">${part.price > 0 ? part.price.toLocaleString() + ' ₽' : '—'}</span></div>
+                    </div>
+                    
+                    <div class="qty-control">
+                        <label>Количество:</label>
+                        <input type="number" value="${part.qty}" min="1" onchange="updateQty(${part.id}, this.value)">
+                    </div>
+                    
+                    <div class="part-actions">
+                        <button class="btn btn-primary btn-small" onclick="openParams(${part.id})">✏️ Параметры</button>
+                        <button class="btn btn-secondary btn-small" onclick="duplicatePart(${part.id})">📋 Дублировать</button>
+                        <button class="btn btn-danger btn-small" onclick="deletePart(${part.id})">🗑 Удалить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(partDiv);
+        
+        if (part.fileUrl && (part.name.toLowerCase().endsWith('.stl') || part.name.toLowerCase().endsWith('.obj'))) {
+            renderSmallPreview(part.id, part.fileUrl);
+        }
+        
+        document.getElementById('partsCount').textContent = parts.length;
+    }
+
+    function renderSmallPreview(partId, fileUrl) {
+        const container = document.getElementById(`preview-${partId}`);
+        if (!container) return;
+        
+        container.innerHTML = '<div class="preview-hint">🔍 Нажми для просмотра</div>';
+        
+        fetch(fileUrl)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                const loader = new THREE.STLLoader();
+                const geometry = loader.parse(arrayBuffer);
+                
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(220, 170);
+                container.appendChild(renderer.domElement);
+
+                const material = new THREE.MeshPhongMaterial({ color: 0x808080, flatShading: true });
+                const mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(1, 1, 1);
+                scene.add(light);
+                scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+                const maxDim = Math.max(
+                    geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+                    geometry.boundingBox.max.y - geometry.boundingBox.min.y,
+                    geometry.boundingBox.max.z - geometry.boundingBox.min.z
+                );
+                camera.position.z = maxDim * 2.5;
+
+                function animate() {
+                    if (!document.getElementById(`preview-${partId}`)) return;
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                }
+                animate();
+            })
+            .catch(err => {
+                console.error('Ошибка загрузки 3D:', err);
+            });
+    }
+
+    // ==========================================
+    // 3D ПРОСМОТР
+    // ==========================================
+    function openViewer(partId) {
+        const part = parts.find(p => p.id === partId);
+        if (!part || !part.fileUrl) {
+            alert('3D просмотр доступен только для STL/OBJ файлов');
+            return;
+        }
+        
+        currentViewerPart = part;
+        document.getElementById('viewerModal').classList.add('show');
+        
+        const container = document.getElementById('viewerContainer');
+        container.innerHTML = '';
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf8f9fa);
+        
+        const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        fetch(part.fileUrl)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                const loader = new THREE.STLLoader();
+                const geometry = loader.parse(arrayBuffer);
+                
+                const material = new THREE.MeshPhongMaterial({ color: 0x0066CC, flatShading: true });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                scene.add(mesh);
+
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(5, 5, 5);
+                light.castShadow = true;
+                scene.add(light);
+                scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+                const maxDim = Math.max(
+                    geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+                    geometry.boundingBox.max.y - geometry.boundingBox.min.y,
+                    geometry.boundingBox.max.z - geometry.boundingBox.min.z
+                );
+                camera.position.z = maxDim * 3;
+                camera.position.y = maxDim;
+                controls.target.set(0, 0, 0);
+
+                function animate() {
+                    if (!document.getElementById('viewerModal').classList.contains('show')) return;
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+            });
+        
+        window.addEventListener('resize', function onResize() {
+            if (!document.getElementById('viewerModal').classList.contains('show')) {
+                window.removeEventListener('resize', onResize);
+                return;
+            }
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    }
+
+    function closeViewerModal() {
+        document.getElementById('viewerModal').classList.remove('show');
+        currentViewerPart = null;
+    }
+
+    // ==========================================
+    // УПРАВЛЕНИЕ ПАРАМЕТРАМИ
+    // ==========================================
+    function updateMaterials() {
+        const tech = document.getElementById('technology').value;
+        const materialSelect = document.getElementById('material');
+        materialSelect.innerHTML = '';
+        
+        materials[tech].forEach(mat => {
+            const option = document.createElement('option');
+            option.value = mat.value;
+            option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
+            materialSelect.appendChild(option);
+        });
+    }
+
+    function updateQty(partId, qty) {
+        const part = parts.find(p => p.id === partId);
+        if (part) {
+            part.qty = parseInt(qty);
+            calculatePrice(part).then(() => {
+                updateSummary();
+                const priceEl = document.getElementById(`price-${partId}`);
+                if (priceEl) priceEl.textContent = part.price.toLocaleString() + ' ₽';
+            });
+        }
+    }
+
+    function openParams(partId) {
+        currentPartId = partId;
+        const part = parts.find(p => p.id === partId);
+        if (!part) return;
+
+        document.getElementById('technology').value = part.params.technology;
+        updateMaterials();
+        document.getElementById('material').value = part.params.material;
+        document.getElementById('layerHeight').value = part.params.layerHeight || '0.2';
+        document.getElementById('infill').value = part.params.infill || '20';
+        document.getElementById('quantity').value = part.qty;
+        document.getElementById('marking').checked = part.params.marking || false;
+        
+        document.getElementById('paramsModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('paramsModal').classList.remove('show');
+        currentPartId = null;
+    }
+
+    async function saveParams() {
+        if (!currentPartId) return;
+        const part = parts.find(p => p.id === currentPartId);
+        if (!part) return;
+
+        const postprocess = [];
+        ['supportRemoval', 'sanding', 'priming', 'painting', 'vaporSmoothing', 'dyeing'].forEach(id => {
+            if (document.getElementById(id).checked) postprocess.push(id);
+        });
+
+        part.params = {
+            technology: document.getElementById('technology').value,
+            material: document.getElementById('material').value,
+            layerHeight: document.getElementById('layerHeight').value,
+            infill: document.getElementById('infill').value,
+            postprocess: postprocess,
+            marking: document.getElementById('marking').checked,
+            markingText: document.getElementById('markingText').value,
+            quantity: parseInt(document.getElementById('quantity').value) || 1
+        };
+
+        part.qty = part.params.quantity;
+        await calculatePrice(part);
+        
+        const oldDiv = document.getElementById(`part-${part.id}`);
+        if (oldDiv) oldDiv.remove();
+        renderPart(part);
+        updateSummary();
+        closeModal();
+    }
+
+    function deletePart(partId) {
+        if (confirm('Удалить деталь?')) {
+            parts = parts.filter(p => p.id !== partId);
+            const div = document.getElementById(`part-${partId}`);
+            if (div) div.remove();
+            
+            if (parts.length === 0) {
+                document.getElementById('partsList').innerHTML = `
+                    <div class="empty-state">
+                        <p>Пока нет загруженных деталей</p>
+                        <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('partsCount').textContent = parts.length;
+            updateSummary();
+        }
+    }
+
+    function duplicatePart(partId) {
+        const part = parts.find(p => p.id === partId);
+        if (!part) return;
+
+        const newPart = {
+            ...part,
+            id: Date.now() + Math.random(),
+            name: 'Копия: ' + part.name,
+            qty: 1
+        };
+
+        parts.push(newPart);
+        renderPart(newPart);
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const totalParts = parts.length;
+        const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+        const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
+        const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
+        
+        document.getElementById('totalParts').textContent = totalParts;
+        document.getElementById('totalQty').textContent = totalQty + ' шт.';
+        document.getElementById('totalWeight').textContent = totalWeight.toFixed(1) + ' г';
+        document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + ' ₽';
+        document.getElementById('leadTime').textContent = totalParts > 0 ? '3-7 дней' : '—';
+    }
+
+    // ==========================================
+    // СОХРАНЕНИЕ И ОФОРМЛЕНИЕ
+    // ==========================================
+    function saveToProjects() {
+        if (parts.length === 0) {
+            alert('Загрузите хотя бы одну деталь');
+            return;
+        }
+        
+        const project = {
+            id: Date.now(),
+            quoteNumber: quoteNumber,
+            date: quoteDate,
+            parts: JSON.parse(JSON.stringify(parts)),
+            totalWeight: document.getElementById('totalWeight').textContent,
+            totalPrice: document.getElementById('totalPrice').textContent,
+            leadTime: document.getElementById('leadTime').textContent,
+            status: 'Черновик'
+        };
+        
+        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+        projects.push(project);
+        localStorage.setItem('projects', JSON.stringify(projects));
+        
+        localStorage.removeItem('currentQuote');
+        parts = [];
+        document.getElementById('partsList').innerHTML = `
+            <div class="empty-state">
+                <p>Пока нет загруженных деталей</p>
+                <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+            </div>
+        `;
+        document.getElementById('partsCount').textContent = '0';
+        updateSummary();
+        initQuoteNumber();
+        
+        alert('Запрос сохранён в "Мои проекты"');
+        window.location.href = 'projects.html';
+    }
+
+    async function checkout() {
+        if (parts.length === 0) {
+            alert('Загрузите хотя бы одну деталь');
+            return;
+        }
+        
+        try {
+            // Здесь можно добавить сохранение заказа в базу данных
+            // Пока сохраняем в localStorage
+            const order = {
+                id: Date.now(),
+                quoteNumber: quoteNumber,
+                date: quoteDate,
+                parts: JSON.parse(JSON.stringify(parts)),
+                totalWeight: document.getElementById('totalWeight').textContent,
+                totalPrice: document.getElementById('totalPrice').textContent,
+                leadTime: document.getElementById('leadTime').textContent,
+                status: 'Новый',
+                orderDate: new Date().toLocaleString('ru-RU')
+            };
+            
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+            
+            localStorage.removeItem('currentQuote');
+            parts = [];
+            document.getElementById('partsList').innerHTML = `
+                <div class="empty-state">
+                    <p>Пока нет загруженных деталей</p>
+                    <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+                </div>
+            `;
+            document.getElementById('partsCount').textContent = '0';
+            updateSummary();
+            initQuoteNumber();
+            
+            alert('Заказ оформлен! Переход в "Мои заказы"');
+            window.location.href = 'orders.html';
+            
+        } catch (error) {
+            console.error('Ошибка оформления заказа:', error);
+            alert('Ошибка при оформлении заказа. Попробуйте ещё раз.');
+        }
+    }
+
+    function downloadPDF() {
+        if (parts.length === 0) {
+            alert('Загрузите хотя бы одну деталь');
+            return;
+        }
+        
+        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+        const totalParts = parts.length;
+        const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+        const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
+        const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
+        
+        let rowsHtml = '';
+        parts.forEach((part, index) => {
+            const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+            const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+            
+            rowsHtml += `
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${index + 1}</td>
+                    <td style="padding: 8px; border: 1px solid #ccc;">${part.name}</td>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${techName}</td>
+                    <td style="padding: 8px; border: 1px solid #ccc;">${matName}</td>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</td>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.weight} г</td>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.qty} шт.</td>
+                    <td style="padding: 8px; border: 1px solid #ccc; text-align: right;">${part.price.toLocaleString('ru-RU')} ₽</td>
+                </tr>
+            `;
+        });
+        
+        const template = document.createElement('div');
+        template.innerHTML = `
+            <div style="font-family: Arial, sans-serif; color: #000; padding: 15mm; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #0066CC; padding-bottom: 15px;">
+                    <div>
+                        <h1 style="color: #0066CC; font-size: 24px; margin: 0 0 5px 0;">DetalHub</h1>
+                        <div style="color: #666; font-size: 11px;">Изготовление деталей по чертежу</div>
+                        <div style="color: #666; font-size: 11px;">detalhub.com</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 18px; font-weight: bold; color: #0066CC;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</div>
+                        <div style="font-size: 13px; margin-top: 5px;">№ ${quoteNumber} от ${quoteDate}</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
+                        <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОСТАВЩИК:</div>
+                        <div style="font-size: 11px; line-height: 1.5;">
+                            <strong>DetalHub</strong><br>
+                            Инженер: Наталия<br>
+                            Email: info@detalhub.com<br>
+                            Сайт: detalhub.com
+                        </div>
+                    </div>
+                    <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
+                        <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОКУПАТЕЛЬ:</div>
+                        <div style="font-size: 11px; line-height: 1.5;">
+                            <strong>${profile.name || '—'}</strong><br>
+                            ${profile.company ? 'Компания: ' + profile.company + '<br>' : ''}
+                            ${profile.address ? 'Адрес: ' + profile.address + '<br>' : ''}
+                            ${profile.phone ? 'Тел: ' + profile.phone + '<br>' : ''}
+                            ${profile.email ? 'Email: ' + profile.email : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 style="color: #0066CC; font-size: 14px; margin-bottom: 10px;">Спецификация деталей:</h2>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px;">
+                    <thead>
+                        <tr style="background: #0066CC; color: white;">
+                            <th style="padding: 8px; border: 1px solid #ccc;">№</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Наименование</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Технология</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Материал</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Размеры</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Вес</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Кол-во</th>
+                            <th style="padding: 8px; border: 1px solid #ccc;">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f5f8ff; font-weight: bold;">
+                            <td colspan="5" style="padding: 8px; border: 1px solid #ccc; text-align: right;">ИТОГО:</td>
+                            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalWeight.toFixed(1)} г</td>
+                            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalQty} шт.</td>
+                            <td style="padding: 8px; border: 1px solid #ccc; text-align: right; font-size: 12px; color: #0066CC;">${totalPrice.toLocaleString('ru-RU')} ₽</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <div style="margin-bottom: 20px; padding: 12px; background: #fff8e1; border-left: 4px solid #f59e0b;">
+                    <div style="font-weight: bold; color: #d97706; margin-bottom: 6px;">УСЛОВИЯ:</div>
+                    <div style="font-size: 11px; line-height: 1.7;">
+                        ✓ Срок изготовления: ${document.getElementById('leadTime').textContent}<br>
+                        ✓ Общий вес деталей: ${totalWeight.toFixed(1)} г<br>
+                        ✓ Количество позиций: ${totalParts}<br>
+                        ✓ Срок действия предложения: 14 дней<br>
+                        ✓ Доставка: по всей России транспортными компаниями
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <div>
+                        <div style="font-size: 11px; color: #666;">С уважением,</div>
+                        <div style="font-weight: bold;">Инженер DetalHub</div>
+                        <div style="font-size: 11px; color: #666;">Наталия</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; color: #666;">Документ сформирован автоматически</div>
+                        <div style="font-size: 10px; color: #999;">detalhub.com</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        html2pdf().from(template).set({
+            margin: 0,
+            filename: 'KP_' + quoteNumber + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).save();
+    }
+
+    function updateMaterials() {
+        const tech = document.getElementById('technology').value;
+        const materialSelect = document.getElementById('material');
+        materialSelect.innerHTML = '';
+        
+        materials[tech].forEach(mat => {
+            const option = document.createElement('option');
+            option.value = mat.value;
+            option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
+            materialSelect.appendChild(option);
+        });
+    }
+
+    function logout() {
+        localStorage.removeItem('isLoggedIn');
+        window.location.href = 'auth.html';
+    }
+
+    // ==========================================
+    // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+    // ==========================================
     initQuoteNumber();
     updateMaterials();
 
     document.getElementById('marking')?.addEventListener('change', function() {
-      const group = document.getElementById('markingTextGroup');
-      if (group) group.style.display = this.checked ? 'block' : 'none';
+        const group = document.getElementById('markingTextGroup');
+        if (group) group.style.display = this.checked ? 'block' : 'none';
     });
 
-    function updateMaterials() {
-      const tech = document.getElementById('technology').value;
-      const materialSelect = document.getElementById('material');
-      materialSelect.innerHTML = '';
-      
-      materials[tech].forEach(mat => {
-        const option = document.createElement('option');
-        option.value = mat.value;
-        option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
-        materialSelect.appendChild(option);
-      });
-    }
-
-    function handleFileUpload(input) {
-      const files = input.files;
-      if (!files.length) return;
-
-      Array.from(files).forEach(file => {
-        const part = {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-          uploadDate: new Date().toLocaleDateString('ru-RU'),
-          qty: 1,
-          params: {
-            technology: 'fdm',
-            material: 'pla',
-            layerHeight: '0.2',
-            infill: '20',
-            postprocess: [],
-            marking: false,
-            quantity: 1
-          },
-          dimensions: { x: 0, y: 0, z: 0 },
-          volume: 0,
-          weight: 0,
-          price: 0
-        };
-
-        if (file.name.toLowerCase().endsWith('.stl') || file.name.toLowerCase().endsWith('.obj')) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const loader = new THREE.STLLoader();
-            const geometry = loader.parse(e.target.result);
-            geometry.computeBoundingBox();
-            const box = geometry.boundingBox;
-            
-            part.dimensions = {
-              x: (box.max.x - box.min.x).toFixed(1),
-              y: (box.max.y - box.min.y).toFixed(1),
-              z: (box.max.z - box.min.z).toFixed(1)
-            };
-            
-            part.volume = calculateVolume(geometry);
-            part.geometry = geometry;
-            
-            calculatePartData(part);
-            renderPart(part);
-          };
-          reader.readAsArrayBuffer(file);
-        } else {
-          part.dimensions = { x: '—', y: '—', z: '—' };
-          part.price = 1000;
-          renderPart(part);
-        }
-
-        parts.push(part);
-      });
-
-      updateSummary();
-      input.value = '';
-    }
-
-    function calculateVolume(geometry) {
-      let volume = 0;
-      const positions = geometry.attributes.position.array;
-      
-      for (let i = 0; i < positions.length; i += 9) {
-        const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
-        const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
-        const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
-        
-        volume += p1.dot(p2.cross(p3)) / 6.0;
-      }
-      
-      return Math.abs(volume);
-    }
-
-    function calculatePartData(part) {
-      const tech = part.params.technology;
-      const matValue = part.params.material;
-      const material = materials[tech].find(m => m.value === matValue);
-      
-      if (!material) return;
-      
-      // Вес = объем * плотность * заполнение / 100
-      const infill = parseInt(part.params.infill) / 100;
-      part.weight = (part.volume * material.density * infill).toFixed(2);
-      
-      // Цена = объем * цена материала * заполнение * количество
-      const basePrice = part.volume * material.price * infill;
-      part.price = Math.max(500, Math.round(basePrice * part.qty));
-    }
-
-    function renderPart(part) {
-      const container = document.getElementById('partsList');
-      const empty = container.querySelector('.empty-state');
-      if (empty) empty.remove();
-
-      const partDiv = document.createElement('div');
-      partDiv.className = 'part-item';
-      partDiv.id = `part-${part.id}`;
-      
-      const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-      const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-      
-      partDiv.innerHTML = `
-        <div class="part-grid">
-          <div class="part-preview" id="preview-${part.id}" onclick="openViewer(${part.id})">
-            <div class="preview-hint">🔍 Нажми для просмотра</div>
-          </div>
-          <div class="part-info">
-            <h3>📄 ${part.name}</h3>
-            <div class="part-meta">
-              <div><strong>Размер файла:</strong> ${part.size}</div>
-              <div><strong>Габариты:</strong> ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм</div>
-              <div><strong>Объем:</strong> ${part.volume.toFixed(2)} см³</div>
-              <div><strong>Вес:</strong> ${part.weight} г</div>
-              <div><strong>Технология:</strong> ${techName} | <strong>Материал:</strong> ${matName}</div>
-            </div>
-            
-            <div class="qty-control">
-              <label>Количество:</label>
-              <input type="number" value="${part.qty}" min="1" onchange="updateQty(${part.id}, this.value)">
-            </div>
-            
-            <div class="part-actions">
-              <button class="btn btn-primary btn-small" onclick="openParams(${part.id})">✏️ Параметры</button>
-              <button class="btn btn-secondary btn-small" onclick="duplicatePart(${part.id})">📋 Дублировать</button>
-              <button class="btn btn-danger btn-small" onclick="deletePart(${part.id})">🗑 Удалить</button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      container.appendChild(partDiv);
-      
-      if (part.geometry) renderSmallPreview(part.id, part.geometry);
-      document.getElementById('partsCount').textContent = parts.length;
-    }
-
-    function renderSmallPreview(partId, geometry) {
-      const container = document.getElementById(`preview-${partId}`);
-      if (!container) return;
-      
-      container.innerHTML = '<div class="preview-hint">🔍 Нажми для просмотра</div>';
-      
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(220, 170);
-      container.appendChild(renderer.domElement);
-
-      const material = new THREE.MeshPhongMaterial({ color: 0x808080, flatShading: true });
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-
-      const light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(1, 1, 1);
-      scene.add(light);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-      const maxDim = Math.max(
-        geometry.boundingBox.max.x - geometry.boundingBox.min.x,
-        geometry.boundingBox.max.y - geometry.boundingBox.min.y,
-        geometry.boundingBox.max.z - geometry.boundingBox.min.z
-      );
-      camera.position.z = maxDim * 2.5;
-
-      // НЕ вращаем автоматически!
-      function animate() {
-        if (!document.getElementById(`preview-${partId}`)) return;
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-      }
-      animate();
-    }
-
-    function openViewer(partId) {
-      const part = parts.find(p => p.id === partId);
-      if (!part || !part.geometry) {
-        alert('3D просмотр доступен только для STL/OBJ файлов');
-        return;
-      }
-      
-      currentViewerPart = part;
-      document.getElementById('viewerModal').classList.add('show');
-      
-      const container = document.getElementById('viewerContainer');
-      container.innerHTML = '';
-      
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xf8f9fa);
-      
-      const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.shadowMap.enabled = true;
-      container.appendChild(renderer.domElement);
-
-      const controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-
-      const material = new THREE.MeshPhongMaterial({ color: 0x0066CC, flatShading: true });
-      const mesh = new THREE.Mesh(part.geometry, material);
-      mesh.castShadow = true;
-      scene.add(mesh);
-
-      const light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(5, 5, 5);
-      light.castShadow = true;
-      scene.add(light);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-      const maxDim = Math.max(
-        part.geometry.boundingBox.max.x - part.geometry.boundingBox.min.x,
-        part.geometry.boundingBox.max.y - part.geometry.boundingBox.min.y,
-        part.geometry.boundingBox.max.z - part.geometry.boundingBox.min.z
-      );
-      camera.position.z = maxDim * 3;
-      camera.position.y = maxDim;
-      controls.target.set(0, 0, 0);
-
-      function animate() {
-        if (!document.getElementById('viewerModal').classList.contains('show')) return;
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-      }
-      animate();
-      
-      window.addEventListener('resize', function onResize() {
-        if (!document.getElementById('viewerModal').classList.contains('show')) {
-          window.removeEventListener('resize', onResize);
-          return;
-        }
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-      });
-    }
-
-    function closeViewerModal() {
-      document.getElementById('viewerModal').classList.remove('show');
-      currentViewerPart = null;
-    }
-
-    function updateQty(partId, qty) {
-      const part = parts.find(p => p.id === partId);
-      if (part) {
-        part.qty = parseInt(qty);
-        calculatePartData(part);
-        updateSummary();
-      }
-    }
-
-    function openParams(partId) {
-      currentPartId = partId;
-      const part = parts.find(p => p.id === partId);
-      if (!part) return;
-
-      document.getElementById('technology').value = part.params.technology;
-      updateMaterials();
-      document.getElementById('material').value = part.params.material;
-      document.getElementById('layerHeight').value = part.params.layerHeight || '0.2';
-      document.getElementById('infill').value = part.params.infill || '20';
-      document.getElementById('quantity').value = part.qty;
-      document.getElementById('marking').checked = part.params.marking || false;
-      
-      document.getElementById('paramsModal').classList.add('show');
-    }
-
-    function closeModal() {
-      document.getElementById('paramsModal').classList.remove('show');
-      currentPartId = null;
-    }
-
-    function saveParams() {
-      if (!currentPartId) return;
-      const part = parts.find(p => p.id === currentPartId);
-      if (!part) return;
-
-      const postprocess = [];
-      ['supportRemoval', 'sanding', 'priming', 'painting', 'vaporSmoothing', 'dyeing'].forEach(id => {
-        if (document.getElementById(id).checked) postprocess.push(id);
-      });
-
-      part.params = {
-        technology: document.getElementById('technology').value,
-        material: document.getElementById('material').value,
-        layerHeight: document.getElementById('layerHeight').value,
-        infill: document.getElementById('infill').value,
-        postprocess: postprocess,
-        marking: document.getElementById('marking').checked,
-        markingText: document.getElementById('markingText').value,
-        quantity: parseInt(document.getElementById('quantity').value) || 1
-      };
-
-      part.qty = part.params.quantity;
-      calculatePartData(part);
-      
-      const oldDiv = document.getElementById(`part-${part.id}`);
-      if (oldDiv) oldDiv.remove();
-      renderPart(part);
-      updateSummary();
-      closeModal();
-    }
-
-    function deletePart(partId) {
-      if (confirm('Удалить деталь?')) {
-        parts = parts.filter(p => p.id !== partId);
-        const div = document.getElementById(`part-${partId}`);
-        if (div) div.remove();
-        
-        if (parts.length === 0) {
-          document.getElementById('partsList').innerHTML = `
-            <div class="empty-state">
-              <p>Пока нет загруженных деталей</p>
-              <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-            </div>
-          `;
-        }
-        
-        document.getElementById('partsCount').textContent = parts.length;
-        updateSummary();
-      }
-    }
-
-    function duplicatePart(partId) {
-      const part = parts.find(p => p.id === partId);
-      if (!part) return;
-
-      const newPart = {
-        ...part,
-        id: Date.now() + Math.random(),
-        name: 'Копия: ' + part.name,
-        qty: 1
-      };
-
-      parts.push(newPart);
-      renderPart(newPart);
-      updateSummary();
-    }
-
-    function updateSummary() {
-      const totalParts = parts.length;
-      const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
-      const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
-      const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
-      
-      document.getElementById('totalParts').textContent = totalParts;
-      document.getElementById('totalQty').textContent = totalQty + ' шт.';
-      document.getElementById('totalWeight').textContent = totalWeight.toFixed(1) + ' г';
-      document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + ' ₽';
-      document.getElementById('leadTime').textContent = totalParts > 0 ? '3-7 дней' : '—';
-    }
-
-    function saveToProjects() {
-      if (parts.length === 0) {
-        alert('Загрузите хотя бы одну деталь');
-        return;
-      }
-      
-      const project = {
-        id: Date.now(),
-        quoteNumber: quoteNumber,
-        date: quoteDate,
-        parts: JSON.parse(JSON.stringify(parts)),
-        totalWeight: document.getElementById('totalWeight').textContent,
-        totalPrice: document.getElementById('totalPrice').textContent,
-        leadTime: document.getElementById('leadTime').textContent,
-        status: 'Черновик'
-      };
-      
-      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-      projects.push(project);
-      localStorage.setItem('projects', JSON.stringify(projects));
-      
-      // Сброс текущего запроса
-      localStorage.removeItem('currentQuote');
-      parts = [];
-      document.getElementById('partsList').innerHTML = `
-        <div class="empty-state">
-          <p>Пока нет загруженных деталей</p>
-          <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-        </div>
-      `;
-      document.getElementById('partsCount').textContent = '0';
-      updateSummary();
-      initQuoteNumber();
-      
-      alert('Запрос сохранён в "Мои проекты"');
-      window.location.href = 'projects.html';
-    }
-
-    function checkout() {
-      if (parts.length === 0) {
-        alert('Загрузите хотя бы одну деталь');
-        return;
-      }
-      
-      const order = {
-        id: Date.now(),
-        quoteNumber: quoteNumber,
-        date: quoteDate,
-        parts: JSON.parse(JSON.stringify(parts)),
-        totalWeight: document.getElementById('totalWeight').textContent,
-        totalPrice: document.getElementById('totalPrice').textContent,
-        leadTime: document.getElementById('leadTime').textContent,
-        status: 'Новый',
-        orderDate: new Date().toLocaleString('ru-RU')
-      };
-      
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      orders.push(order);
-      localStorage.setItem('orders', JSON.stringify(orders));
-      
-      localStorage.removeItem('currentQuote');
-      parts = [];
-      document.getElementById('partsList').innerHTML = `
-        <div class="empty-state">
-          <p>Пока нет загруженных деталей</p>
-          <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-        </div>
-      `;
-      document.getElementById('partsCount').textContent = '0';
-      updateSummary();
-      initQuoteNumber();
-      
-      alert('Заказ оформлен! Переход в "Мои заказы"');
-      window.location.href = 'orders.html';
-    }
-
-  function downloadPDF() {
-  if (parts.length === 0) {
-    alert('Загрузите хотя бы одну деталь');
-    return;
-  }
-  
-  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-  const totalParts = parts.length;
-  const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
-  const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
-  const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
-  
-  let rowsHtml = '';
-  parts.forEach((part, index) => {
-    const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-    const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-    
-    rowsHtml += `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${index + 1}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${part.name}</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${techName}</td>
-        <td style="padding: 8px; border: 1px solid #ccc;">${matName}</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.weight} г</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.qty} шт.</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: right;">${part.price.toLocaleString('ru-RU')} ₽</td>
-      </tr>
-    `;
-  });
-  
-  const template = document.createElement('div');
-  template.innerHTML = `
-    <div style="font-family: Arial, sans-serif; color: #000; padding: 15mm; background: #fff;">
-      
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #0066CC; padding-bottom: 15px;">
-        <div>
-          <h1 style="color: #0066CC; font-size: 24px; margin: 0 0 5px 0;">DetalHub</h1>
-          <div style="color: #666; font-size: 11px;">Изготовление деталей по чертежу</div>
-          <div style="color: #666; font-size: 11px;">detalhub.com</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 18px; font-weight: bold; color: #0066CC;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</div>
-          <div style="font-size: 13px; margin-top: 5px;">№ ${quoteNumber} от ${quoteDate}</div>
-        </div>
-      </div>
-      
-      <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-        <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
-          <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОСТАВЩИК:</div>
-          <div style="font-size: 11px; line-height: 1.5;">
-            <strong>DetalHub</strong><br>
-            Инженер: Наталия<br>
-            Email: info@detalhub.com<br>
-            Сайт: detalhub.com
-          </div>
-        </div>
-        <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
-          <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОКУПАТЕЛЬ:</div>
-          <div style="font-size: 11px; line-height: 1.5;">
-            <strong>${profile.name || '—'}</strong><br>
-            ${profile.company ? 'Компания: ' + profile.company + '<br>' : ''}
-            ${profile.address ? 'Адрес: ' + profile.address + '<br>' : ''}
-            ${profile.phone ? 'Тел: ' + profile.phone + '<br>' : ''}
-            ${profile.email ? 'Email: ' + profile.email : ''}
-          </div>
-        </div>
-      </div>
-      
-      <h2 style="color: #0066CC; font-size: 14px; margin-bottom: 10px;">Спецификация деталей:</h2>
-      
-      <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px;">
-        <thead>
-          <tr style="background: #0066CC; color: white;">
-            <th style="padding: 8px; border: 1px solid #ccc;">№</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Наименование</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Технология</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Материал</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Размеры</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Вес</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Кол-во</th>
-            <th style="padding: 8px; border: 1px solid #ccc;">Сумма</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-        <tfoot>
-          <tr style="background: #f5f8ff; font-weight: bold;">
-            <td colspan="5" style="padding: 8px; border: 1px solid #ccc; text-align: right;">ИТОГО:</td>
-            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalWeight.toFixed(1)} г</td>
-            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalQty} шт.</td>
-            <td style="padding: 8px; border: 1px solid #ccc; text-align: right; font-size: 12px; color: #0066CC;">${totalPrice.toLocaleString('ru-RU')} ₽</td>
-          </tr>
-        </tfoot>
-      </table>
-      
-      <div style="margin-bottom: 20px; padding: 12px; background: #fff8e1; border-left: 4px solid #f59e0b;">
-        <div style="font-weight: bold; color: #d97706; margin-bottom: 6px;">УСЛОВИЯ:</div>
-        <div style="font-size: 11px; line-height: 1.7;">
-          ✓ Срок изготовления: ${document.getElementById('leadTime').textContent}<br>
-          ✓ Общий вес деталей: ${totalWeight.toFixed(1)} г<br>
-          ✓ Количество позиций: ${totalParts}<br>
-          ✓ Срок действия предложения: 14 дней<br>
-          ✓ Доставка: по всей России транспортными компаниями
-        </div>
-      </div>
-      
-      <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;">
-        <div>
-          <div style="font-size: 11px; color: #666;">С уважением,</div>
-          <div style="font-weight: bold;">Инженер DetalHub</div>
-          <div style="font-size: 11px; color: #666;">Наталия</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 11px; color: #666;">Документ сформирован автоматически</div>
-          <div style="font-size: 10px; color: #999;">detalhub.com</div>
-        </div>
-      </div>
-      
-    </div>
-  `;
-  
-  html2pdf().from(template).set({
-    margin: 0,
-    filename: 'KP_' + quoteNumber + '.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }).save();
-}
-
-    function logout() {
-      localStorage.removeItem('isLoggedIn');
-      window.location.href = 'auth.html';
-    }
-
     document.getElementById('paramsModal')?.addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
+        if (e.target === this) closeModal();
     });
     
     document.getElementById('viewerModal')?.addEventListener('click', function(e) {
-      if (e.target === this) closeViewerModal();
+        if (e.target === this) closeViewerModal();
     });
-  </script>
+</script>
 
 </body>
 </html>
