@@ -357,7 +357,7 @@
     </div>
 
     <div class="upload-section">
-      <label class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <label class="upload-area">
         <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" onchange="handleFileUpload(this)" multiple>
         <div class="upload-icon">📁</div>
         <h3>Загрузить файлы для 3D-печати</h3>
@@ -538,8 +538,8 @@
     // ==========================================
     // КОНФИГУРАЦИЯ
     // ==========================================
-    const UPLOAD_FUNCTION_URL = 'https://functions.yandexcloud.net/d4eqokbiu4la1oanhl8n';
-    const CALCULATE_FUNCTION_URL = 'https://functions.yandexcloud.net/d4e755lj4gn6mkc75ags';
+    const UPLOAD_FUNCTION_URL = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
+    const CALCULATE_FUNCTION_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
     
     // Настройки базы данных
     const DB_CONFIG = {
@@ -547,7 +547,7 @@
         port: 6432,
         database: 'detalhub',
         user: 'detalhub_admin',
-        password: 'En2468@!' // ЗАМЕНИ на свой пароль!
+        password: 'En2468@!'
     };
 
     // ==========================================
@@ -627,12 +627,16 @@
         const files = input.files;
         if (!files.length) return;
 
+        // Показываем индикатор загрузки сразу
+        showLoading(files[0].name);
+
         for (const file of files) {
             try {
-                showLoading(file.name);
-                
                 // Читаем файл как Base64
                 const fileData = await readFileAsBase64(file);
+                
+                // Создаём локальный blob URL для превью (НЕ ТРЕБУЕТ CORS!)
+                const localBlobUrl = URL.createObjectURL(file);
                 
                 // Отправляем в Object Storage
                 const uploadResult = await uploadToStorage(file.name, fileData, file.type);
@@ -645,6 +649,7 @@
                     uploadDate: new Date().toLocaleDateString('ru-RU'),
                     qty: 1,
                     fileUrl: uploadResult.fileUrl || uploadResult.Location,
+                    localUrl: localBlobUrl, // Локальная ссылка для превью
                     params: {
                         technology: 'fdm',
                         material: 'pla',
@@ -661,11 +666,11 @@
                     quoteId: null
                 };
 
-                // Если STL — читаем размеры
+                // Если STL — читаем размеры и объём
                 if (file.name.toLowerCase().endsWith('.stl') || file.name.toLowerCase().endsWith('.obj')) {
-                    const dimensions = await getSTLDimensions(fileData);
-                    part.dimensions = dimensions;
-                    part.volume = await calculateVolumeFromSTL(fileData);
+                    const stlData = await analyzeSTL(localBlobUrl);
+                    part.dimensions = stlData.dimensions;
+                    part.volume = stlData.volume;
                 }
 
                 // Считаем стоимость через функцию
@@ -673,17 +678,84 @@
                 
                 parts.push(part);
                 renderPart(part);
-                hideLoading();
                 
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
                 alert('Ошибка загрузки файла: ' + error.message);
-                hideLoading();
             }
         }
 
+        hideLoading();
         updateSummary();
+        
+        // Сбрасываем input, чтобы можно было выбрать тот же файл снова
         input.value = '';
+    }
+
+    // ==========================================
+    // АНАЛИЗ STL ФАЙЛА (РАЗМЕРЫ + ОБЪЁМ)
+    // ==========================================
+    async function analyzeSTL(localUrl) {
+        return new Promise((resolve) => {
+            fetch(localUrl)
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => {
+                    try {
+                        const loader = new THREE.STLLoader();
+                        const geometry = loader.parse(arrayBuffer);
+                        geometry.computeBoundingBox();
+                        const box = geometry.boundingBox;
+                        
+                        // Размеры в мм (STL обычно в мм)
+                        const dimensions = {
+                            x: (box.max.x - box.min.x).toFixed(1),
+                            y: (box.max.y - box.min.y).toFixed(1),
+                            z: (box.max.z - box.min.z).toFixed(1)
+                        };
+                        
+                        // Считаем объём
+                        let volume = 0;
+                        const positions = geometry.attributes.position.array;
+                        
+                        for (let i = 0; i < positions.length; i += 9) {
+                            const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
+                            const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
+                            const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
+                            
+                            volume += p1.dot(p2.cross(p3)) / 6.0;
+                        }
+                        
+                        volume = Math.abs(volume);
+                        
+                        // ВАЖНО: STL обычно в мм³, переводим в см³ (делим на 1000)
+                        // Но если модель большая (объем > 100000), значит она в мм³
+                        // Если маленькая (< 1000), значит уже в см³
+                        let volumeCm3 = volume;
+                        if (volume > 100000) {
+                            // Скорее всего мм³, переводим в см³
+                            volumeCm3 = volume / 1000;
+                        }
+                        
+                        resolve({
+                            dimensions: dimensions,
+                            volume: volumeCm3
+                        });
+                    } catch (err) {
+                        console.error('Ошибка анализа STL:', err);
+                        resolve({
+                            dimensions: { x: '—', y: '—', z: '—' },
+                            volume: 0
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('Ошибка загрузки STL:', err);
+                    resolve({
+                        dimensions: { x: '—', y: '—', z: '—' },
+                        volume: 0
+                    });
+                });
+        });
     }
 
     // ==========================================
@@ -711,74 +783,6 @@
 
         if (!response.ok) throw new Error('Ошибка загрузки');
         return await response.json();
-    }
-
-    async function getSTLDimensions(fileData) {
-        return new Promise((resolve) => {
-            const binaryString = atob(fileData);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            const blob = new Blob([bytes], { type: 'application/octet-stream' });
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const loader = new THREE.STLLoader();
-                    const geometry = loader.parse(e.target.result);
-                    geometry.computeBoundingBox();
-                    const box = geometry.boundingBox;
-                    
-                    resolve({
-                        x: (box.max.x - box.min.x).toFixed(1),
-                        y: (box.max.y - box.min.y).toFixed(1),
-                        z: (box.max.z - box.min.z).toFixed(1)
-                    });
-                } catch (err) {
-                    resolve({ x: '—', y: '—', z: '—' });
-                }
-            };
-            
-            reader.readAsArrayBuffer(blob);
-        });
-    }
-
-    async function calculateVolumeFromSTL(fileData) {
-        return new Promise((resolve) => {
-            const binaryString = atob(fileData);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            const blob = new Blob([bytes], { type: 'application/octet-stream' });
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const loader = new THREE.STLLoader();
-                    const geometry = loader.parse(e.target.result);
-                    let volume = 0;
-                    const positions = geometry.attributes.position.array;
-                    
-                    for (let i = 0; i < positions.length; i += 9) {
-                        const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
-                        const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
-                        const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
-                        
-                        volume += p1.dot(p2.cross(p3)) / 6.0;
-                    }
-                    
-                    resolve(Math.abs(volume));
-                } catch (err) {
-                    resolve(0);
-                }
-            };
-            
-            reader.readAsArrayBuffer(blob);
-        });
     }
 
     async function calculatePrice(part) {
@@ -827,13 +831,18 @@
 
     function showLoading(fileName) {
         const container = document.getElementById('partsList');
+        
+        // Удаляем старый индикатор если есть
+        const oldLoading = document.getElementById('loading-indicator');
+        if (oldLoading) oldLoading.remove();
+        
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'loading-indicator';
         loadingDiv.className = 'part-item';
         loadingDiv.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: #666;">
                 <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
-                <p>Загрузка файла: ${fileName}</p>
+                <p>Загрузка файла: <strong>${fileName}</strong></p>
                 <p style="font-size: 0.9rem; color: #999;">Пожалуйста, подождите...</p>
             </div>
         `;
@@ -892,8 +901,10 @@
         
         container.appendChild(partDiv);
         
-        if (part.fileUrl && (part.name.toLowerCase().endsWith('.stl') || part.name.toLowerCase().endsWith('.obj'))) {
-            renderSmallPreview(part.id, part.fileUrl);
+        // Используем ЛОКАЛЬНЫЙ URL для превью (не требует CORS!)
+        const previewUrl = part.localUrl || part.fileUrl;
+        if (previewUrl && (part.name.toLowerCase().endsWith('.stl') || part.name.toLowerCase().endsWith('.obj'))) {
+            renderSmallPreview(part.id, previewUrl);
         }
         
         document.getElementById('partsCount').textContent = parts.length;
@@ -910,6 +921,7 @@
             .then(arrayBuffer => {
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(arrayBuffer);
+                geometry.computeBoundingBox();
                 
                 const scene = new THREE.Scene();
                 const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
@@ -950,8 +962,15 @@
     // ==========================================
     function openViewer(partId) {
         const part = parts.find(p => p.id === partId);
-        if (!part || !part.fileUrl) {
-            alert('3D просмотр доступен только для STL/OBJ файлов');
+        if (!part) {
+            alert('Деталь не найдена');
+            return;
+        }
+        
+        // Используем локальный URL если есть, иначе файл с Object Storage
+        const viewerUrl = part.localUrl || part.fileUrl;
+        if (!viewerUrl) {
+            alert('3D просмотр недоступен для этой детали');
             return;
         }
         
@@ -974,11 +993,12 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
 
-        fetch(part.fileUrl)
+        fetch(viewerUrl)
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => {
                 const loader = new THREE.STLLoader();
                 const geometry = loader.parse(arrayBuffer);
+                geometry.computeBoundingBox();
                 
                 const material = new THREE.MeshPhongMaterial({ color: 0x0066CC, flatShading: true });
                 const mesh = new THREE.Mesh(geometry, material);
@@ -1107,6 +1127,11 @@
 
     function deletePart(partId) {
         if (confirm('Удалить деталь?')) {
+            const part = parts.find(p => p.id === partId);
+            if (part && part.localUrl) {
+                URL.revokeObjectURL(part.localUrl); // Освобождаем память
+            }
+            
             parts = parts.filter(p => p.id !== partId);
             const div = document.getElementById(`part-${partId}`);
             if (div) div.remove();
@@ -1201,8 +1226,6 @@
         }
         
         try {
-            // Здесь можно добавить сохранение заказа в базу данных
-            // Пока сохраняем в localStorage
             const order = {
                 id: Date.now(),
                 quoteNumber: quoteNumber,
@@ -1368,19 +1391,6 @@
             html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).save();
-    }
-
-    function updateMaterials() {
-        const tech = document.getElementById('technology').value;
-        const materialSelect = document.getElementById('material');
-        materialSelect.innerHTML = '';
-        
-        materials[tech].forEach(mat => {
-            const option = document.createElement('option');
-            option.value = mat.value;
-            option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
-            materialSelect.appendChild(option);
-        });
     }
 
     function logout() {
