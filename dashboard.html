@@ -540,6 +540,7 @@
     // ==========================================
     const UPLOAD_FUNCTION_URL = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
     const CALCULATE_FUNCTION_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
+    const BITRIX_WEBHOOK_URL = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
     
     // Настройки базы данных
     const DB_CONFIG = {
@@ -1220,48 +1221,126 @@
     }
 
     async function checkout() {
-        if (parts.length === 0) {
-            alert('Загрузите хотя бы одну деталь');
-            return;
-        }
-        
-        try {
-            const order = {
-                id: Date.now(),
-                quoteNumber: quoteNumber,
-                date: quoteDate,
-                parts: JSON.parse(JSON.stringify(parts)),
-                totalWeight: document.getElementById('totalWeight').textContent,
-                totalPrice: document.getElementById('totalPrice').textContent,
-                leadTime: document.getElementById('leadTime').textContent,
-                status: 'Новый',
-                orderDate: new Date().toLocaleString('ru-RU')
-            };
-            
-            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-            orders.push(order);
-            localStorage.setItem('orders', JSON.stringify(orders));
-            
-            localStorage.removeItem('currentQuote');
-            parts = [];
-            document.getElementById('partsList').innerHTML = `
-                <div class="empty-state">
-                    <p>Пока нет загруженных деталей</p>
-                    <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-                </div>
-            `;
-            document.getElementById('partsCount').textContent = '0';
-            updateSummary();
-            initQuoteNumber();
-            
-            alert('Заказ оформлен! Переход в "Мои заказы"');
-            window.location.href = 'orders.html';
-            
-        } catch (error) {
-            console.error('Ошибка оформления заказа:', error);
-            alert('Ошибка при оформлении заказа. Попробуйте ещё раз.');
-        }
+    if (parts.length === 0) {
+        alert('Загрузите хотя бы одну деталь');
+        return;
     }
+    
+    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+    
+    try {
+        // Отправляем данные в Bitrix24
+        await sendToBitrix24(profile);
+        
+        // Сохраняем заказ локально
+        const order = {
+            id: Date.now(),
+            quoteNumber: quoteNumber,
+            date: quoteDate,
+            parts: JSON.parse(JSON.stringify(parts)),
+            totalWeight: document.getElementById('totalWeight').textContent,
+            totalPrice: document.getElementById('totalPrice').textContent,
+            leadTime: document.getElementById('leadTime').textContent,
+            status: 'Новый',
+            orderDate: new Date().toLocaleString('ru-RU')
+        };
+        
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        orders.push(order);
+        localStorage.setItem('orders', JSON.stringify(orders));
+        
+        localStorage.removeItem('currentQuote');
+        parts = [];
+        document.getElementById('partsList').innerHTML = `
+            <div class="empty-state">
+                <p>Пока нет загруженных деталей</p>
+                <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
+            </div>
+        `;
+        document.getElementById('partsCount').textContent = '0';
+        updateSummary();
+        initQuoteNumber();
+        
+        alert('✅ Заказ оформлен! Данные отправлены в CRM.\n\nПереход в "Мои заказы"');
+        window.location.href = 'orders.html';
+        
+    } catch (error) {
+        console.error('Ошибка оформления заказа:', error);
+        alert('❌ Ошибка при оформлении заказа: ' + error.message + '\n\nПопробуйте ещё раз.');
+    }
+}
+
+// ==========================================
+// ОТПРАВКА ДАННЫХ В BITRIX24
+// ==========================================
+async function sendToBitrix24(profile) {
+    const totalParts = parts.length;
+    const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
+    const totalWeight = document.getElementById('totalWeight').textContent;
+    const totalPrice = document.getElementById('totalPrice').textContent;
+    
+    // Формируем список деталей
+    let partsList = '';
+    parts.forEach((part, index) => {
+        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
+        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
+        partsList += `${index + 1}. ${part.name}\n`;
+        partsList += `   Технология: ${techName}, Материал: ${matName}\n`;
+        partsList += `   Размеры: ${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм\n`;
+        partsList += `   Объем: ${part.volume.toFixed(2)} см³, Вес: ${part.weight} г\n`;
+        partsList += `   Количество: ${part.qty} шт., Цена: ${part.price.toLocaleString()} ₽\n\n`;
+    });
+    
+    // 1. Создаём контакт
+    const contactData = {
+        fields: {
+            NAME: profile.name?.split(' ')[0] || 'Клиент',
+            LAST_NAME: profile.name?.split(' ').slice(1).join(' ') || profile.name || 'DetalHub',
+            EMAIL: [{ VALUE: profile.email, TYPE: 'WORK' }],
+            PHONE: [{ VALUE: profile.phone, TYPE: 'WORK' }],
+            POST: profile.company || 'DetalHub Client',
+            COMMENTS: `Заказ №${quoteNumber} от ${quoteDate}\nОбщая стоимость: ${totalPrice} ₽\nОбщий вес: ${totalWeight}\nКоличество деталей: ${totalParts} шт.`
+        },
+        params: { REGISTER_SONET_EVENT: 'Y' }
+    };
+    
+    const contactResponse = await fetch(`${BITRIX_WEBHOOK_URL}crm.contact.add.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactData)
+    });
+    
+    const contactResult = await contactResponse.json();
+    const contactId = contactResult.result;
+    
+    // 2. Создаём сделку
+    const dealData = {
+        fields: {
+            TITLE: `Заказ №${quoteNumber} — 3D печать`,
+            OPPORTUNITY: totalPrice.replace(/\s/g, '').replace('₽', ''),
+            CURRENCY_ID: 'RUB',
+            STAGE_ID: 'NEW',
+            CONTACT_ID: contactId,
+            COMMENTS: `Детали для 3D-печати:\n\n${partsList}\n\nСрок изготовления: ${document.getElementById('leadTime').textContent}\n\nEmail: ${profile.email}\nТелефон: ${profile.phone}\nКомпания: ${profile.company || 'Не указана'}`
+        },
+        params: { REGISTER_SONET_EVENT: 'Y' }
+    };
+    
+    const dealResponse = await fetch(`${BITRIX_WEBHOOK_URL}crm.deal.add.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dealData)
+    });
+    
+    const dealResult = await dealResponse.json();
+    
+    if (!dealResult.result) {
+        throw new Error('Не удалось создать сделку в Bitrix24');
+    }
+    
+    console.log('✅ Заказ отправлен в Bitrix24:', dealResult);
+    return dealResult;
+}
 
     function downloadPDF() {
         if (parts.length === 0) {
