@@ -105,6 +105,11 @@
       background: #0052A3;
     }
     
+    .btn:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    
     .divider {
       text-align: center;
       margin: 1.5rem 0;
@@ -210,7 +215,7 @@
           <label for="rememberMe">Запомнить меня</label>
         </div>
         
-        <button type="submit" class="btn">Войти</button>
+        <button type="submit" class="btn" id="loginBtn">Войти</button>
       </form>
       
       <div class="divider">или</div>
@@ -260,12 +265,17 @@
           <label for="agreeTerms">Согласен с <a href="#" class="link">условиями использования</a></label>
         </div>
         
-        <button type="submit" class="btn">Зарегистрироваться</button>
+        <button type="submit" class="btn" id="registerBtn">Зарегистрироваться</button>
       </form>
     </div>
   </div>
 
   <script>
+    // ==========================================
+    // URL ФУНКЦИИ АВТОРИЗАЦИИ
+    // ==========================================
+    const AUTH_FUNCTION_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+    
     // ==========================================
     // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
     // ==========================================
@@ -288,50 +298,76 @@
     }
     
     // ==========================================
+    // ОТПРАВКА ЗАПРОСА В ФУНКЦИЮ
+    // ==========================================
+    async function callAuthFunction(action, data) {
+      try {
+        const response = await fetch(AUTH_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action, ...data })
+        });
+
+        if (!response.ok) {
+          throw new Error('Ошибка сервера: ' + response.status);
+        }
+
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Ошибка запроса:', error);
+        throw error;
+      }
+    }
+    
+    // ==========================================
     // ВХОД В СИСТЕМУ
     // ==========================================
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       hideMessages();
       
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
       const remember = document.getElementById('rememberMe').checked;
+      const btn = document.getElementById('loginBtn');
       
-      // Получаем пользователей из localStorage
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      btn.disabled = true;
+      btn.textContent = 'Вход...';
       
-      // Ищем пользователя
-      const user = users.find(u => u.email === email && u.password === password);
-      
-      if (user) {
-        // Успешный вход
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', user.id);
-        localStorage.setItem('userProfile', JSON.stringify({
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          company: user.company
-        }));
+      try {
+        const result = await callAuthFunction('login', { email, password });
         
-        if (remember) {
-          localStorage.setItem('rememberMe', 'true');
+        if (result.success) {
+          // Успешный вход
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userId', result.userId);
+          localStorage.setItem('userProfile', JSON.stringify(result.profile));
+          
+          if (remember) {
+            localStorage.setItem('rememberMe', 'true');
+          }
+          
+          showMessage('success', '✅ Вход выполнен! Перенаправление...');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } else {
+          showMessage('error', '❌ ' + (result.error || 'Неверный email или пароль'));
+          btn.disabled = false;
+          btn.textContent = 'Войти';
         }
-        
-        showMessage('success', '✅ Вход выполнен! Перенаправление...');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1000);
-      } else {
-        showMessage('error', '❌ Неверный email или пароль');
+      } catch (error) {
+        showMessage('error', '❌ Ошибка подключения: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Войти';
       }
     }
     
     // ==========================================
     // РЕГИСТРАЦИЯ
     // ==========================================
-    function handleRegister(e) {
+    async function handleRegister(e) {
       e.preventDefault();
       hideMessages();
       
@@ -341,6 +377,7 @@
       const company = document.getElementById('regCompany').value.trim();
       const password = document.getElementById('regPassword').value;
       const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+      const btn = document.getElementById('registerBtn');
       
       // Проверка паролей
       if (password !== passwordConfirm) {
@@ -354,45 +391,44 @@
         return;
       }
       
-      // Получаем существующих пользователей
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      btn.disabled = true;
+      btn.textContent = 'Регистрация...';
       
-      // Проверяем, есть ли такой email
-      if (users.find(u => u.email === email)) {
-        showMessage('error', '❌ Пользователь с таким email уже существует');
-        return;
-      }
-      
-      // Создаём нового пользователя
-      const newUser = {
-        id: Date.now().toString(),
-        name: name,
-        email: email,
-        phone: phone,
-        company: company,
-        password: password,
-        registeredAt: new Date().toLocaleString('ru-RU')
-      };
-      
-      // Сохраняем
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      showMessage('success', '✅ Регистрация успешна! Выполняем вход...');
-      
-      // Автоматический вход
-      setTimeout(() => {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', newUser.id);
-        localStorage.setItem('userProfile', JSON.stringify({
-          name: newUser.name,
-          email: newUser.email,
-          phone: newUser.phone,
-          company: newUser.company
-        }));
+      try {
+        const result = await callAuthFunction('register', {
+          name: name,
+          email: email,
+          phone: phone,
+          company: company,
+          password: password
+        });
         
-        window.location.href = 'dashboard.html';
-      }, 1500);
+        if (result.success) {
+          showMessage('success', '✅ Регистрация успешна! Выполняем вход...');
+          
+          // Автоматический вход
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userId', result.userId);
+          localStorage.setItem('userProfile', JSON.stringify({
+            name: name,
+            email: email,
+            phone: phone,
+            company: company
+          }));
+          
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        } else {
+          showMessage('error', '❌ ' + (result.error || 'Ошибка регистрации'));
+          btn.disabled = false;
+          btn.textContent = 'Зарегистрироваться';
+        }
+      } catch (error) {
+        showMessage('error', '❌ Ошибка подключения: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Зарегистрироваться';
+      }
     }
     
     // ==========================================
