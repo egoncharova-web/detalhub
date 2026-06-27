@@ -1,1501 +1,743 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Панель управления — DetalHub</title>
-  
-  <!-- Three.js -->
+  <link rel="stylesheet" href="cabinet.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-  
-
-<!-- html2pdf для поддержки кириллицы -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: #f8f9fa; color: #1a1a1a; }
-    
-    .header {
-      background: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .logo { max-width: 160px; height: auto; }
-    
-    .nav-menu { display: flex; gap: 2rem; }
-    .nav-menu a {
-      color: #666;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: color 0.2s;
-      padding: 0.5rem 0;
-      border-bottom: 2px solid transparent;
-    }
-    .nav-menu a:hover, .nav-menu a.active {
-      color: #0066CC;
-      border-bottom-color: #0066CC;
-    }
-    
-    .user-menu { display: flex; align-items: center; gap: 1rem; }
-    .avatar {
-      width: 36px; height: 36px;
-      background: #0066CC;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-    
-    .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-    
-    .page-header { margin-bottom: 2rem; }
-    .page-title { font-size: 1.8rem; color: #0066CC; margin-bottom: 0.5rem; }
-    .page-subtitle { color: #666; }
-    
-    .quote-info {
-      background: #e3f2fd;
-      border-left: 4px solid #0066CC;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 2rem;
-    }
-    
-    .quote-number {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #0066CC;
-    }
-    
-    .upload-section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      border: 1px solid #e9ecef;
-    }
-    
-    .upload-area {
-      border: 2px dashed #0066CC !important;
-      border-radius: 12px;
-      padding: 3rem 2rem;
-      text-align: center;
-      background: #f0f7ff;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: block;
-      width: 100%;
-    }
-    
-    .upload-area:hover {
-      background: #e0f0ff;
-      border-color: #0052A3 !important;
-    }
-    
-    .upload-area input[type="file"] { display: none; }
-    .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .upload-area h3 { color: #333; margin-bottom: 0.5rem; font-size: 1.3rem; }
-    .upload-area p { color: #666; font-size: 0.95rem; margin: 0; }
-    
-    .content-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; }
-    
-    .parts-section {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .section-title { font-size: 1.2rem; font-weight: 600; }
-    
-    .part-item {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      border: 1px solid #e9ecef;
-    }
-    
-    .part-grid { display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; }
-    
-    .part-preview {
-      background: white;
-      border-radius: 6px;
-      border: 1px solid #dee2e6;
-      height: 170px;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-    }
-    
-    .part-preview canvas { width: 100%; height: 100%; }
-    .preview-hint {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      background: rgba(0,102,204,0.9);
-      color: white;
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    
-    .part-info h3 { color: #333; margin-bottom: 0.75rem; font-size: 1rem; }
-    .part-meta { font-size: 0.85rem; color: #666; line-height: 1.8; }
-    .part-meta strong { color: #333; }
-    
-    .qty-control { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
-    .qty-control input {
-      width: 80px;
-      padding: 0.4rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      text-align: center;
-    }
-    
-    .part-actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
-    
-    .btn {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.9rem;
-      text-decoration: none;
-      display: inline-block;
-    }
-    
-    .btn-primary { background: #0066CC; color: white; }
-    .btn-primary:hover { background: #0052A3; }
-    .btn-secondary { background: #e9ecef; color: #333; }
-    .btn-secondary:hover { background: #dee2e6; }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-danger:hover { background: #c82333; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-success:hover { background: #218838; }
-    .btn-small { padding: 0.5rem 0.9rem; font-size: 0.85rem; }
-    .btn-icon { padding: 0.5rem; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
-    
-    .sidebar { position: sticky; top: 100px; height: fit-content; }
-    
-    .order-summary {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    
-    .summary-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .summary-row.total {
-      font-size: 1.2rem;
-      font-weight: 700;
-      border-top: 2px solid #0066CC;
-      color: #0066CC;
-      margin-top: 0.5rem;
-      padding-top: 1rem;
-    }
-    
-    .btn-checkout {
-      width: 100%;
-      padding: 1rem;
-      background: #0066CC;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    
-    .btn-checkout:hover { background: #0052A3; }
-    
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    .modal.show { display: flex; }
-    
-    .modal-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 700px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    
-    .modal-large { max-width: 900px; }
-    
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .modal-header h3 { color: #0066CC; font-size: 1.3rem; }
-    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
-    
-    .form-section { margin-bottom: 1.5rem; }
-    .form-section h4 { color: #333; margin-bottom: 1rem; font-size: 1rem; font-weight: 600; }
-    
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 500; color: #555; }
-    .form-group select, .form-group input {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-    
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .viewer-container {
-      width: 100%;
-      height: 500px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    
-    .viewer-container canvas { width: 100% !important; height: 100% !important; }
-    
-    .empty-state { text-align: center; padding: 3rem; color: #999; }
-    
-    .action-buttons {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e9ecef;
-    }
-    
-    @media (max-width: 1024px) {
-      .content-grid { grid-template-columns: 1fr; }
-      .sidebar { position: static; }
-      .part-grid { grid-template-columns: 1fr; }
-      .nav-menu { display: none; }
-    }
-  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+<div class="layout">
 
-  <div class="header">
-    <img src="logo.svg" alt="DetalHub" class="logo">
-    <nav class="nav-menu">
-      <a href="dashboard.html" class="active">📊 Панель управления</a>
-      <a href="projects.html">📁 Мои проекты</a>
-      <a href="orders.html">🛒 Мои заказы</a>
-      <a href="profile.html">👤 Профиль</a>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.svg" alt="DetalHub">
+    </div>
+    <div class="sidebar-lang">
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Кабинет</div>
+      <a href="dashboard.html" class="nav-link active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span data-i18n="nav_dashboard">Панель управления</span>
+      </a>
+      <a href="projects.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <span data-i18n="nav_projects">Мои проекты</span>
+      </a>
+      <a href="orders.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span data-i18n="nav_orders">Мои заказы</span>
+      </a>
+      <div class="sidebar-section">Аккаунт</div>
+      <a href="profile.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="nav_profile">Профиль</span>
+      </a>
+      <a href="#" class="nav-link" onclick="logout();return false;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+        <span data-i18n="nav_logout">Выйти</span>
+      </a>
     </nav>
-    <div class="user-menu">
-      <div class="avatar" onclick="window.location.href='profile.html'">НК</div>
+    <div class="sidebar-footer">
+      <div class="avatar-sm js-avatar" onclick="window.location.href='profile.html'">?</div>
+      <div style="min-width:0">
+        <div class="sidebar-user-name js-user-name">—</div>
+        <div class="sidebar-user-role" data-i18n="role_client">Клиент</div>
+      </div>
     </div>
-  </div>
+  </aside>
 
-  <div class="container">
-    <div class="page-header">
-      <h1 class="page-title">Панель управления</h1>
-      <p class="page-subtitle">Загрузите чертёж для 3D-печати и получите расчёт стоимости</p>
-    </div>
-
-    <div class="quote-info">
-      <div class="quote-number">📋 Запрос на КП №<span id="quoteNumber">-</span></div>
-      <div style="font-size: 0.85rem; color: #666; margin-top: 0.3rem;">
-        Создан: <span id="quoteDate">-</span>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Панель управления</span>
+      <div class="topbar-right">
+        <a href="dashboard.html" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="new_order">Новый заказ</span>
+        </a>
       </div>
     </div>
 
-    <div class="upload-section">
-      <label class="upload-area">
-        <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" onchange="handleFileUpload(this)" multiple>
-        <div class="upload-icon">📁</div>
-        <h3>Загрузить файлы для 3D-печати</h3>
-        <p>Перетащите файлы сюда или нажмите для выбора<br>
-        <small>Поддерживаемые форматы: .stl, .obj, .step, .stp</small></p>
-      </label>
-    </div>
+    <div class="page-content">
 
-    <div class="content-grid">
-      <div class="parts-section">
-        <div class="section-header">
-          <div class="section-title">Ваши детали (<span id="partsCount">0</span>)</div>
-        </div>
-        <div id="partsList">
-          <div class="empty-state">
-            <p>Пока нет загруженных деталей</p>
-            <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-          </div>
-        </div>
+      <!-- Quote info bar -->
+      <div style="background:#e8f4ff;border:1px solid #b3d9f7;border-radius:var(--radius-lg);padding:12px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+        <svg width="16" height="16" fill="none" stroke="#185fa5" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+        <span style="font-size:13px;color:#185fa5;font-weight:500">Запрос на КП №<span id="quoteNumber" style="font-weight:600">—</span></span>
+        <span style="font-size:12px;color:#5a7fa8;margin-left:auto">Создан: <span id="quoteDate">—</span></span>
       </div>
 
-      <div class="sidebar">
-        <div class="order-summary">
-          <h3 class="summary-title">Итого запроса:</h3>
-          
-          <div class="summary-row">
-            <span>Деталей:</span>
-            <span id="totalParts">0</span>
-          </div>
-          <div class="summary-row">
-            <span>Общее количество:</span>
-            <span id="totalQty">0 шт.</span>
-          </div>
-          <div class="summary-row">
-            <span>Общий вес:</span>
-            <span id="totalWeight">0 г</span>
-          </div>
-          <div class="summary-row">
-            <span>Срок изготовления:</span>
-            <span id="leadTime">—</span>
-          </div>
-          <div class="summary-row total">
-            <span>Стоимость:</span>
-            <span id="totalPrice">0 ₽</span>
-          </div>
-
-          <div class="action-buttons">
-            <button class="btn btn-success" onclick="downloadPDF()" style="flex:1;">📥 КП</button>
-            <button class="btn btn-primary" onclick="saveToProjects()" style="flex:2;">💾 В проекты</button>
-          </div>
-          <button class="btn-checkout" onclick="checkout()">🛒 Оформить заказ</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal для параметров -->
-  <div id="paramsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Параметры 3D-печати</h3>
-        <button class="close-btn" onclick="closeModal()">&times;</button>
-      </div>
-      
-      <form id="paramsForm">
-        <div class="form-section">
-          <h4>🖨️ Технология 3D-печати</h4>
-          <div class="form-group">
-            <label>Технология изготовления</label>
-            <select id="technology" onchange="updateMaterials()">
-              <option value="fdm">FDM (послойное наплавление)</option>
-              <option value="sla">SLA (фотополимерная)</option>
-              <option value="sls">SLS (селективное лазерное спекание)</option>
-              <option value="mjf">MJF (Multi Jet Fusion)</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>Материал</label>
-            <select id="material">
-              <!-- Заполняется JS -->
-            </select>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h4>⚙️ Параметры печати</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Толщина слоя</label>
-              <select id="layerHeight">
-                <option value="0.1">0.1 мм (высокое качество)</option>
-                <option value="0.2" selected>0.2 мм (стандарт)</option>
-                <option value="0.3">0.3 мм (быстро)</option>
-              </select>
+      <!-- Upload -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-body">
+          <label class="upload-zone">
+            <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" multiple onchange="handleFileUpload(this)">
+            <div class="upload-zone-icon">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
             </div>
-            <div class="form-group">
-              <label>Заполнение</label>
-              <select id="infill">
-                <option value="20">20% (стандарт)</option>
-                <option value="40">40% (повышенное)</option>
-                <option value="80">80% (высокое)</option>
-                <option value="100">100% (сплошное)</option>
-              </select>
+            <h3>Загрузить файлы деталей</h3>
+            <p>Перетащите сюда или нажмите · STL, OBJ, STEP — до 50 МБ</p>
+          </label>
+        </div>
+      </div>
+
+      <!-- Content grid -->
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+
+        <!-- Parts -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Детали <span id="partsCount" style="color:var(--gray-400);font-weight:400">(0)</span></span>
+          </div>
+          <div id="partsList">
+            <div class="empty-state">
+              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--gray-200)"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <h3>Нет загруженных деталей</h3>
+              <p>Загрузите первый файл выше</p>
             </div>
           </div>
         </div>
 
-        <div class="form-section">
-          <h4>🎨 Постобработка</h4>
-          <div class="checkbox-group">
-            <input type="checkbox" id="supportRemoval">
-            <label for="supportRemoval">Удаление поддержек</label>
-          </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="sanding">
-            <label for="sanding">Шлифовка</label>
-          </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="priming">
-            <label for="priming">Грунтовка</label>
-          </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="painting">
-            <label for="painting">Покраска</label>
-          </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="vaporSmoothing">
-            <label for="vaporSmoothing">Сглаживание парами (для SLS/MJF)</label>
-          </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="dyeing">
-            <label for="dyeing">Окрашивание (для нейлона)</label>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h4>🏷️ Маркировка</h4>
-          <div class="checkbox-group">
-            <input type="checkbox" id="marking">
-            <label for="marking">Нанести маркировку</label>
-          </div>
-          <div class="form-group" id="markingTextGroup" style="display:none;">
-            <input type="text" id="markingText" placeholder="Текст маркировки">
+        <!-- Summary sidebar -->
+        <div class="card" style="position:sticky;top:80px;">
+          <div class="card-header"><span class="card-title">Итого запроса</span></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:0;">
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
+                <span class="text-muted">Деталей</span><span id="totalParts" style="font-weight:500">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
+                <span class="text-muted">Количество</span><span id="totalQty" style="font-weight:500">0 шт.</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
+                <span class="text-muted">Вес</span><span id="totalWeight" style="font-weight:500">0 г</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
+                <span class="text-muted">Срок</span><span id="leadTime" style="font-weight:500">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:600;">
+                <span>Стоимость</span><span id="totalPrice" style="color:var(--navy)">0 ₽</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="btn btn-ghost btn-sm" onclick="downloadPDF()" style="flex:1">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15V3M6 9l6 6 6-6M3 19h18v2H3z"/></svg>
+                КП
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="saveToProjects()" style="flex:2">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                В проекты
+              </button>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:10px;justify-content:center;padding:11px;" onclick="checkout()">
+              Оформить заказ →
+            </button>
           </div>
         </div>
 
-        <div class="form-section">
-          <h4>📊 Количество</h4>
-          <div class="form-group">
-            <label>Количество деталей</label>
-            <input type="number" id="quantity" min="1" value="1">
-          </div>
-        </div>
-
-        <button type="button" class="btn btn-primary" onclick="saveParams()" style="width: 100%;">
-          Сохранить параметры
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal для 3D просмотра -->
-  <div id="viewerModal" class="modal">
-    <div class="modal-content modal-large">
-      <div class="modal-header">
-        <h3>3D просмотр детали</h3>
-        <button class="close-btn" onclick="closeViewerModal()">&times;</button>
       </div>
-      <div id="viewerContainer" class="viewer-container"></div>
-      <p style="color: #666; font-size: 0.9rem; text-align: center;">
-        🖱️ Левая кнопка мыши — вращение | Колесо — масштаб | Правая кнопка — перемещение
-      </p>
-    </div>
-  </div>
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
 
+<!-- Params Modal -->
+<div id="paramsModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Параметры детали</span>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="paramsForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Технология</label>
+          <select class="form-control" id="technology" onchange="updateMaterials()">
+            <option value="fdm">FDM (послойное наплавление)</option>
+            <option value="sla">SLA (фотополимерная)</option>
+            <option value="sls">SLS (лазерное спекание)</option>
+            <option value="mjf">MJF (Multi Jet Fusion)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Материал</label>
+          <select class="form-control" id="material"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Толщина слоя</label>
+          <select class="form-control" id="layerHeight">
+            <option value="0.1">0.1 мм (высокое качество)</option>
+            <option value="0.2" selected>0.2 мм (стандарт)</option>
+            <option value="0.3">0.3 мм (быстро)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Заполнение</label>
+          <select class="form-control" id="infill">
+            <option value="20">20% (стандарт)</option>
+            <option value="40">40% (повышенное)</option>
+            <option value="80">80% (высокое)</option>
+            <option value="100">100% (сплошное)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Количество, шт</label>
+        <input type="number" class="form-control" id="quantity" min="1" value="1" style="max-width:120px;">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="margin-bottom:10px;">Постобработка</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="supportRemoval"> Удаление поддержек</label>
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="sanding"> Шлифовка</label>
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="priming"> Грунтовка</label>
+          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="painting"> Покраска</label>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="saveParams()" style="width:100%;justify-content:center;padding:11px;">
+        Сохранить параметры
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Viewer Modal -->
+<div id="viewerModal" class="modal-backdrop">
+  <div class="modal-box" style="max-width:860px;">
+    <div class="modal-header">
+      <span class="modal-title">3D просмотр</span>
+      <button class="modal-close" onclick="closeViewerModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="viewerContainer" style="width:100%;height:480px;background:var(--gray-50);border-radius:var(--radius);overflow:hidden;"></div>
+    <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;">Левая кнопка — вращение · Колесо — масштаб · Правая — перемещение</p>
+  </div>
+</div>
+
+<script src="cabinet.js"></script>
 <script>
-    // ==========================================
-    // КОНФИГУРАЦИЯ
-    // ==========================================
-    const UPLOAD_FUNCTION_URL = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
-    const CALCULATE_FUNCTION_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
-    const BITRIX_WEBHOOK_URL = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
-    
-    // Настройки базы данных
-    const DB_CONFIG = {
-        host: 'rc1a-8f0h7v8g9d91c84k.mdb.yandexcloud.net',
-        port: 6432,
-        database: 'detalhub',
-        user: 'detalhub_admin',
-        password: 'En2468@!'
-    };
+  // ---- CONFIG (без паролей!) ----
+  const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
+  const CALCULATE_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
+  const BITRIX_URL    = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
 
-    // ==========================================
-    // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-    // ==========================================
-    let parts = [];
-    let currentPartId = null;
-    let currentViewerPart = null;
-    let quoteNumber = null;
-    let quoteDate = null;
+  // ---- MATERIALS ----
+  const materials = {
+    fdm: [
+      { value:'pla',   name:'PLA',          density:1.24, price:15 },
+      { value:'abs',   name:'ABS',          density:1.04, price:18 },
+      { value:'petg',  name:'PETG',         density:1.27, price:20 },
+      { value:'nylon', name:'Nylon (PA)',   density:1.15, price:25 },
+      { value:'tpu',   name:'TPU (гибкий)',density:1.25, price:30 },
+    ],
+    sla: [
+      { value:'standard-resin', name:'Стандартная смола', density:1.1,  price:35 },
+      { value:'tough-resin',    name:'Прочная смола',     density:1.15, price:45 },
+      { value:'flexible-resin', name:'Гибкая смола',      density:1.1,  price:50 },
+    ],
+    sls: [
+      { value:'pa12',  name:'PA12 (нейлон)',             density:1.01, price:60 },
+      { value:'pa11',  name:'PA11 (нейлон)',             density:1.03, price:65 },
+      { value:'pa-gf', name:'PA12 GF (стеклонаполненный)',density:1.25,price:75 },
+    ],
+    mjf: [
+      { value:'pa12-mjf', name:'PA12 (HP MJF)', density:1.01, price:70 },
+      { value:'pa11-mjf', name:'PA11 (HP MJF)', density:1.03, price:80 },
+    ]
+  };
 
-    // ==========================================
-    // ПРОВЕРКА АВТОРИЗАЦИИ
-    // ==========================================
-    if (!localStorage.getItem('isLoggedIn')) {
-        window.location.href = 'auth.html';
+  let parts = [];
+  let currentPartId = null;
+  let quoteNumber = null;
+  let quoteDate = null;
+
+  // ---- QUOTE NUMBER ----
+  function initQuote() {
+    const saved = localStorage.getItem('currentQuote');
+    if (saved) {
+      const q = JSON.parse(saved);
+      quoteNumber = q.number; quoteDate = q.date;
+    } else {
+      const last = localStorage.getItem('lastQuoteNumber');
+      quoteNumber = last ? parseInt(last) + 1 : 1000;
+      quoteDate = new Date().toLocaleString('ru-RU');
+      localStorage.setItem('lastQuoteNumber', quoteNumber);
+      localStorage.setItem('currentQuote', JSON.stringify({ number: quoteNumber, date: quoteDate }));
     }
+    document.getElementById('quoteNumber').textContent = quoteNumber;
+    document.getElementById('quoteDate').textContent = quoteDate;
+  }
 
-    // ==========================================
-    // ИНИЦИАЛИЗАЦИЯ
-    // ==========================================
-    function initQuoteNumber() {
-        const savedQuote = localStorage.getItem('currentQuote');
-        if (savedQuote) {
-            const quote = JSON.parse(savedQuote);
-            quoteNumber = quote.number;
-            quoteDate = quote.date;
-        } else {
-            const lastQuote = localStorage.getItem('lastQuoteNumber');
-            const newNumber = lastQuote ? parseInt(lastQuote) + 1 : 1000;
-            quoteNumber = newNumber;
-            quoteDate = new Date().toLocaleString('ru-RU');
-            
-            localStorage.setItem('lastQuoteNumber', quoteNumber);
-            localStorage.setItem('currentQuote', JSON.stringify({
-                number: quoteNumber,
-                date: quoteDate
-            }));
-        }
-        
-        document.getElementById('quoteNumber').textContent = quoteNumber;
-        document.getElementById('quoteDate').textContent = quoteDate;
-    }
-
-    // ==========================================
-    // МАТЕРИАЛЫ И ТЕХНОЛОГИИ
-    // ==========================================
-    const materials = {
-        fdm: [
-            { value: 'pla', name: 'PLA', density: 1.24, price: 15 },
-            { value: 'abs', name: 'ABS', density: 1.04, price: 18 },
-            { value: 'petg', name: 'PETG', density: 1.27, price: 20 },
-            { value: 'nylon', name: 'Nylon (PA)', density: 1.15, price: 25 },
-            { value: 'tpu', name: 'TPU (гибкий)', density: 1.25, price: 30 }
-        ],
-        sla: [
-            { value: 'standard-resin', name: 'Стандартная смола', density: 1.1, price: 35 },
-            { value: 'tough-resin', name: 'Прочная смола', density: 1.15, price: 45 },
-            { value: 'flexible-resin', name: 'Гибкая смола', density: 1.1, price: 50 },
-            { value: 'castable-resin', name: 'Литьевая смола', density: 1.2, price: 55 }
-        ],
-        sls: [
-            { value: 'pa12', name: 'PA12 (нейлон)', density: 1.01, price: 60 },
-            { value: 'pa11', name: 'PA11 (нейлон)', density: 1.03, price: 65 },
-            { value: 'pa-gf', name: 'PA12 GF (стеклонаполненный)', density: 1.25, price: 75 }
-        ],
-        mjf: [
-            { value: 'pa12-mjf', name: 'PA12 (HP MJF)', density: 1.01, price: 70 },
-            { value: 'pa11-mjf', name: 'PA11 (HP MJF)', density: 1.03, price: 80 }
-        ]
-    };
-
-    // ==========================================
-    // ОБРАБОТКА ЗАГРУЗКИ ФАЙЛОВ
-    // ==========================================
-    async function handleFileUpload(input) {
-        const files = input.files;
-        if (!files.length) return;
-
-        // Показываем индикатор загрузки сразу
-        showLoading(files[0].name);
-
-        for (const file of files) {
-            try {
-                // Читаем файл как Base64
-                const fileData = await readFileAsBase64(file);
-                
-                // Создаём локальный blob URL для превью (НЕ ТРЕБУЕТ CORS!)
-                const localBlobUrl = URL.createObjectURL(file);
-                
-                // Отправляем в Object Storage
-                const uploadResult = await uploadToStorage(file.name, fileData, file.type);
-                
-                // Создаём объект детали
-                const part = {
-                    id: Date.now() + Math.random(),
-                    name: file.name,
-                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-                    uploadDate: new Date().toLocaleDateString('ru-RU'),
-                    qty: 1,
-                    fileUrl: uploadResult.fileUrl || uploadResult.Location,
-                    localUrl: localBlobUrl, // Локальная ссылка для превью
-                    params: {
-                        technology: 'fdm',
-                        material: 'pla',
-                        layerHeight: '0.2',
-                        infill: '20',
-                        postprocess: [],
-                        marking: false,
-                        quantity: 1
-                    },
-                    dimensions: { x: 0, y: 0, z: 0 },
-                    volume: 0,
-                    weight: 0,
-                    price: 0,
-                    quoteId: null
-                };
-
-                // Если STL — читаем размеры и объём
-                if (file.name.toLowerCase().endsWith('.stl') || file.name.toLowerCase().endsWith('.obj')) {
-                    const stlData = await analyzeSTL(localBlobUrl);
-                    part.dimensions = stlData.dimensions;
-                    part.volume = stlData.volume;
-                }
-
-                // Считаем стоимость через функцию
-                await calculatePrice(part);
-                
-                parts.push(part);
-                renderPart(part);
-                
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                alert('Ошибка загрузки файла: ' + error.message);
-            }
-        }
-
-        hideLoading();
-        updateSummary();
-        
-        // Сбрасываем input, чтобы можно было выбрать тот же файл снова
-        input.value = '';
-    }
-
-    // ==========================================
-    // АНАЛИЗ STL ФАЙЛА (РАЗМЕРЫ + ОБЪЁМ)
-    // ==========================================
-    async function analyzeSTL(localUrl) {
-        return new Promise((resolve) => {
-            fetch(localUrl)
-                .then(response => response.arrayBuffer())
-                .then(arrayBuffer => {
-                    try {
-                        const loader = new THREE.STLLoader();
-                        const geometry = loader.parse(arrayBuffer);
-                        geometry.computeBoundingBox();
-                        const box = geometry.boundingBox;
-                        
-                        // Размеры в мм (STL обычно в мм)
-                        const dimensions = {
-                            x: (box.max.x - box.min.x).toFixed(1),
-                            y: (box.max.y - box.min.y).toFixed(1),
-                            z: (box.max.z - box.min.z).toFixed(1)
-                        };
-                        
-                        // Считаем объём
-                        let volume = 0;
-                        const positions = geometry.attributes.position.array;
-                        
-                        for (let i = 0; i < positions.length; i += 9) {
-                            const p1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
-                            const p2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
-                            const p3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
-                            
-                            volume += p1.dot(p2.cross(p3)) / 6.0;
-                        }
-                        
-                        volume = Math.abs(volume);
-                        
-                        // ВАЖНО: STL обычно в мм³, переводим в см³ (делим на 1000)
-                        // Но если модель большая (объем > 100000), значит она в мм³
-                        // Если маленькая (< 1000), значит уже в см³
-                        let volumeCm3 = volume;
-                        if (volume > 100000) {
-                            // Скорее всего мм³, переводим в см³
-                            volumeCm3 = volume / 1000;
-                        }
-                        
-                        resolve({
-                            dimensions: dimensions,
-                            volume: volumeCm3
-                        });
-                    } catch (err) {
-                        console.error('Ошибка анализа STL:', err);
-                        resolve({
-                            dimensions: { x: '—', y: '—', z: '—' },
-                            volume: 0
-                        });
-                    }
-                })
-                .catch(err => {
-                    console.error('Ошибка загрузки STL:', err);
-                    resolve({
-                        dimensions: { x: '—', y: '—', z: '—' },
-                        volume: 0
-                    });
-                });
-        });
-    }
-
-    // ==========================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // ==========================================
-    function readFileAsBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }
-
-    async function uploadToStorage(fileName, fileData, contentType) {
-        const response = await fetch(UPLOAD_FUNCTION_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                body: fileData,
-                fileName: fileName,
-                contentType: contentType
-            })
-        });
-
-        if (!response.ok) throw new Error('Ошибка загрузки');
-        return await response.json();
-    }
-
-    async function calculatePrice(part) {
-        try {
-            const response = await fetch(CALCULATE_FUNCTION_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    volume: part.volume,
-                    weight: 0,
-                    technology: part.params.technology,
-                    material: part.params.material,
-                    quantity: part.qty,
-                    fileName: part.name,
-                    userId: getCurrentUserId()
-                })
-            });
-
-            if (!response.ok) throw new Error('Ошибка расчёта');
-
-            const result = await response.json();
-            part.price = parseFloat(result.price) || 0;
-            part.quoteId = result.quoteId;
-            
-        } catch (error) {
-            console.error('Ошибка расчёта:', error);
-            // Fallback на локальный расчёт
-            const tech = part.params.technology;
-            const matValue = part.params.material;
-            const material = materials[tech].find(m => m.value === matValue);
-            
-            if (material) {
-                const infill = parseInt(part.params.infill) / 100;
-                part.weight = (part.volume * material.density * infill).toFixed(2);
-                const basePrice = part.volume * material.price * infill;
-                part.price = Math.max(500, Math.round(basePrice * part.qty));
-            } else {
-                part.price = 1000;
-            }
-        }
-    }
-
-    function getCurrentUserId() {
-        return localStorage.getItem('userId') || null;
-    }
-
-    function showLoading(fileName) {
-        const container = document.getElementById('partsList');
-        
-        // Удаляем старый индикатор если есть
-        const oldLoading = document.getElementById('loading-indicator');
-        if (oldLoading) oldLoading.remove();
-        
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading-indicator';
-        loadingDiv.className = 'part-item';
-        loadingDiv.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #666;">
-                <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
-                <p>Загрузка файла: <strong>${fileName}</strong></p>
-                <p style="font-size: 0.9rem; color: #999;">Пожалуйста, подождите...</p>
-            </div>
-        `;
-        container.appendChild(loadingDiv);
-    }
-
-    function hideLoading() {
-        const loading = document.getElementById('loading-indicator');
-        if (loading) loading.remove();
-    }
-
-    // ==========================================
-    // ОТРИСОВКА ДЕТАЛЕЙ
-    // ==========================================
-    function renderPart(part) {
-        const container = document.getElementById('partsList');
-        const empty = container.querySelector('.empty-state');
-        if (empty) empty.remove();
-
-        const partDiv = document.createElement('div');
-        partDiv.className = 'part-item';
-        partDiv.id = `part-${part.id}`;
-        
-        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-        
-        partDiv.innerHTML = `
-            <div class="part-grid">
-                <div class="part-preview" id="preview-${part.id}" onclick="openViewer(${part.id})">
-                    <div class="preview-hint">🔍 Нажми для просмотра</div>
-                </div>
-                <div class="part-info">
-                    <h3>📄 ${part.name}</h3>
-                    <div class="part-meta">
-                        <div><strong>Размер файла:</strong> ${part.size}</div>
-                        <div><strong>Габариты:</strong> ${part.dimensions.x} × ${part.dimensions.y} × ${part.dimensions.z} мм</div>
-                        <div><strong>Объем:</strong> ${part.volume.toFixed(2)} см³</div>
-                        <div><strong>Вес:</strong> ${part.weight} г</div>
-                        <div><strong>Технология:</strong> ${techName} | <strong>Материал:</strong> ${matName}</div>
-                        <div><strong>Цена:</strong> <span id="price-${part.id}">${part.price > 0 ? part.price.toLocaleString() + ' ₽' : '—'}</span></div>
-                    </div>
-                    
-                    <div class="qty-control">
-                        <label>Количество:</label>
-                        <input type="number" value="${part.qty}" min="1" onchange="updateQty(${part.id}, this.value)">
-                    </div>
-                    
-                    <div class="part-actions">
-                        <button class="btn btn-primary btn-small" onclick="openParams(${part.id})">✏️ Параметры</button>
-                        <button class="btn btn-secondary btn-small" onclick="duplicatePart(${part.id})">📋 Дублировать</button>
-                        <button class="btn btn-danger btn-small" onclick="deletePart(${part.id})">🗑 Удалить</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(partDiv);
-        
-        // Используем ЛОКАЛЬНЫЙ URL для превью (не требует CORS!)
-        const previewUrl = part.localUrl || part.fileUrl;
-        if (previewUrl && (part.name.toLowerCase().endsWith('.stl') || part.name.toLowerCase().endsWith('.obj'))) {
-            renderSmallPreview(part.id, previewUrl);
-        }
-        
-        document.getElementById('partsCount').textContent = parts.length;
-    }
-
-    function renderSmallPreview(partId, fileUrl) {
-        const container = document.getElementById(`preview-${partId}`);
-        if (!container) return;
-        
-        container.innerHTML = '<div class="preview-hint">🔍 Нажми для просмотра</div>';
-        
-        fetch(fileUrl)
-            .then(response => response.arrayBuffer())
-            .then(arrayBuffer => {
-                const loader = new THREE.STLLoader();
-                const geometry = loader.parse(arrayBuffer);
-                geometry.computeBoundingBox();
-                
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(50, 220/170, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(220, 170);
-                container.appendChild(renderer.domElement);
-
-                const material = new THREE.MeshPhongMaterial({ color: 0x808080, flatShading: true });
-                const mesh = new THREE.Mesh(geometry, material);
-                scene.add(mesh);
-
-                const light = new THREE.DirectionalLight(0xffffff, 1);
-                light.position.set(1, 1, 1);
-                scene.add(light);
-                scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-                const maxDim = Math.max(
-                    geometry.boundingBox.max.x - geometry.boundingBox.min.x,
-                    geometry.boundingBox.max.y - geometry.boundingBox.min.y,
-                    geometry.boundingBox.max.z - geometry.boundingBox.min.z
-                );
-                camera.position.z = maxDim * 2.5;
-
-                function animate() {
-                    if (!document.getElementById(`preview-${partId}`)) return;
-                    requestAnimationFrame(animate);
-                    renderer.render(scene, camera);
-                }
-                animate();
-            })
-            .catch(err => {
-                console.error('Ошибка загрузки 3D:', err);
-            });
-    }
-
-    // ==========================================
-    // 3D ПРОСМОТР
-    // ==========================================
-    function openViewer(partId) {
-        const part = parts.find(p => p.id === partId);
-        if (!part) {
-            alert('Деталь не найдена');
-            return;
-        }
-        
-        // Используем локальный URL если есть, иначе файл с Object Storage
-        const viewerUrl = part.localUrl || part.fileUrl;
-        if (!viewerUrl) {
-            alert('3D просмотр недоступен для этой детали');
-            return;
-        }
-        
-        currentViewerPart = part;
-        document.getElementById('viewerModal').classList.add('show');
-        
-        const container = document.getElementById('viewerContainer');
-        container.innerHTML = '';
-        
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf8f9fa);
-        
-        const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.shadowMap.enabled = true;
-        container.appendChild(renderer.domElement);
-
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-
-        fetch(viewerUrl)
-            .then(response => response.arrayBuffer())
-            .then(arrayBuffer => {
-                const loader = new THREE.STLLoader();
-                const geometry = loader.parse(arrayBuffer);
-                geometry.computeBoundingBox();
-                
-                const material = new THREE.MeshPhongMaterial({ color: 0x0066CC, flatShading: true });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.castShadow = true;
-                scene.add(mesh);
-
-                const light = new THREE.DirectionalLight(0xffffff, 1);
-                light.position.set(5, 5, 5);
-                light.castShadow = true;
-                scene.add(light);
-                scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-                const maxDim = Math.max(
-                    geometry.boundingBox.max.x - geometry.boundingBox.min.x,
-                    geometry.boundingBox.max.y - geometry.boundingBox.min.y,
-                    geometry.boundingBox.max.z - geometry.boundingBox.min.z
-                );
-                camera.position.z = maxDim * 3;
-                camera.position.y = maxDim;
-                controls.target.set(0, 0, 0);
-
-                function animate() {
-                    if (!document.getElementById('viewerModal').classList.contains('show')) return;
-                    requestAnimationFrame(animate);
-                    controls.update();
-                    renderer.render(scene, camera);
-                }
-                animate();
-            });
-        
-        window.addEventListener('resize', function onResize() {
-            if (!document.getElementById('viewerModal').classList.contains('show')) {
-                window.removeEventListener('resize', onResize);
-                return;
-            }
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        });
-    }
-
-    function closeViewerModal() {
-        document.getElementById('viewerModal').classList.remove('show');
-        currentViewerPart = null;
-    }
-
-    // ==========================================
-    // УПРАВЛЕНИЕ ПАРАМЕТРАМИ
-    // ==========================================
-    function updateMaterials() {
-        const tech = document.getElementById('technology').value;
-        const materialSelect = document.getElementById('material');
-        materialSelect.innerHTML = '';
-        
-        materials[tech].forEach(mat => {
-            const option = document.createElement('option');
-            option.value = mat.value;
-            option.textContent = `${mat.name} (${mat.density} г/см³) — ${mat.price} ₽/см³`;
-            materialSelect.appendChild(option);
-        });
-    }
-
-    function updateQty(partId, qty) {
-        const part = parts.find(p => p.id === partId);
-        if (part) {
-            part.qty = parseInt(qty);
-            calculatePrice(part).then(() => {
-                updateSummary();
-                const priceEl = document.getElementById(`price-${partId}`);
-                if (priceEl) priceEl.textContent = part.price.toLocaleString() + ' ₽';
-            });
-        }
-    }
-
-    function openParams(partId) {
-        currentPartId = partId;
-        const part = parts.find(p => p.id === partId);
-        if (!part) return;
-
-        document.getElementById('technology').value = part.params.technology;
-        updateMaterials();
-        document.getElementById('material').value = part.params.material;
-        document.getElementById('layerHeight').value = part.params.layerHeight || '0.2';
-        document.getElementById('infill').value = part.params.infill || '20';
-        document.getElementById('quantity').value = part.qty;
-        document.getElementById('marking').checked = part.params.marking || false;
-        
-        document.getElementById('paramsModal').classList.add('show');
-    }
-
-    function closeModal() {
-        document.getElementById('paramsModal').classList.remove('show');
-        currentPartId = null;
-    }
-
-    async function saveParams() {
-        if (!currentPartId) return;
-        const part = parts.find(p => p.id === currentPartId);
-        if (!part) return;
-
-        const postprocess = [];
-        ['supportRemoval', 'sanding', 'priming', 'painting', 'vaporSmoothing', 'dyeing'].forEach(id => {
-            if (document.getElementById(id).checked) postprocess.push(id);
-        });
-
-        part.params = {
-            technology: document.getElementById('technology').value,
-            material: document.getElementById('material').value,
-            layerHeight: document.getElementById('layerHeight').value,
-            infill: document.getElementById('infill').value,
-            postprocess: postprocess,
-            marking: document.getElementById('marking').checked,
-            markingText: document.getElementById('markingText').value,
-            quantity: parseInt(document.getElementById('quantity').value) || 1
+  // ---- FILE UPLOAD ----
+  async function handleFileUpload(input) {
+    if (!input.files.length) return;
+    showLoading(input.files[0].name);
+    for (const file of input.files) {
+      try {
+        const fileData = await readBase64(file);
+        const localUrl = URL.createObjectURL(file);
+        const uploadResult = await uploadToStorage(file.name, fileData, file.type);
+        const part = {
+          id: Date.now() + Math.random(),
+          name: file.name,
+          size: (file.size/1024/1024).toFixed(2) + ' MB',
+          uploadDate: new Date().toLocaleDateString('ru-RU'),
+          qty: 1,
+          fileUrl: uploadResult.fileUrl || uploadResult.Location,
+          localUrl,
+          params: { technology:'fdm', material:'pla', layerHeight:'0.2', infill:'20', postprocess:[], quantity:1 },
+          dimensions: { x:0, y:0, z:0 },
+          volume: 0, weight: 0, price: 0
         };
-
-        part.qty = part.params.quantity;
-        await calculatePrice(part);
-        
-        const oldDiv = document.getElementById(`part-${part.id}`);
-        if (oldDiv) oldDiv.remove();
+        if (file.name.toLowerCase().match(/\.(stl|obj)$/)) {
+          const stlData = await analyzeSTL(localUrl);
+          part.dimensions = stlData.dimensions;
+          part.volume = stlData.volume;
+        }
+        await calcPrice(part);
+        parts.push(part);
         renderPart(part);
-        updateSummary();
-        closeModal();
+      } catch(e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+      }
     }
+    hideLoading();
+    updateSummary();
+    input.value = '';
+  }
 
-    function deletePart(partId) {
-        if (confirm('Удалить деталь?')) {
-            const part = parts.find(p => p.id === partId);
-            if (part && part.localUrl) {
-                URL.revokeObjectURL(part.localUrl); // Освобождаем память
-            }
-            
-            parts = parts.filter(p => p.id !== partId);
-            const div = document.getElementById(`part-${partId}`);
-            if (div) div.remove();
-            
-            if (parts.length === 0) {
-                document.getElementById('partsList').innerHTML = `
-                    <div class="empty-state">
-                        <p>Пока нет загруженных деталей</p>
-                        <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-                    </div>
-                `;
-            }
-            
-            document.getElementById('partsCount').textContent = parts.length;
-            updateSummary();
+  function readBase64(file) {
+    return new Promise((res,rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function uploadToStorage(name, data, type) {
+    const resp = await fetch(UPLOAD_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ body:data, fileName:name, contentType:type })
+    });
+    if (!resp.ok) throw new Error('Ошибка загрузки файла');
+    return resp.json();
+  }
+
+  async function analyzeSTL(url) {
+    return new Promise(resolve => {
+      fetch(url).then(r=>r.arrayBuffer()).then(buf => {
+        try {
+          const loader = new THREE.STLLoader();
+          const geo = loader.parse(buf);
+          geo.computeBoundingBox();
+          const b = geo.boundingBox;
+          const dims = {
+            x: (b.max.x-b.min.x).toFixed(1),
+            y: (b.max.y-b.min.y).toFixed(1),
+            z: (b.max.z-b.min.z).toFixed(1)
+          };
+          let vol = 0;
+          const pos = geo.attributes.position.array;
+          for (let i=0;i<pos.length;i+=9) {
+            const p1=new THREE.Vector3(pos[i],pos[i+1],pos[i+2]);
+            const p2=new THREE.Vector3(pos[i+3],pos[i+4],pos[i+5]);
+            const p3=new THREE.Vector3(pos[i+6],pos[i+7],pos[i+8]);
+            vol += p1.dot(p2.cross(p3))/6;
+          }
+          vol = Math.abs(vol);
+          if (vol > 100000) vol /= 1000;
+          resolve({ dimensions:dims, volume:vol });
+        } catch(e) {
+          resolve({ dimensions:{x:'—',y:'—',z:'—'}, volume:0 });
         }
-    }
+      }).catch(() => resolve({ dimensions:{x:'—',y:'—',z:'—'}, volume:0 }));
+    });
+  }
 
-    function duplicatePart(partId) {
-        const part = parts.find(p => p.id === partId);
-        if (!part) return;
-
-        const newPart = {
-            ...part,
-            id: Date.now() + Math.random(),
-            name: 'Копия: ' + part.name,
-            qty: 1
-        };
-
-        parts.push(newPart);
-        renderPart(newPart);
-        updateSummary();
-    }
-
-    function updateSummary() {
-        const totalParts = parts.length;
-        const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
-        const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
-        const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
-        
-        document.getElementById('totalParts').textContent = totalParts;
-        document.getElementById('totalQty').textContent = totalQty + ' шт.';
-        document.getElementById('totalWeight').textContent = totalWeight.toFixed(1) + ' г';
-        document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + ' ₽';
-        document.getElementById('leadTime').textContent = totalParts > 0 ? '3-7 дней' : '—';
-    }
-
-    // ==========================================
-    // СОХРАНЕНИЕ И ОФОРМЛЕНИЕ
-    // ==========================================
-    function saveToProjects() {
-        if (parts.length === 0) {
-            alert('Загрузите хотя бы одну деталь');
-            return;
-        }
-        
-        const project = {
-            id: Date.now(),
-            quoteNumber: quoteNumber,
-            date: quoteDate,
-            parts: JSON.parse(JSON.stringify(parts)),
-            totalWeight: document.getElementById('totalWeight').textContent,
-            totalPrice: document.getElementById('totalPrice').textContent,
-            leadTime: document.getElementById('leadTime').textContent,
-            status: 'Черновик'
-        };
-        
-        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-        projects.push(project);
-        localStorage.setItem('projects', JSON.stringify(projects));
-        
-        localStorage.removeItem('currentQuote');
-        parts = [];
-        document.getElementById('partsList').innerHTML = `
-            <div class="empty-state">
-                <p>Пока нет загруженных деталей</p>
-                <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-            </div>
-        `;
-        document.getElementById('partsCount').textContent = '0';
-        updateSummary();
-        initQuoteNumber();
-        
-        alert('Запрос сохранён в "Мои проекты"');
-        window.location.href = 'projects.html';
-    }
-
-    async function checkout() {
-    if (parts.length === 0) {
-        alert('Загрузите хотя бы одну деталь');
-        return;
-    }
-    
-    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-    
+  async function calcPrice(part) {
     try {
-        // Отправляем данные в Bitrix24
-        await sendToBitrix24(profile);
-        
-        // Сохраняем заказ локально
-        const order = {
-            id: Date.now(),
-            quoteNumber: quoteNumber,
-            date: quoteDate,
-            parts: JSON.parse(JSON.stringify(parts)),
-            totalWeight: document.getElementById('totalWeight').textContent,
-            totalPrice: document.getElementById('totalPrice').textContent,
-            leadTime: document.getElementById('leadTime').textContent,
-            status: 'Новый',
-            orderDate: new Date().toLocaleString('ru-RU')
-        };
-        
-        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-        orders.push(order);
-        localStorage.setItem('orders', JSON.stringify(orders));
-        
-        localStorage.removeItem('currentQuote');
-        parts = [];
-        document.getElementById('partsList').innerHTML = `
-            <div class="empty-state">
-                <p>Пока нет загруженных деталей</p>
-                <p style="font-size: 0.9rem;">Загрузите первый файл выше</p>
-            </div>
-        `;
-        document.getElementById('partsCount').textContent = '0';
-        updateSummary();
-        initQuoteNumber();
-        
-        alert('✅ Заказ оформлен! Данные отправлены в CRM.\n\nПереход в "Мои заказы"');
-        window.location.href = 'orders.html';
-        
-    } catch (error) {
-        console.error('Ошибка оформления заказа:', error);
-        alert('❌ Ошибка при оформлении заказа: ' + error.message + '\n\nПопробуйте ещё раз.');
+      const resp = await fetch(CALCULATE_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          volume: part.volume,
+          technology: part.params.technology,
+          material: part.params.material,
+          quantity: part.qty,
+          fileName: part.name,
+          userId: localStorage.getItem('userId')
+        })
+      });
+      if (!resp.ok) throw new Error();
+      const result = await resp.json();
+      part.price = parseFloat(result.price) || 0;
+    } catch {
+      // Локальный расчёт
+      const mats = materials[part.params.technology];
+      const mat = mats.find(m => m.value === part.params.material);
+      if (mat) {
+        const infill = parseInt(part.params.infill)/100;
+        part.weight = (part.volume * mat.density * infill).toFixed(1);
+        part.price = Math.max(500, Math.round(part.volume * mat.price * infill * part.qty));
+      } else { part.price = 1000; }
     }
-}
+  }
 
-// ==========================================
-// ОТПРАВКА ДАННЫХ В BITRIX24
-// ==========================================
-async function sendToBitrix24(profile) {
-    const totalParts = parts.length;
-    const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
-    const totalWeight = document.getElementById('totalWeight').textContent;
-    const totalPrice = document.getElementById('totalPrice').textContent;
-    
-    // Формируем список деталей
-    let partsList = '';
-    parts.forEach((part, index) => {
-        const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-        const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-        partsList += `${index + 1}. ${part.name}\n`;
-        partsList += `   Технология: ${techName}, Материал: ${matName}\n`;
-        partsList += `   Размеры: ${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм\n`;
-        partsList += `   Объем: ${part.volume.toFixed(2)} см³, Вес: ${part.weight} г\n`;
-        partsList += `   Количество: ${part.qty} шт., Цена: ${part.price.toLocaleString()} ₽\n\n`;
+  // ---- RENDER PART ----
+  function renderPart(part) {
+    const list = document.getElementById('partsList');
+    const empty = list.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const tech = {fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[part.params.technology];
+    const matName = (materials[part.params.technology].find(m=>m.value===part.params.material)||{}).name||'';
+
+    const div = document.createElement('div');
+    div.id = `part-${part.id}`;
+    div.style.cssText = 'padding:16px 20px;border-bottom:1px solid var(--gray-100);display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:start;';
+    div.innerHTML = `
+      <div id="preview-${part.id}" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);height:140px;cursor:pointer;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;" onclick="openViewer(${JSON.stringify(part.id)})">
+        <span style="font-size:11px;color:var(--gray-400)">Загрузка 3D...</span>
+        <div style="position:absolute;bottom:6px;right:6px;background:rgba(7,31,42,.7);color:#7dc3fd;font-size:10px;padding:2px 7px;border-radius:4px;">3D</div>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--gray-900);">${part.name}</div>
+        <div style="font-size:12px;color:var(--gray-400);line-height:2;">
+          <span style="margin-right:14px;">Файл: <b style="color:var(--gray-600)">${part.size}</b></span>
+          <span style="margin-right:14px;">Габариты: <b style="color:var(--gray-600)">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</b></span><br>
+          <span style="margin-right:14px;">Технология: <b style="color:var(--gray-600)">${tech}</b></span>
+          <span style="margin-right:14px;">Материал: <b style="color:var(--gray-600)">${matName}</b></span>
+          <span>Вес: <b style="color:var(--gray-600)">${part.weight||'—'} г</b></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
+          <span style="font-size:12px;color:var(--gray-400)">Кол-во:</span>
+          <input type="number" value="${part.qty}" min="1" style="width:64px;padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;" onchange="updateQty(${JSON.stringify(part.id)},this.value)">
+          <span style="font-size:15px;font-weight:600;color:var(--navy);margin-left:auto;" id="price-${part.id}">${part.price>0?part.price.toLocaleString()+' ₽':'—'}</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="openParams(${JSON.stringify(part.id)})">Параметры</button>
+          <button class="btn btn-ghost btn-sm" onclick="duplicatePart(${JSON.stringify(part.id)})">Дублировать</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePart(${JSON.stringify(part.id)})">Удалить</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+    document.getElementById('partsCount').textContent = `(${parts.length})`;
+    // 3D preview
+    const previewUrl = part.localUrl || part.fileUrl;
+    if (previewUrl && part.name.toLowerCase().match(/\.(stl|obj)$/)) {
+      renderMiniPreview(part.id, previewUrl);
+    }
+  }
+
+  function renderMiniPreview(partId, url) {
+    const cont = document.getElementById(`preview-${partId}`);
+    if (!cont) return;
+    cont.innerHTML = '<div style="position:absolute;bottom:6px;right:6px;background:rgba(7,31,42,.7);color:#7dc3fd;font-size:10px;padding:2px 7px;border-radius:4px;">3D</div>';
+    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+      const loader = new THREE.STLLoader();
+      const geo = loader.parse(buf);
+      geo.computeBoundingBox();
+      const scene = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(50,180/140,0.1,1000);
+      const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+      renderer.setSize(180,140);
+      cont.appendChild(renderer.domElement);
+      const mat = new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true});
+      scene.add(new THREE.Mesh(geo,mat));
+      scene.add(new THREE.DirectionalLight(0xffffff,1).position.set(1,1,1)||new THREE.DirectionalLight(0xffffff,1));
+      scene.add(new THREE.AmbientLight(0x7dc3fd,0.4));
+      const b = geo.boundingBox;
+      const mx = Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
+      cam.position.z = mx*2.5;
+      (function anim(){
+        if (!document.getElementById(`preview-${partId}`)) return;
+        requestAnimationFrame(anim);
+        renderer.render(scene,cam);
+      })();
+    }).catch(()=>{});
+  }
+
+  // ---- VIEWER ----
+  function openViewer(partId) {
+    const part = parts.find(p=>p.id===partId);
+    if (!part) return;
+    const url = part.localUrl||part.fileUrl;
+    if (!url) return;
+    document.getElementById('viewerModal').classList.add('show');
+    const cont = document.getElementById('viewerContainer');
+    cont.innerHTML = '';
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf6f8fb);
+    const cam = new THREE.PerspectiveCamera(50,cont.clientWidth/cont.clientHeight,0.1,1000);
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(cont.clientWidth,cont.clientHeight);
+    cont.appendChild(renderer.domElement);
+    const controls = new THREE.OrbitControls(cam,renderer.domElement);
+    controls.enableDamping = true;
+    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+      const geo = new THREE.STLLoader().parse(buf);
+      geo.computeBoundingBox();
+      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true}));
+      scene.add(mesh);
+      const light = new THREE.DirectionalLight(0x7dc3fd,1);
+      light.position.set(5,5,5);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0xffffff,0.6));
+      const b = geo.boundingBox;
+      const mx = Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
+      cam.position.set(0,mx,mx*3);
+      controls.target.set(0,0,0);
+      (function anim(){
+        if (!document.getElementById('viewerModal').classList.contains('show')) return;
+        requestAnimationFrame(anim);
+        controls.update();
+        renderer.render(scene,cam);
+      })();
     });
-    
-    // 1. Создаём контакт
-    const contactData = {
-        fields: {
-            NAME: profile.name?.split(' ')[0] || 'Клиент',
-            LAST_NAME: profile.name?.split(' ').slice(1).join(' ') || profile.name || 'DetalHub',
-            EMAIL: [{ VALUE: profile.email, TYPE: 'WORK' }],
-            PHONE: [{ VALUE: profile.phone, TYPE: 'WORK' }],
-            POST: profile.company || 'DetalHub Client',
-            COMMENTS: `Заказ №${quoteNumber} от ${quoteDate}\nОбщая стоимость: ${totalPrice} ₽\nОбщий вес: ${totalWeight}\nКоличество деталей: ${totalParts} шт.`
-        },
-        params: { REGISTER_SONET_EVENT: 'Y' }
-    };
-    
-    const contactResponse = await fetch(`${BITRIX_WEBHOOK_URL}crm.contact.add.json`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contactData)
-    });
-    
-    const contactResult = await contactResponse.json();
-    const contactId = contactResult.result;
-    
-    // 2. Создаём сделку
-    const dealData = {
-        fields: {
-            TITLE: `Заказ №${quoteNumber} — 3D печать`,
-            OPPORTUNITY: totalPrice.replace(/\s/g, '').replace('₽', ''),
-            CURRENCY_ID: 'RUB',
-            STAGE_ID: 'NEW',
-            CONTACT_ID: contactId,
-            COMMENTS: `Детали для 3D-печати:\n\n${partsList}\n\nСрок изготовления: ${document.getElementById('leadTime').textContent}\n\nEmail: ${profile.email}\nТелефон: ${profile.phone}\nКомпания: ${profile.company || 'Не указана'}`
-        },
-        params: { REGISTER_SONET_EVENT: 'Y' }
-    };
-    
-    const dealResponse = await fetch(`${BITRIX_WEBHOOK_URL}crm.deal.add.json`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dealData)
-    });
-    
-    const dealResult = await dealResponse.json();
-    
-    if (!dealResult.result) {
-        throw new Error('Не удалось создать сделку в Bitrix24');
-    }
-    
-    console.log('✅ Заказ отправлен в Bitrix24:', dealResult);
-    return dealResult;
-}
+  }
 
-    function downloadPDF() {
-        if (parts.length === 0) {
-            alert('Загрузите хотя бы одну деталь');
-            return;
-        }
-        
-        const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        const totalParts = parts.length;
-        const totalQty = parts.reduce((sum, p) => sum + p.qty, 0);
-        const totalWeight = parts.reduce((sum, p) => sum + parseFloat(p.weight || 0), 0);
-        const totalPrice = parts.reduce((sum, p) => sum + p.price, 0);
-        
-        let rowsHtml = '';
-        parts.forEach((part, index) => {
-            const techName = { fdm: 'FDM', sla: 'SLA', sls: 'SLS', mjf: 'MJF' }[part.params.technology];
-            const matName = materials[part.params.technology].find(m => m.value === part.params.material)?.name || '';
-            
-            rowsHtml += `
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${index + 1}</td>
-                    <td style="padding: 8px; border: 1px solid #ccc;">${part.name}</td>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${techName}</td>
-                    <td style="padding: 8px; border: 1px solid #ccc;">${matName}</td>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</td>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.weight} г</td>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${part.qty} шт.</td>
-                    <td style="padding: 8px; border: 1px solid #ccc; text-align: right;">${part.price.toLocaleString('ru-RU')} ₽</td>
-                </tr>
-            `;
-        });
-        
-        const template = document.createElement('div');
-        template.innerHTML = `
-            <div style="font-family: Arial, sans-serif; color: #000; padding: 15mm; background: #fff;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #0066CC; padding-bottom: 15px;">
-                    <div>
-                        <h1 style="color: #0066CC; font-size: 24px; margin: 0 0 5px 0;">DetalHub</h1>
-                        <div style="color: #666; font-size: 11px;">Изготовление деталей по чертежу</div>
-                        <div style="color: #666; font-size: 11px;">detalhub.com</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 18px; font-weight: bold; color: #0066CC;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</div>
-                        <div style="font-size: 13px; margin-top: 5px;">№ ${quoteNumber} от ${quoteDate}</div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
-                        <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОСТАВЩИК:</div>
-                        <div style="font-size: 11px; line-height: 1.5;">
-                            <strong>DetalHub</strong><br>
-                            Инженер: Наталия<br>
-                            Email: info@detalhub.com<br>
-                            Сайт: detalhub.com
-                        </div>
-                    </div>
-                    <div style="flex: 1; background: #f5f8ff; padding: 12px; border-left: 4px solid #0066CC;">
-                        <div style="font-weight: bold; color: #0066CC; margin-bottom: 6px; font-size: 12px;">ПОКУПАТЕЛЬ:</div>
-                        <div style="font-size: 11px; line-height: 1.5;">
-                            <strong>${profile.name || '—'}</strong><br>
-                            ${profile.company ? 'Компания: ' + profile.company + '<br>' : ''}
-                            ${profile.address ? 'Адрес: ' + profile.address + '<br>' : ''}
-                            ${profile.phone ? 'Тел: ' + profile.phone + '<br>' : ''}
-                            ${profile.email ? 'Email: ' + profile.email : ''}
-                        </div>
-                    </div>
-                </div>
-                
-                <h2 style="color: #0066CC; font-size: 14px; margin-bottom: 10px;">Спецификация деталей:</h2>
-                
-                <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 15px;">
-                    <thead>
-                        <tr style="background: #0066CC; color: white;">
-                            <th style="padding: 8px; border: 1px solid #ccc;">№</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Наименование</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Технология</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Материал</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Размеры</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Вес</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Кол-во</th>
-                            <th style="padding: 8px; border: 1px solid #ccc;">Сумма</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHtml}
-                    </tbody>
-                    <tfoot>
-                        <tr style="background: #f5f8ff; font-weight: bold;">
-                            <td colspan="5" style="padding: 8px; border: 1px solid #ccc; text-align: right;">ИТОГО:</td>
-                            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalWeight.toFixed(1)} г</td>
-                            <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${totalQty} шт.</td>
-                            <td style="padding: 8px; border: 1px solid #ccc; text-align: right; font-size: 12px; color: #0066CC;">${totalPrice.toLocaleString('ru-RU')} ₽</td>
-                        </tr>
-                    </tfoot>
-                </table>
-                
-                <div style="margin-bottom: 20px; padding: 12px; background: #fff8e1; border-left: 4px solid #f59e0b;">
-                    <div style="font-weight: bold; color: #d97706; margin-bottom: 6px;">УСЛОВИЯ:</div>
-                    <div style="font-size: 11px; line-height: 1.7;">
-                        ✓ Срок изготовления: ${document.getElementById('leadTime').textContent}<br>
-                        ✓ Общий вес деталей: ${totalWeight.toFixed(1)} г<br>
-                        ✓ Количество позиций: ${totalParts}<br>
-                        ✓ Срок действия предложения: 14 дней<br>
-                        ✓ Доставка: по всей России транспортными компаниями
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;">
-                    <div>
-                        <div style="font-size: 11px; color: #666;">С уважением,</div>
-                        <div style="font-weight: bold;">Инженер DetalHub</div>
-                        <div style="font-size: 11px; color: #666;">Наталия</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 11px; color: #666;">Документ сформирован автоматически</div>
-                        <div style="font-size: 10px; color: #999;">detalhub.com</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        html2pdf().from(template).set({
-            margin: 0,
-            filename: 'KP_' + quoteNumber + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).save();
-    }
+  function closeViewerModal() {
+    document.getElementById('viewerModal').classList.remove('show');
+  }
 
-    function logout() {
-        localStorage.removeItem('isLoggedIn');
-        window.location.href = 'auth.html';
-    }
+  // ---- PARAMS ----
+  function updateMaterials() {
+    const tech = document.getElementById('technology').value;
+    const sel = document.getElementById('material');
+    sel.innerHTML = materials[tech].map(m=>`<option value="${m.value}">${m.name} — ${m.price} ₽/см³</option>`).join('');
+  }
 
-    // ==========================================
-    // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
-    // ==========================================
-    initQuoteNumber();
+  function openParams(partId) {
+    currentPartId = partId;
+    const part = parts.find(p=>p.id===partId);
+    if (!part) return;
+    document.getElementById('technology').value = part.params.technology;
     updateMaterials();
+    document.getElementById('material').value = part.params.material;
+    document.getElementById('layerHeight').value = part.params.layerHeight||'0.2';
+    document.getElementById('infill').value = part.params.infill||'20';
+    document.getElementById('quantity').value = part.qty;
+    document.getElementById('paramsModal').classList.add('show');
+  }
 
-    document.getElementById('marking')?.addEventListener('change', function() {
-        const group = document.getElementById('markingTextGroup');
-        if (group) group.style.display = this.checked ? 'block' : 'none';
-    });
+  function closeModal() {
+    document.getElementById('paramsModal').classList.remove('show');
+    currentPartId = null;
+  }
 
-    document.getElementById('paramsModal')?.addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
+  async function saveParams() {
+    if (!currentPartId) return;
+    const part = parts.find(p=>p.id===currentPartId);
+    if (!part) return;
+    const pp = [];
+    ['supportRemoval','sanding','priming','painting'].forEach(id=>{
+      if (document.getElementById(id).checked) pp.push(id);
     });
-    
-    document.getElementById('viewerModal')?.addEventListener('click', function(e) {
-        if (e.target === this) closeViewerModal();
+    part.params = {
+      technology: document.getElementById('technology').value,
+      material: document.getElementById('material').value,
+      layerHeight: document.getElementById('layerHeight').value,
+      infill: document.getElementById('infill').value,
+      postprocess: pp,
+      quantity: parseInt(document.getElementById('quantity').value)||1
+    };
+    part.qty = part.params.quantity;
+    await calcPrice(part);
+    const old = document.getElementById(`part-${part.id}`);
+    if (old) old.remove();
+    renderPart(part);
+    updateSummary();
+    closeModal();
+  }
+
+  function updateQty(partId, qty) {
+    const part = parts.find(p=>p.id===partId);
+    if (!part) return;
+    part.qty = parseInt(qty)||1;
+    calcPrice(part).then(()=>{
+      updateSummary();
+      const el = document.getElementById(`price-${partId}`);
+      if (el) el.textContent = part.price.toLocaleString()+' ₽';
     });
+  }
+
+  function deletePart(partId) {
+    if (!confirm('Удалить деталь?')) return;
+    const part = parts.find(p=>p.id===partId);
+    if (part?.localUrl) URL.revokeObjectURL(part.localUrl);
+    parts = parts.filter(p=>p.id!==partId);
+    document.getElementById(`part-${partId}`)?.remove();
+    document.getElementById('partsCount').textContent = `(${parts.length})`;
+    if (!parts.length) document.getElementById('partsList').innerHTML = '<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
+    updateSummary();
+  }
+
+  function duplicatePart(partId) {
+    const part = parts.find(p=>p.id===partId);
+    if (!part) return;
+    const np = { ...part, id: Date.now()+Math.random(), name:'Копия: '+part.name, qty:1 };
+    parts.push(np);
+    renderPart(np);
+    updateSummary();
+  }
+
+  function updateSummary() {
+    document.getElementById('totalParts').textContent = parts.length;
+    document.getElementById('totalQty').textContent = parts.reduce((s,p)=>s+p.qty,0)+' шт.';
+    document.getElementById('totalWeight').textContent = parts.reduce((s,p)=>s+parseFloat(p.weight||0),0).toFixed(1)+' г';
+    document.getElementById('totalPrice').textContent = parts.reduce((s,p)=>s+p.price,0).toLocaleString()+' ₽';
+    document.getElementById('leadTime').textContent = parts.length ? '3–7 дней' : '—';
+  }
+
+  function showLoading(name) {
+    document.getElementById('loading-ind')?.remove();
+    const d = document.createElement('div');
+    d.id='loading-ind';
+    d.style.cssText='padding:24px 20px;text-align:center;color:var(--gray-400);font-size:13px;border-bottom:1px solid var(--gray-100);';
+    d.innerHTML=`<div style="margin-bottom:6px;">⏳</div>Загрузка: <b>${name}</b>...`;
+    const list = document.getElementById('partsList');
+    const empty = list.querySelector('.empty-state');
+    if (empty) empty.remove();
+    list.appendChild(d);
+  }
+  function hideLoading() { document.getElementById('loading-ind')?.remove(); }
+
+  // ---- SAVE & CHECKOUT ----
+  function saveToProjects() {
+    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
+    const p = { id:Date.now(), quoteNumber, date:quoteDate, parts:JSON.parse(JSON.stringify(parts)),
+      totalWeight: document.getElementById('totalWeight').textContent,
+      totalPrice: document.getElementById('totalPrice').textContent,
+      leadTime: document.getElementById('leadTime').textContent, status:'Черновик' };
+    const projects = JSON.parse(localStorage.getItem('projects')||'[]');
+    projects.push(p);
+    localStorage.setItem('projects', JSON.stringify(projects));
+    localStorage.removeItem('currentQuote');
+    parts=[]; document.getElementById('partsList').innerHTML='<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
+    document.getElementById('partsCount').textContent='(0)';
+    updateSummary(); initQuote();
+    alert('Сохранено в «Мои проекты»');
+    window.location.href='projects.html';
+  }
+
+  async function checkout() {
+    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
+    const profile = JSON.parse(localStorage.getItem('userProfile')||'{}');
+    try {
+      await sendToBitrix(profile);
+      const order = { id:Date.now(), quoteNumber, date:quoteDate, parts:JSON.parse(JSON.stringify(parts)),
+        totalWeight: document.getElementById('totalWeight').textContent,
+        totalPrice: document.getElementById('totalPrice').textContent,
+        leadTime: document.getElementById('leadTime').textContent,
+        status:'Новый', orderDate:new Date().toLocaleString('ru-RU') };
+      const orders = JSON.parse(localStorage.getItem('orders')||'[]');
+      orders.push(order);
+      localStorage.setItem('orders', JSON.stringify(orders));
+      localStorage.removeItem('currentQuote');
+      parts=[]; updateSummary(); initQuote();
+      document.getElementById('partsList').innerHTML='<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
+      document.getElementById('partsCount').textContent='(0)';
+      alert('✅ Заказ оформлен! Данные отправлены в CRM.');
+      window.location.href='orders.html';
+    } catch(e) {
+      alert('Ошибка при оформлении: '+e.message);
+    }
+  }
+
+  async function sendToBitrix(profile) {
+    const totalPrice = document.getElementById('totalPrice').textContent;
+    let partsList='';
+    parts.forEach((p,i)=>{
+      const t={fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[p.params.technology];
+      const m=(materials[p.params.technology].find(x=>x.value===p.params.material)||{}).name||'';
+      partsList+=`${i+1}. ${p.name} | ${t} | ${m} | ${p.dimensions.x}×${p.dimensions.y}×${p.dimensions.z}мм | ${p.qty}шт | ${p.price.toLocaleString()}₽\n`;
+    });
+    const contact = await fetch(`${BITRIX_URL}crm.contact.add.json`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ fields:{
+        NAME:(profile.name||'Клиент').split(' ')[0],
+        LAST_NAME:(profile.name||'').split(' ').slice(1).join(' ')||'DetalHub',
+        EMAIL:[{VALUE:profile.email,TYPE:'WORK'}],
+        PHONE:[{VALUE:profile.phone,TYPE:'WORK'}]
+      }})
+    }).then(r=>r.json());
+    const deal = await fetch(`${BITRIX_URL}crm.deal.add.json`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ fields:{
+        TITLE:`Заказ №${quoteNumber} — 3D печать`,
+        OPPORTUNITY: totalPrice.replace(/\s/g,'').replace('₽',''),
+        CURRENCY_ID:'RUB', STAGE_ID:'NEW',
+        CONTACT_ID: contact.result,
+        COMMENTS:`Детали:\n${partsList}\nEmail:${profile.email}\nТел:${profile.phone}`
+      }})
+    }).then(r=>r.json());
+    if (!deal.result) throw new Error('Не удалось создать сделку в Bitrix24');
+  }
+
+  function downloadPDF() {
+    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
+    const profile = JSON.parse(localStorage.getItem('userProfile')||'{}');
+    const totalPrice = parts.reduce((s,p)=>s+p.price,0);
+    const totalQty   = parts.reduce((s,p)=>s+p.qty,0);
+    const totalWeight= parts.reduce((s,p)=>s+parseFloat(p.weight||0),0);
+    let rows='';
+    parts.forEach((p,i)=>{
+      const t={fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[p.params.technology];
+      const m=(materials[p.params.technology].find(x=>x.value===p.params.material)||{}).name||'';
+      rows+=`<tr><td>${i+1}</td><td>${p.name}</td><td>${t}</td><td>${m}</td><td>${p.dimensions.x}×${p.dimensions.y}×${p.dimensions.z}</td><td>${p.weight}г</td><td>${p.qty}шт</td><td><b>${p.price.toLocaleString()}₽</b></td></tr>`;
+    });
+    const tpl=document.createElement('div');
+    tpl.innerHTML=`<div style="font-family:Arial,sans-serif;padding:20mm;color:#000;">
+      <div style="display:flex;justify-content:space-between;border-bottom:3px solid #071f2a;padding-bottom:14px;margin-bottom:20px;">
+        <div><b style="font-size:22px;color:#071f2a;">DetalHub</b><br><span style="font-size:11px;color:#666;">detalhub.com</span></div>
+        <div style="text-align:right;"><b style="font-size:16px;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</b><br>№ ${quoteNumber} от ${quoteDate}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px;">
+        <thead><tr style="background:#071f2a;color:#7dc3fd;">
+          <th style="padding:8px;border:1px solid #ccc;">№</th><th style="padding:8px;border:1px solid #ccc;">Наименование</th>
+          <th style="padding:8px;border:1px solid #ccc;">Технология</th><th style="padding:8px;border:1px solid #ccc;">Материал</th>
+          <th style="padding:8px;border:1px solid #ccc;">Габариты</th><th style="padding:8px;border:1px solid #ccc;">Вес</th>
+          <th style="padding:8px;border:1px solid #ccc;">Кол-во</th><th style="padding:8px;border:1px solid #ccc;">Сумма</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="background:#f5f8ff;font-weight:bold;">
+          <td colspan="5" style="padding:8px;border:1px solid #ccc;text-align:right;">ИТОГО:</td>
+          <td style="padding:8px;border:1px solid #ccc;">${totalWeight.toFixed(1)}г</td>
+          <td style="padding:8px;border:1px solid #ccc;">${totalQty}шт</td>
+          <td style="padding:8px;border:1px solid #ccc;color:#071f2a;">${totalPrice.toLocaleString()}₽</td>
+        </tr></tfoot>
+      </table>
+      <p style="font-size:11px;color:#666;">Срок изготовления: ${document.getElementById('leadTime').textContent} · Срок действия КП: 14 дней</p>
+    </div>`;
+    html2pdf().from(tpl).set({
+      filename:`KP_${quoteNumber}.pdf`,
+      jsPDF:{unit:'mm',format:'a4'},
+      html2canvas:{scale:2,backgroundColor:'#fff'}
+    }).save();
+  }
+
+  document.getElementById('paramsModal').addEventListener('click', e=>{if(e.target===e.currentTarget)closeModal();});
+  document.getElementById('viewerModal').addEventListener('click', e=>{if(e.target===e.currentTarget)closeViewerModal();});
+
+  initQuote();
+  updateMaterials();
 </script>
-
 </body>
 </html>

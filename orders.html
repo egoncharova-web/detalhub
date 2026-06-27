@@ -1,80 +1,111 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Мои заказы — DetalHub</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background: #f8f9fa; color: #1a1a1a; }
-    .header { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
-    .logo { max-width: 160px; height: auto; }
-    .nav-menu { display: flex; gap: 2rem; }
-    .nav-menu a { color: #666; text-decoration: none; font-weight: 500; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 2px solid transparent; }
-    .nav-menu a:hover, .nav-menu a.active { color: #0066CC; border-bottom-color: #0066CC; }
-    .avatar { width: 36px; height: 36px; background: #0066CC; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-    .page-title { font-size: 1.8rem; color: #0066CC; margin-bottom: 1.5rem; }
-    
-    .order-card {
-      background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
-    }
-    .order-info h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #333; }
-    .order-meta { font-size: 0.9rem; color: #666; line-height: 1.6; }
-    .status-badge {
-      display: inline-block; padding: 0.3rem 0.8rem; border-radius: 20px;
-      font-size: 0.8rem; font-weight: 600; background: #d4edda; color: #155724; margin-bottom: 0.5rem;
-    }
-    .empty-state { text-align: center; padding: 4rem; color: #999; background: white; border-radius: 12px; }
-  </style>
+  <link rel="stylesheet" href="cabinet.css">
 </head>
 <body>
-  <div class="header">
-    <img src="logo.svg" alt="DetalHub" class="logo">
-    <nav class="nav-menu">
-      <a href="dashboard.html">📊 Панель управления</a>
-      <a href="projects.html">📁 Мои проекты</a>
-      <a href="orders.html" class="active">🛒 Мои заказы</a>
-      <a href="profile.html"> Профиль</a>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><img src="logo.svg" alt="DetalHub"></div>
+    <div class="sidebar-lang">
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Кабинет</div>
+      <a href="dashboard.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span data-i18n="nav_dashboard">Панель управления</span>
+      </a>
+      <a href="projects.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <span data-i18n="nav_projects">Мои проекты</span>
+      </a>
+      <a href="orders.html" class="nav-link active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span data-i18n="nav_orders">Мои заказы</span>
+      </a>
+      <div class="sidebar-section">Аккаунт</div>
+      <a href="profile.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span data-i18n="nav_profile">Профиль</span>
+      </a>
+      <a href="#" class="nav-link" onclick="logout();return false;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+        <span data-i18n="nav_logout">Выйти</span>
+      </a>
     </nav>
-    <div class="avatar" onclick="window.location.href='profile.html'">НК</div>
-  </div>
+    <div class="sidebar-footer">
+      <div class="avatar-sm js-avatar" onclick="window.location.href='profile.html'">?</div>
+      <div style="min-width:0">
+        <div class="sidebar-user-name js-user-name">—</div>
+        <div class="sidebar-user-role" data-i18n="role_client">Клиент</div>
+      </div>
+    </div>
+  </aside>
 
-  <div class="container">
-    <h1 class="page-title">Мои заказы</h1>
-    <div id="ordersList"></div>
-  </div>
-
-  <script>
-    function renderOrders() {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      const container = document.getElementById('ordersList');
-      
-      if (orders.length === 0) {
-        container.innerHTML = '<div class="empty-state"><h3>У вас пока нет оформленных заказов</h3><p>Загрузите детали и нажмите "Оформить заказ"</p></div>';
-        return;
-      }
-
-      container.innerHTML = orders.map(o => `
-        <div class="order-card">
-          <div class="order-info">
-            <span class="status-badge">Новый</span>
-            <h3>Заказ №${o.quoteNumber} — ${o.parts.length} дет.</h3>
-            <div class="order-meta">
-              Дата оформления: ${o.orderDate}<br>
-              Вес: ${o.totalWeight} | Стоимость: ${o.totalPrice} | Срок: ${o.leadTime}
-            </div>
-          </div>
-          <div>
-            <span style="color: #0066CC; font-weight: 600;">Ожидает подтверждения</span>
-          </div>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Мои заказы</span>
+      <div class="topbar-right">
+        <a href="dashboard.html" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="new_order">Новый заказ</span>
+        </a>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">История заказов</span>
         </div>
-      `).join('');
-    }
+        <div id="ordersList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="cabinet.js"></script>
+<script>
+const statusMap = {
+  'Новый':     { cls:'badge-new',      label:'Новый' },
+  'В работе':  { cls:'badge-progress', label:'В работе' },
+  'На проверке':{ cls:'badge-review',  label:'На проверке' },
+  'Выполнен':  { cls:'badge-done',     label:'Выполнен' },
+};
 
-    renderOrders();
-  </script>
+function renderOrders() {
+  const orders = JSON.parse(localStorage.getItem('orders')||'[]').reverse();
+  const cont = document.getElementById('ordersList');
+  if (!orders.length) {
+    cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
+    return;
+  }
+  cont.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th>
+        </tr></thead>
+        <tbody>
+          ${orders.map(o => {
+            const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
+            return `<tr>
+              <td class="text-mono">#${o.quoteNumber}</td>
+              <td class="text-muted">${o.orderDate}</td>
+              <td><b>${o.parts.length}</b> дет.</td>
+              <td class="text-muted">${o.leadTime}</td>
+              <td style="font-weight:600">${o.totalPrice}</td>
+              <td><span class="badge ${s.cls}">${s.label}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+renderOrders();
+</script>
 </body>
 </html>
