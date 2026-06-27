@@ -320,6 +320,55 @@
       .left { display: none; }
       .right { width: 100%; padding: 40px 24px; }
     }
+
+
+    /* Стружка — как искры от шлифовки: резко, прямолинейно, мгновенно гаснут */
+    .chip {
+      position: absolute;
+      border-radius: 1px;
+      background: #7dc3fd;
+      box-shadow: 0 0 4px #7dc3fd;
+      animation: chip-spark var(--dur, 0.5s) ease-in var(--delay, 0s) infinite;
+    }
+    @keyframes chip-spark {
+      0%   { opacity: 0;   transform: translate(0,0) rotate(var(--rot,30deg)) scaleX(1); }
+      8%   { opacity: 1; }
+      70%  { opacity: 0.6; }
+      100% { opacity: 0;   transform: translate(var(--tx),var(--ty)) rotate(var(--rot,30deg)) scaleX(0.3); }
+    }
+
+    /* Текст с медленным переливом */
+    .logo-text-anim {
+      background: linear-gradient(90deg, #7dc3fd 0%, #ffffff 30%, #7dc3fd 60%, #5aaae8 80%, #7dc3fd 100%);
+      background-size: 400% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 5s linear infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Искорка под текстом — медленнее */
+    .spark-line {
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 14px;
+      height: 2px;
+      background: #7dc3fd;
+      border-radius: 2px;
+      box-shadow: 0 0 10px #7dc3fd, 0 0 4px #fff;
+      animation: spark-move 4s ease-in-out infinite;
+    }
+    @keyframes spark-move {
+      0%   { left: 0;    opacity: 0;   width: 6px; }
+      8%   { opacity: 1; width: 14px; }
+      85%  { opacity: 1; width: 8px; }
+      100% { left: calc(100% - 6px); opacity: 0; width: 6px; }
+    }
   </style>
 </head>
 <body>
@@ -330,70 +379,26 @@
     <div class="glow2"></div>
     <div class="left-content">
 
-      <div class="logo-wrap" style="margin-bottom:48px;">
-        <!-- Real logo + animated chips + spark -->
-        <div style="position:relative;display:inline-block;">
-          <img src="logo-dark.svg" alt="DetalHub" style="height:56px;width:auto;display:block;">
+      <div class="logo-wrap" style="margin-bottom:48px;display:flex;align-items:center;gap:0;margin-left:-8px;">
 
-          <!-- Animated chips flying off (стружки) -->
-          <svg style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none;" viewBox="0 0 200 56">
+          <!-- Шестерёнка 144px — статичный градиент, не переливается -->
+          <svg width="144" height="144" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:block;">
             <defs>
-              <linearGradient id="chip-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#7dc3fd;stop-opacity:1"/>
-                <stop offset="100%" style="stop-color:#7dc3fd;stop-opacity:0"/>
+              <linearGradient id="g1" gradientUnits="userSpaceOnUse" x1="50" y1="50" x2="450" y2="450">
+                <stop offset="0%" stop-color="#7dc3fd"/>
+                <stop offset="50%" stop-color="#3a8fd4"/>
+                <stop offset="100%" stop-color="#071f2a"/>
               </linearGradient>
-              <!-- Spark path along the logo text -->
-              <path id="sp" d="M 10 28 L 190 28" fill="none"/>
             </defs>
-
-            <!-- Chip 1 -->
-            <rect x="28" y="8" width="5" height="5" rx="1" fill="#7dc3fd" opacity="0">
-              <animate attributeName="opacity" values="0;0.9;0" dur="2.2s" repeatCount="indefinite" begin="0s"/>
-              <animateTransform attributeName="transform" type="translate" values="0,0; -12,-18" dur="2.2s" repeatCount="indefinite" begin="0s"/>
-            </rect>
-
-            <!-- Chip 2 -->
-            <rect x="32" y="12" width="4" height="4" rx="1" fill="#7dc3fd" opacity="0">
-              <animate attributeName="opacity" values="0;0.7;0" dur="1.8s" repeatCount="indefinite" begin="0.4s"/>
-              <animateTransform attributeName="transform" type="translate" values="0,0; 10,-20" dur="1.8s" repeatCount="indefinite" begin="0.4s"/>
-            </rect>
-
-            <!-- Chip 3 -->
-            <rect x="22" y="14" width="3" height="3" rx="1" fill="#7dc3fd" opacity="0">
-              <animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="indefinite" begin="0.8s"/>
-              <animateTransform attributeName="transform" type="translate" values="0,0; -8,-22" dur="2.5s" repeatCount="indefinite" begin="0.8s"/>
-            </rect>
-
-            <!-- Chip 4 -->
-            <rect x="35" y="10" width="4" height="3" rx="1" fill="#7dc3fd" opacity="0">
-              <animate attributeName="opacity" values="0;0.6;0" dur="2s" repeatCount="indefinite" begin="1.2s"/>
-              <animateTransform attributeName="transform" type="translate" values="0,0; 14,-16" dur="2s" repeatCount="indefinite" begin="1.2s"/>
-            </rect>
-
-            <!-- Chip 5 small -->
-            <rect x="26" y="18" width="3" height="3" rx="1" fill="#7dc3fd" opacity="0">
-              <animate attributeName="opacity" values="0;0.5;0" dur="1.6s" repeatCount="indefinite" begin="1.6s"/>
-              <animateTransform attributeName="transform" type="translate" values="0,0; -6,-14" dur="1.6s" repeatCount="indefinite" begin="1.6s"/>
-            </rect>
-
-            <!-- Spark travelling along text -->
-            <circle r="2.5" fill="#7dc3fd" filter="url(#glow)" opacity="0">
-              <animateMotion dur="2.8s" repeatCount="indefinite" begin="0.3s">
-                <mpath href="#sp"/>
-              </animateMotion>
-              <animate attributeName="opacity" values="0;0;1;1;1;0" keyTimes="0;0.05;0.1;0.85;0.95;1" dur="2.8s" repeatCount="indefinite" begin="0.3s"/>
-              <animate attributeName="r" values="2.5;3.5;2.5" dur="2.8s" repeatCount="indefinite" begin="0.3s"/>
-            </circle>
-
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
+            <g transform="translate(250,173) scale(2.18) translate(-50,-50)">
+              <path fill="url(#g1)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/>
+            </g>
           </svg>
+
+          <!-- Текст переливается градиентом -->
+          <div style="font-family:Inter,system-ui,sans-serif;font-size:28px;font-weight:600;margin-left:-6px;background:linear-gradient(90deg,#7dc3fd,#cce8ff,#7dc3fd,#a8d8f8,#7dc3fd);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 8s linear infinite;">DetalHub</div>
+
         </div>
-      </div>
 
       <div class="tagline">
         Изготовление деталей<br>
@@ -436,8 +441,19 @@
 
   <!-- RIGHT -->
   <div class="right">
-    <div class="form-logo">
-      <img src="logo.svg" alt="DetalHub">
+    <div class="form-logo" style="margin-bottom:28px;display:flex;align-items:center;gap:10px;">
+      <svg width="32" height="32" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gear-form2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500">
+            <stop offset="0%" style="stop-color:#7dc3fd"/>
+            <stop offset="100%" style="stop-color:#071f2a"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(250,173) scale(2.18) translate(-50,-50)">
+          <path fill="url(#gear-form2)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/>
+        </g>
+      </svg>
+      <span style="font-family:Inter,system-ui,sans-serif;font-size:20px;font-weight:600;background:linear-gradient(90deg,#7dc3fd,#071f2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">DetalHub</span>
     </div>
 
     <div class="tabs">
