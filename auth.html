@@ -1,462 +1,588 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Вход в систему — DetalHub</title>
+  <title>Вход — DetalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { 
-      background: #f5f7fa; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #071f2a;
       min-height: 100vh;
+      display: flex;
+      overflow: hidden;
     }
-    
-    .auth-container {
-      background: white;
-      padding: 3rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 420px;
+
+    /* ---- LEFT PANEL ---- */
+    .left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
     }
-    
-    .logo {
-      text-align: center;
-      margin-bottom: 2rem;
+
+    /* Subtle grid pattern */
+    .left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(125,195,253,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(125,195,253,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
     }
-    
-    .logo img {
-      max-width: 160px;
-      height: auto;
+
+    /* Animated glow blob */
+    .glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125,195,253,0.08) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      animation: drift 8s ease-in-out infinite alternate;
+      pointer-events: none;
     }
-    
-    h2 {
-      color: #1a1a1a;
-      margin-bottom: 0.5rem;
-      font-size: 1.5rem;
+    .glow2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125,195,253,0.05) 0%, transparent 70%);
+      bottom: -80px;
+      right: -80px;
+      animation: drift 10s ease-in-out infinite alternate-reverse;
+      pointer-events: none;
     }
-    
-    .subtitle {
-      color: #666;
-      margin-bottom: 2rem;
-      font-size: 0.9rem;
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.1); }
     }
-    
-    .form-group {
-      margin-bottom: 1.5rem;
+
+    .left-content { position: relative; z-index: 1; }
+
+    /* ---- LOGO with spark animation ---- */
+    .logo-wrap {
+      display: inline-block;
+      margin-bottom: 48px;
+      position: relative;
     }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #333;
-      font-weight: 500;
-      font-size: 0.9rem;
+
+    .logo-wrap svg { display: block; }
+
+    /* Spark that runs along the logo */
+    .spark {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
     }
-    
-    .form-group input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 1rem;
+
+    .spark-dot {
+      r: 3;
+      fill: #7dc3fd;
+      filter: drop-shadow(0 0 6px #7dc3fd);
+      opacity: 0;
+      animation: spark-run 3s ease-in-out infinite;
     }
-    
-    .form-group input:focus {
-      outline: none;
-      border-color: #0066CC;
+
+    @keyframes spark-run {
+      0%   { opacity: 0; }
+      5%   { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { opacity: 0; }
     }
-    
-    .checkbox-group {
+
+    .tagline {
+      font-size: 28px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+
+    .tagline span { color: #7dc3fd; }
+
+    .sub {
+      font-size: 15px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.7;
+      max-width: 380px;
+      margin-bottom: 48px;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .feature-item {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
+      gap: 12px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
     }
-    
-    .checkbox-group input {
-      width: 18px;
-      height: 18px;
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(125,195,253,0.1);
+      border: 1px solid rgba(125,195,253,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #7dc3fd;
     }
-    
-    .checkbox-group label {
-      color: #666;
-      font-size: 0.9rem;
-      cursor: pointer;
+
+    /* ---- RIGHT PANEL (form) ---- */
+    .right {
+      width: 460px;
+      flex-shrink: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 52px 48px;
     }
-    
-    .btn {
-      width: 100%;
-      padding: 1rem;
-      background: #0066CC;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
+
+    .form-logo {
+      margin-bottom: 32px;
     }
-    
-    .btn:hover {
-      background: #0052A3;
+
+    .form-logo img { height: 28px; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 28px;
     }
-    
-    .btn:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-    
-    .divider {
+
+    .tab {
+      flex: 1;
+      padding: 10px;
       text-align: center;
-      margin: 1.5rem 0;
-      color: #999;
-      font-size: 0.9rem;
+      font-size: 14px;
+      font-weight: 500;
+      color: #9aa3ae;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .15s;
     }
-    
-    .link {
-      color: #0066CC;
+
+    .tab.active {
+      color: #071f2a;
+      border-bottom-color: #071f2a;
+    }
+
+    .form-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #111927;
+      margin-bottom: 6px;
+    }
+
+    .form-sub {
+      font-size: 13px;
+      color: #9aa3ae;
+      margin-bottom: 24px;
+    }
+
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-error   { background: #fff0f0; color: #c0392b; border: 1px solid #fcc; }
+    .alert-success { background: #eaf3de; color: #3b6d11; border: 1px solid #c0dd97; }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #5a6472;
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1px solid #dde3eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #111927;
+      transition: border-color .15s;
+      background: #fff;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #071f2a;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: #5a6472;
+      cursor: pointer;
+    }
+
+    .checkbox-label input { width: 15px; height: 15px; accent-color: #071f2a; }
+
+    .forgot {
+      font-size: 13px;
+      color: #071f2a;
       text-decoration: none;
       font-weight: 500;
     }
-    
-    .link:hover {
-      text-decoration: underline;
-    }
-    
-    .error {
-      background: #fee;
-      color: #c33;
-      padding: 0.75rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      display: none;
-    }
-    
-    .success {
-      background: #efe;
-      color: #3c3;
-      padding: 0.75rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      display: none;
-    }
-    
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid #eee;
-    }
-    
-    .tab {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
+    .forgot:hover { text-decoration: underline; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: #071f2a;
+      color: #7dc3fd;
       border: none;
-      background: none;
-      font-size: 1rem;
-      color: #666;
-      font-weight: 500;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      font-family: inherit;
     }
-    
-    .tab.active {
-      color: #0066CC;
-      border-bottom-color: #0066CC;
+    .btn-submit:hover { background: #0c2d40; }
+    .btn-submit:disabled { background: #9aa3ae; color: #fff; cursor: not-allowed; }
+
+    .divider {
+      text-align: center;
+      font-size: 12px;
+      color: #9aa3ae;
+      margin: 20px 0;
+      position: relative;
     }
-    
-    .form-section {
-      display: none;
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 24px);
+      height: 1px;
+      background: #e9ecef;
     }
-    
-    .form-section.active {
-      display: block;
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .terms-text {
+      font-size: 12px;
+      color: #9aa3ae;
+      text-align: center;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    .terms-text a { color: #071f2a; font-weight: 500; }
+
+    @media (max-width: 800px) {
+      .left { display: none; }
+      .right { width: 100%; padding: 40px 24px; }
     }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="logo">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="glow"></div>
+    <div class="glow2"></div>
+    <div class="left-content">
+
+      <div class="logo-wrap">
+        <!-- Logo SVG inline with spark animation -->
+        <svg width="220" height="60" viewBox="0 0 220 60" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7dc3fd"/>
+              <stop offset="100%" style="stop-color:#1a6fa8"/>
+            </linearGradient>
+            <!-- Path for spark to travel along -->
+            <path id="spark-path" d="M 8 30 Q 20 5 36 30 Q 52 55 68 30 L 220 30" fill="none"/>
+          </defs>
+
+          <!-- Gear icon -->
+          <g transform="translate(0,4) scale(0.85)">
+            <circle cx="30" cy="30" r="28" fill="none" stroke="url(#lg)" stroke-width="1.5" opacity="0.3"/>
+            <circle cx="30" cy="30" r="10" fill="none" stroke="url(#lg)" stroke-width="2"/>
+            <!-- Gear teeth -->
+            <g stroke="url(#lg)" stroke-width="2.5" stroke-linecap="round">
+              <line x1="30" y1="2"  x2="30" y2="10"/>
+              <line x1="30" y1="50" x2="30" y2="58"/>
+              <line x1="2"  y1="30" x2="10" y2="30"/>
+              <line x1="50" y1="30" x2="58" y2="30"/>
+              <line x1="9"  y1="9"  x2="15" y2="15"/>
+              <line x1="45" y1="45" x2="51" y2="51"/>
+              <line x1="51" y1="9"  x2="45" y2="15"/>
+              <line x1="15" y1="45" x2="9"  y2="51"/>
+            </g>
+          </g>
+
+          <!-- DetalHub text -->
+          <text x="72" y="38" font-family="Inter,sans-serif" font-size="28" font-weight="600" fill="url(#lg)">DetalHub</text>
+
+          <!-- Animated spark -->
+          <circle class="spark-dot" r="3">
+            <animateMotion dur="3s" repeatCount="indefinite" begin="0.5s">
+              <mpath href="#spark-path"/>
+            </animateMotion>
+            <animate attributeName="opacity" values="0;0;1;1;1;0" keyTimes="0;0.05;0.1;0.85;0.95;1" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+          </circle>
+        </svg>
+      </div>
+
+      <div class="tagline">
+        Изготовление деталей<br>
+        <span>по чертежу — онлайн</span>
+      </div>
+
+      <p class="sub">
+        Загружайте чертёж, получайте расчёт стоимости за 1 час.
+        ЧПУ-обработка, 3D-печать, лазерная резка.
+      </p>
+
+      <div class="features">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          ЧПУ-фрезерование и токарная обработка
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          3D-печать: FDM, SLA, SLS, MJF
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          КП за 1 час · Доставка по России
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          Безопасная загрузка файлов
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="form-logo">
       <img src="logo.svg" alt="DetalHub">
     </div>
-    
+
     <div class="tabs">
       <button class="tab active" onclick="switchTab('login')">Вход</button>
       <button class="tab" onclick="switchTab('register')">Регистрация</button>
     </div>
-    
-    <div id="error" class="error"></div>
-    <div id="success" class="success"></div>
-    
-    <!-- Форма входа -->
+
+    <div id="alert-error"   class="alert alert-error"></div>
+    <div id="alert-success" class="alert alert-success"></div>
+
+    <!-- LOGIN -->
     <div id="loginForm" class="form-section active">
-      <h2>С возвращением!</h2>
-      <p class="subtitle">Введите данные для входа в личный кабинет</p>
-      
+      <div class="form-title">С возвращением!</div>
+      <div class="form-sub">Войдите в личный кабинет</div>
       <form onsubmit="handleLogin(event)">
         <div class="form-group">
-          <label for="loginEmail">Email</label>
-          <input type="email" id="loginEmail" required placeholder="your@email.com">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="loginEmail" placeholder="your@email.com" required>
         </div>
-        
         <div class="form-group">
-          <label for="loginPassword">Пароль</label>
-          <input type="password" id="loginPassword" required placeholder="••••••••">
+          <label class="form-label">Пароль</label>
+          <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
         </div>
-        
-        <div class="checkbox-group">
-          <input type="checkbox" id="rememberMe">
-          <label for="rememberMe">Запомнить меня</label>
+        <div class="checkbox-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe"> Запомнить меня
+          </label>
+          <a href="#" class="forgot">Забыли пароль?</a>
         </div>
-        
-        <button type="submit" class="btn" id="loginBtn">Войти</button>
+        <button type="submit" class="btn-submit" id="loginBtn">Войти</button>
       </form>
-      
-      <div class="divider">или</div>
-      <p style="text-align: center; color: #666; font-size: 0.9rem;">
-        <a href="#" class="link">Забыли пароль?</a>
-      </p>
     </div>
-    
-    <!-- Форма регистрации -->
+
+    <!-- REGISTER -->
     <div id="registerForm" class="form-section">
-      <h2>Создать аккаунт</h2>
-      <p class="subtitle">Заполните данные для регистрации</p>
-      
+      <div class="form-title">Создать аккаунт</div>
+      <div class="form-sub">Бесплатно, займёт 1 минуту</div>
       <form onsubmit="handleRegister(event)">
         <div class="form-group">
-          <label for="regName">Имя</label>
-          <input type="text" id="regName" required placeholder="Иван Иванов">
+          <label class="form-label">Имя и фамилия</label>
+          <input type="text" class="form-control" id="regName" placeholder="Иван Иванов" required>
         </div>
-        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="regEmail" placeholder="your@email.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Телефон</label>
+            <input type="tel" class="form-control" id="regPhone" placeholder="+7 999 000-00-00">
+          </div>
+        </div>
         <div class="form-group">
-          <label for="regEmail">Email</label>
-          <input type="email" id="regEmail" required placeholder="your@email.com">
+          <label class="form-label">Компания (необязательно)</label>
+          <input type="text" class="form-control" id="regCompany" placeholder="ООО «Название»">
         </div>
-        
-        <div class="form-group">
-          <label for="regPhone">Телефон</label>
-          <input type="tel" id="regPhone" placeholder="+7 (999) 999-99-99">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="regPassword" placeholder="••••••••" minlength="6" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Повторите пароль</label>
+            <input type="password" class="form-control" id="regPasswordConfirm" placeholder="••••••••" minlength="6" required>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="regCompany">Компания (необязательно)</label>
-          <input type="text" id="regCompany" placeholder="ООО Компания">
-        </div>
-        
-        <div class="form-group">
-          <label for="regPassword">Пароль</label>
-          <input type="password" id="regPassword" required placeholder="••••••••" minlength="6">
-        </div>
-        
-        <div class="form-group">
-          <label for="regPasswordConfirm">Подтвердите пароль</label>
-          <input type="password" id="regPasswordConfirm" required placeholder="••••••••" minlength="6">
-        </div>
-        
-        <div class="checkbox-group">
-          <input type="checkbox" id="agreeTerms" required>
-          <label for="agreeTerms">Согласен с <a href="#" class="link">условиями использования</a></label>
-        </div>
-        
-        <button type="submit" class="btn" id="registerBtn">Зарегистрироваться</button>
+        <button type="submit" class="btn-submit" id="registerBtn">Зарегистрироваться</button>
+        <p class="terms-text">
+          Регистрируясь, вы соглашаетесь с
+          <a href="#">условиями использования</a> и
+          <a href="#">политикой конфиденциальности</a>
+        </p>
       </form>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // URL ФУНКЦИИ АВТОРИЗАЦИИ
-    // ==========================================
-    const AUTH_FUNCTION_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
-    
-    // ==========================================
-    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
-    // ==========================================
+    const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
     function switchTab(tab) {
-      const tabs = document.querySelectorAll('.tab');
-      const forms = document.querySelectorAll('.form-section');
-      
-      tabs.forEach(t => t.classList.remove('active'));
-      forms.forEach(f => f.classList.remove('active'));
-      
-      if (tab === 'login') {
-        tabs[0].classList.add('active');
-        document.getElementById('loginForm').classList.add('active');
-      } else {
-        tabs[1].classList.add('active');
-        document.getElementById('registerForm').classList.add('active');
-      }
-      
-      hideMessages();
+      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+      document.getElementById('loginForm').classList.toggle('active', tab==='login');
+      document.getElementById('registerForm').classList.toggle('active', tab==='register');
+      hideAlerts();
     }
-    
-    // ==========================================
-    // ОТПРАВКА ЗАПРОСА В ФУНКЦИЮ
-    // ==========================================
-    async function callAuthFunction(action, data) {
-      try {
-        const response = await fetch(AUTH_FUNCTION_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: action, ...data })
-        });
 
-        if (!response.ok) {
-          throw new Error('Ошибка сервера: ' + response.status);
-        }
-
-        const result = await response.json();
-        return result;
-      } catch (error) {
-        console.error('Ошибка запроса:', error);
-        throw error;
-      }
+    function showAlert(type, msg) {
+      hideAlerts();
+      const el = document.getElementById('alert-'+type);
+      el.textContent = msg;
+      el.classList.add('show');
     }
-    
-    // ==========================================
-    // ВХОД В СИСТЕМУ
-    // ==========================================
+
+    function hideAlerts() {
+      document.querySelectorAll('.alert').forEach(el => el.classList.remove('show'));
+    }
+
+    async function callAuth(action, data) {
+      const resp = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...data })
+      });
+      if (!resp.ok) throw new Error('Ошибка сервера: ' + resp.status);
+      return resp.json();
+    }
+
     async function handleLogin(e) {
       e.preventDefault();
-      hideMessages();
-      
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value;
-      const remember = document.getElementById('rememberMe').checked;
       const btn = document.getElementById('loginBtn');
-      
-      btn.disabled = true;
-      btn.textContent = 'Вход...';
-      
+      btn.disabled = true; btn.textContent = 'Входим...';
       try {
-        const result = await callAuthFunction('login', { email, password });
-        
+        const result = await callAuth('login', {
+          email: document.getElementById('loginEmail').value.trim(),
+          password: document.getElementById('loginPassword').value
+        });
         if (result.success) {
-          // Успешный вход
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('userId', result.userId);
           localStorage.setItem('userProfile', JSON.stringify(result.profile));
-          
-          if (remember) {
-            localStorage.setItem('rememberMe', 'true');
-          }
-          
-          showMessage('success', '✅ Вход выполнен! Перенаправление...');
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1000);
+          showAlert('success', '✓ Добро пожаловать! Загружаем кабинет...');
+          setTimeout(() => window.location.href = 'dashboard.html', 900);
         } else {
-          showMessage('error', '❌ ' + (result.error || 'Неверный email или пароль'));
-          btn.disabled = false;
-          btn.textContent = 'Войти';
+          showAlert('error', result.error || 'Неверный email или пароль');
+          btn.disabled = false; btn.textContent = 'Войти';
         }
-      } catch (error) {
-        showMessage('error', '❌ Ошибка подключения: ' + error.message);
-        btn.disabled = false;
-        btn.textContent = 'Войти';
+      } catch(err) {
+        showAlert('error', 'Ошибка подключения: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Войти';
       }
     }
-    
-    // ==========================================
-    // РЕГИСТРАЦИЯ
-    // ==========================================
+
     async function handleRegister(e) {
       e.preventDefault();
-      hideMessages();
-      
-      const name = document.getElementById('regName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const phone = document.getElementById('regPhone').value.trim();
-      const company = document.getElementById('regCompany').value.trim();
-      const password = document.getElementById('regPassword').value;
-      const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+      const pw  = document.getElementById('regPassword').value;
+      const pw2 = document.getElementById('regPasswordConfirm').value;
+      if (pw !== pw2) { showAlert('error', 'Пароли не совпадают'); return; }
       const btn = document.getElementById('registerBtn');
-      
-      // Проверка паролей
-      if (password !== passwordConfirm) {
-        showMessage('error', '❌ Пароли не совпадают');
-        return;
-      }
-      
-      // Проверка длины пароля
-      if (password.length < 6) {
-        showMessage('error', '❌ Пароль должен быть не менее 6 символов');
-        return;
-      }
-      
-      btn.disabled = true;
-      btn.textContent = 'Регистрация...';
-      
+      btn.disabled = true; btn.textContent = 'Регистрируем...';
       try {
-        const result = await callAuthFunction('register', {
-          name: name,
-          email: email,
-          phone: phone,
-          company: company,
-          password: password
+        const result = await callAuth('register', {
+          name:     document.getElementById('regName').value.trim(),
+          email:    document.getElementById('regEmail').value.trim(),
+          phone:    document.getElementById('regPhone').value.trim(),
+          company:  document.getElementById('regCompany').value.trim(),
+          password: pw
         });
-        
         if (result.success) {
-          showMessage('success', '✅ Регистрация успешна! Выполняем вход...');
-          
-          // Автоматический вход
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('userId', result.userId);
           localStorage.setItem('userProfile', JSON.stringify({
-            name: name,
-            email: email,
-            phone: phone,
-            company: company
+            name:    document.getElementById('regName').value.trim(),
+            email:   document.getElementById('regEmail').value.trim(),
+            phone:   document.getElementById('regPhone').value.trim(),
+            company: document.getElementById('regCompany').value.trim()
           }));
-          
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1500);
+          showAlert('success', '✓ Аккаунт создан! Загружаем кабинет...');
+          setTimeout(() => window.location.href = 'dashboard.html', 1000);
         } else {
-          showMessage('error', '❌ ' + (result.error || 'Ошибка регистрации'));
-          btn.disabled = false;
-          btn.textContent = 'Зарегистрироваться';
+          showAlert('error', result.error || 'Ошибка регистрации');
+          btn.disabled = false; btn.textContent = 'Зарегистрироваться';
         }
-      } catch (error) {
-        showMessage('error', '❌ Ошибка подключения: ' + error.message);
-        btn.disabled = false;
-        btn.textContent = 'Зарегистрироваться';
+      } catch(err) {
+        showAlert('error', 'Ошибка подключения: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Зарегистрироваться';
       }
     }
-    
-    // ==========================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // ==========================================
-    function showMessage(type, message) {
-      const errorDiv = document.getElementById('error');
-      const successDiv = document.getElementById('success');
-      
-      if (type === 'error') {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        successDiv.style.display = 'none';
-      } else {
-        successDiv.textContent = message;
-        successDiv.style.display = 'block';
-        errorDiv.style.display = 'none';
-      }
-    }
-    
-    function hideMessages() {
-      document.getElementById('error').style.display = 'none';
-      document.getElementById('success').style.display = 'none';
-    }
-    
-    // ==========================================
-    // ПРОВЕРКА АВТОРИЗАЦИИ ПРИ ЗАГРУЗКЕ
-    // ==========================================
+
     if (localStorage.getItem('isLoggedIn') === 'true') {
       window.location.href = 'dashboard.html';
     }
