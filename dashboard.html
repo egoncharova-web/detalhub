@@ -77,18 +77,14 @@
       </div>
 
       <!-- Upload -->
-      <div class="card" style="margin-bottom:24px;">
-        <div class="card-body">
-          <label class="upload-zone">
-            <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" multiple onchange="handleFileUpload(this)">
-            <div class="upload-zone-icon">
-              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
-            </div>
-            <h3>Загрузить файлы деталей</h3>
-            <p>Перетащите сюда или нажмите · STL, OBJ, STEP — до 50 МБ</p>
-          </label>
+      <label for="fileInput" style="display:block;margin-bottom:24px;border:2px dashed #dde3eb;border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;background:#fff;transition:all .2s;" onmouseover="this.style.borderColor='#5aaae8';this.style.background='#f0f8ff'" onmouseout="this.style.borderColor='#dde3eb';this.style.background='#fff'">
+        <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" multiple onchange="handleFileUpload(this)" style="display:none">
+        <div style="font-size:32px;color:#9aa3ae;margin-bottom:12px;">
+          <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
         </div>
-      </div>
+        <div style="font-size:15px;font-weight:600;color:#111927;margin-bottom:6px;">Загрузить файлы деталей</div>
+        <div style="font-size:13px;color:#9aa3ae;">Перетащите сюда или нажмите · STL, OBJ, STEP, STP — до 50 МБ</div>
+      </label>
 
       <!-- Content grid -->
       <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
