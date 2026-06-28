@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/OBJLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -145,6 +146,17 @@
       align-self:stretch;
     }
     .pc-preview canvas { display:block; }
+    .preview-rotate-btns {
+      display:flex; justify-content:center; gap:4px;
+      padding:5px 8px; background:#eef2f5; border-top:1px solid #e0eaf2;
+    }
+    .rot-btn {
+      width:26px; height:26px; border:1px solid #d1dde6; border-radius:5px;
+      background:#fff; cursor:pointer; font-size:13px; display:flex;
+      align-items:center; justify-content:center; color:#4a6d80;
+      transition:all .15s;
+    }
+    .rot-btn:hover { background:#dceef7; border-color:#7dc3fd; color:#071f2a; }
     .pc-preview-placeholder { text-align:center; color:#9ca3af; }
     .pc-preview-placeholder svg { display:block; margin:0 auto 8px; }
     .badge-3d {
@@ -520,19 +532,19 @@
       <div>
         <div class="order-title">Предложение <span id="order-num" style="color:#9ca3af;font-weight:400;font-size:14px;"></span></div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <button class="add-more-btn" onclick="document.getElementById('addInput').click()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          Добавить ещё файлы
-        </button>
-        <input type="file" id="addInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple onchange="handleFiles(this)" style="display:none">
-      </div>
     </div>
 
     <div class="content-grid">
       <!-- Left: parts list -->
       <div>
         <div id="parts-list"></div>
+        <div style="margin-bottom:12px;">
+          <input type="file" id="addInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple onchange="addToQuote(this)" style="display:none">
+          <button class="add-more-btn" onclick="document.getElementById('addInput').click()" style="width:100%;padding:12px;border:2px dashed #e5e7eb;border-radius:10px;background:#fff;justify-content:center;font-size:13px;color:#6b7280;transition:all .15s;" onmouseover="this.style.borderColor='#7dc3fd';this.style.color='#071f2a'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#6b7280'">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Добавить ещё детали
+          </button>
+        </div>
         <div class="note-box">
           <div class="note-title">Примечание к заказу</div>
           <textarea class="note-textarea" id="order-note" placeholder="Дополнительные требования, допуски, особые пожелания к производству..."></textarea>
@@ -610,6 +622,7 @@ const TOLS = [
 const DENS = {'Алюминий AL6061':2.70,'Алюминий AL7075':2.81,'Сталь 45':7.85,'Нержавейка 304':7.93,'Нержавейка 316':8.00,'Латунь':8.50,'Медь':8.96,'Титан':4.51,'PLA':1.24,'PETG':1.27,'ABS':1.04,'Нейлон PA':1.15,'PA12 (нейлон)':1.01,'PA12 (HP MJF)':1.01};
 
 let parts = [], quoteNum = null, pendingFiles = [];
+const previewStates = {}; // хранит {object, cam, ren, scene} для каждой карточки
 
 // ---- INIT ----
 function doLogout() { localStorage.removeItem('isLoggedIn'); location.href='auth.html'; }
@@ -698,14 +711,14 @@ function removePendingFile(idx) {
   }
 }
 
-async function startCalculation() {
-  if (!pendingFiles.length) return;
-  document.getElementById('files-section').style.display = 'none';
-  document.getElementById('parts-section').style.display = 'block';
-
-  for (const file of pendingFiles) {
+async function addToQuote(input) {
+  if (!input.files || !input.files.length) return;
+  for (const file of Array.from(input.files)) {
     const url = URL.createObjectURL(file);
     const isManual = /\.(dwg|dwf|pdf)$/i.test(file.name);
+    const isStep   = /\.(step|stp)$/i.test(file.name);
+    const isStl    = /\.(stl)$/i.test(file.name);
+    const isObj    = /\.(obj)$/i.test(file.name);
     const part = {
       id: Date.now() + Math.random(), name: file.name,
       size: (file.size/1024/1024).toFixed(2)+' МБ', localUrl: url, fileUrl: null,
@@ -713,12 +726,12 @@ async function startCalculation() {
       material: isManual?'Уточнить у менеджера':'Алюминий AL6061',
       finish:'standard', tolerance:'std', qty:1,
       dims:{x:'—',y:'—',z:'—'}, volume:0, weight:'—', price:0,
-      status: isManual?'manual':'analysing',
+      status: isManual?'manual': isStep?'step':'analysing',
     };
     parts.push(part);
     appendPartCard(part);
-    if (!isManual) {
-      parseGeometry(url).then(geo => {
+    if (isStl || isObj) {
+      parseGeometry(url, isObj).then(geo => {
         part.dims=geo.dims; part.volume=geo.volume;
         part.weight=calcWeight(part); part.status='ready';
         refreshCard(part);
@@ -727,30 +740,83 @@ async function startCalculation() {
     }
     uploadToCloud(file).then(u=>{ if(u) part.fileUrl=u; }).catch(()=>{});
   }
+  updateSummary();
+  input.value = '';
+}
+
+async function startCalculation() {
+  if (!pendingFiles.length) return;
+  document.getElementById('files-section').style.display = 'none';
+  document.getElementById('parts-section').style.display = 'block';
+
+  for (const file of pendingFiles) {
+    const url = URL.createObjectURL(file);
+    const isManual = /\.(dwg|dwf|pdf)$/i.test(file.name);
+    const isStep   = /\.(step|stp)$/i.test(file.name);
+    const isStl    = /\.(stl)$/i.test(file.name);
+    const isObj    = /\.(obj)$/i.test(file.name);
+    const part = {
+      id: Date.now() + Math.random(), name: file.name,
+      size: (file.size/1024/1024).toFixed(2)+' МБ', localUrl: url, fileUrl: null,
+      tech: isManual?'other':'cnc_mill',
+      material: isManual?'Уточнить у менеджера':'Алюминий AL6061',
+      finish:'standard', tolerance:'std', qty:1,
+      dims:{x:'—',y:'—',z:'—'}, volume:0, weight:'—', price:0,
+      status: isManual?'manual': isStep?'step': 'analysing',
+    };
+    parts.push(part);
+    appendPartCard(part);
+    if (isStl || isObj) {
+      parseGeometry(url, isObj).then(geo => {
+        part.dims=geo.dims; part.volume=geo.volume;
+        part.weight=calcWeight(part); part.status='ready';
+        refreshCard(part);
+        calcPrice(part).then(()=>{ refreshCard(part); updateSummary(); });
+      });
+    } else if (isStep) {
+      part.status='step';
+      refreshCard(part);
+    }
+    uploadToCloud(file).then(u=>{ if(u) part.fileUrl=u; }).catch(()=>{});
+  }
   pendingFiles = [];
   updateSummary();
 }
 
-function parseGeometry(url) {
+function parseGeometry(url, isObj) {
   return new Promise(resolve => {
-    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
-      try {
-        const geo=new THREE.STLLoader().parse(buf);
-        geo.computeBoundingBox();
-        const b=geo.boundingBox;
-        const dims={x:(b.max.x-b.min.x).toFixed(1),y:(b.max.y-b.min.y).toFixed(1),z:(b.max.z-b.min.z).toFixed(1)};
-        const pos=geo.attributes.position.array;
-        let vol=0;
-        for(let i=0;i<pos.length;i+=9){
-          const p1=new THREE.Vector3(pos[i],pos[i+1],pos[i+2]);
-          const p2=new THREE.Vector3(pos[i+3],pos[i+4],pos[i+5]);
-          const p3=new THREE.Vector3(pos[i+6],pos[i+7],pos[i+8]);
-          vol+=p1.dot(p2.clone().cross(p3))/6;
-        }
-        vol=Math.abs(vol); if(vol>1e6)vol/=1000;
-        resolve({dims,volume:vol});
-      } catch { resolve({dims:{x:'—',y:'—',z:'—'},volume:0}); }
-    }).catch(()=>resolve({dims:{x:'—',y:'—',z:'—'},volume:0}));
+    if (isObj) {
+      new THREE.OBJLoader().load(url, obj => {
+        try {
+          const box = new THREE.Box3().setFromObject(obj);
+          const dims = {
+            x:(box.max.x-box.min.x).toFixed(1),
+            y:(box.max.y-box.min.y).toFixed(1),
+            z:(box.max.z-box.min.z).toFixed(1)
+          };
+          resolve({dims, volume:0});
+        } catch { resolve({dims:{x:'—',y:'—',z:'—'},volume:0}); }
+      }, null, ()=>resolve({dims:{x:'—',y:'—',z:'—'},volume:0}));
+    } else {
+      fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+        try {
+          const geo=new THREE.STLLoader().parse(buf);
+          geo.computeBoundingBox();
+          const b=geo.boundingBox;
+          const dims={x:(b.max.x-b.min.x).toFixed(1),y:(b.max.y-b.min.y).toFixed(1),z:(b.max.z-b.min.z).toFixed(1)};
+          const pos=geo.attributes.position.array;
+          let vol=0;
+          for(let i=0;i<pos.length;i+=9){
+            const p1=new THREE.Vector3(pos[i],pos[i+1],pos[i+2]);
+            const p2=new THREE.Vector3(pos[i+3],pos[i+4],pos[i+5]);
+            const p3=new THREE.Vector3(pos[i+6],pos[i+7],pos[i+8]);
+            vol+=p1.dot(p2.clone().cross(p3))/6;
+          }
+          vol=Math.abs(vol); if(vol>1e6)vol/=1000;
+          resolve({dims,volume:vol});
+        } catch { resolve({dims:{x:'—',y:'—',z:'—'},volume:0}); }
+      }).catch(()=>resolve({dims:{x:'—',y:'—',z:'—'},volume:0}));
+    }
   });
 }
 
@@ -778,6 +844,15 @@ async function uploadToCloud(file) {
   const d=await resp.json(); return d.fileUrl||d.Location;
 }
 
+// ---- PREVIEW ROTATION ----
+function rotatePreview(pid, axis, dir) {
+  const s = previewStates[pid]; if(!s) return;
+  const angle = Math.PI/6 * dir;
+  if(axis==='y') s.object.rotation.y += angle;
+  if(axis==='x') s.object.rotation.x += angle;
+  s.ren.render(s.scene, s.cam);
+}
+
 // ---- CARD HTML ----
 function buildCardHTML(p) {
   const techOpts = TECHS.map(t=>`<option value="${t.v}"${t.v===p.tech?' selected':''}>${t.l}</option>`).join('');
@@ -789,7 +864,9 @@ function buildCardHTML(p) {
   const statusHTML = p.status==='analysing'
     ? `<span class="chip chip-loading"><span class="spin"></span>Анализируем геометрию...</span>`
     : p.status==='manual'
-    ? `<span class="chip chip-manual">Мануальный запрос (24–48 ч)</span>`
+    ? `<span class="chip chip-manual">Ручной расчёт (24–48 ч)</span>`
+    : p.status==='step'
+    ? `<span class="chip chip-manual">STEP/STP — габариты уточнит менеджер</span>`
     : `<span class="chip chip-ready">✓ Геометрия определена</span>`;
 
   const analysingPrev = `
@@ -819,14 +896,15 @@ function buildCardHTML(p) {
   const prevHTML = p.status === 'analysing'
     ? analysingPrev
     : isStl
-    ? `<div class="pc-preview" id="prev-${p.id}" style="cursor:default;background:#edf4fa;">
-         <div class="pc-preview-placeholder"><div style="font-size:11px;color:#9ca3af;">Загрузка 3D...</div></div>
-         <div class="badge-3d" onclick="openViewer(${JSON.stringify(p.id)})" style="cursor:pointer;">3D ↗</div>
-       </div>`
+    ? `<div class="pc-preview" id="prev-${p.id}" style="cursor:grab;">`+
+      `<div class="pc-preview-placeholder"><div style="font-size:11px;color:#9ca3af;">Загрузка 3D...</div></div>`+
+      `<div class="badge-3d" onclick="openViewer(${JSON.stringify(p.id)})" style="cursor:pointer;">3D ↗</div>`+
+      `</div>`
     : `<div class="pc-preview" style="cursor:default;">
          <div class="pc-preview-placeholder">
            <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-           <div style="font-size:12px;margin-top:8px;">${p.size}</div>
+           <div style="font-size:11px;font-weight:600;color:#6b7280;margin-top:8px;">${p.name.split('.').pop().toUpperCase()}</div>
+           <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${p.size}</div>
          </div>
        </div>`;
 
@@ -848,6 +926,11 @@ function buildCardHTML(p) {
         <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
         <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" onchange="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
         <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
+        ${(p.status==='manual'||p.status==='step') ? `
+        <div style="margin:10px 18px 14px;padding:12px 14px;background:#fff8ed;border:1px solid #fcd34d;border-radius:8px;">
+          <div style="font-size:12px;font-weight:700;color:#b45309;margin-bottom:4px;">⏱ Требуется ручной расчёт</div>
+          <div style="font-size:11px;color:#92400e;line-height:1.5;">Мгновенный расчёт недоступен для этого файла. Наш инженер подготовит предложение в течение <b>24–48 часов</b>.</div>
+        </div>` : ''}
       </div>
     </div>
     <div class="pc-footer">
@@ -888,18 +971,45 @@ function updateSummary(){
   const total=parts.reduce((s,p)=>s+p.price,0);
   const qty=parts.reduce((s,p)=>s+p.qty,0);
   const w=parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0);
+  const hasManual=parts.some(p=>p.status==='manual'||p.status==='step');
   document.getElementById('s-parts').textContent=parts.length;
   document.getElementById('s-qty').textContent=qty+' шт.';
   document.getElementById('s-weight').textContent=w>0?w.toFixed(1)+' г':'—';
   document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
   document.getElementById('s-lead').textContent=parts.length?'3–7 дней':'—';
+
+  let warn=document.getElementById('s-manual-warn');
+  if(hasManual){
+    if(!warn){
+      warn=document.createElement('div');
+      warn.id='s-manual-warn';
+      warn.style.cssText='margin:0 18px 12px;padding:12px 14px;background:#fff8ed;border:1px solid #fcd34d;border-radius:8px;';
+      warn.innerHTML='<div style="font-size:12px;font-weight:700;color:#b45309;margin-bottom:3px;">⏱ Ручной расчёт</div><div style="font-size:11px;color:#92400e;line-height:1.5;">Одна или несколько деталей требуют расчёта инженером. Ответим в течение <b>24–48 ч</b>.</div>';
+      const sTotal=document.querySelector('.s-total');
+      sTotal.parentNode.insertBefore(warn,sTotal);
+    }
+  } else {
+    warn?.remove();
+  }
 }
 
 // ---- 3D ----
 function render3DPreview(cid,url,partId){
   const c=document.getElementById(cid);if(!c)return;
-  fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
-    const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
+  const mat=new THREE.MeshPhongMaterial({color:0x2e4d5e,specular:0x5a8fa8,shininess:50,flatShading:false});
+
+  function doRender(object){
+    // Авто-ориентация: если Z — самая высокая ось (CAD Z-up), поворачиваем в Y-up
+    const boxRaw=new THREE.Box3().setFromObject(object);
+    const sx=boxRaw.max.x-boxRaw.min.x, sy=boxRaw.max.y-boxRaw.min.y, sz=boxRaw.max.z-boxRaw.min.z;
+    if(sz>sy && sz>sx) {
+      object.rotation.x=-Math.PI/2; // Z-up → Y-up
+    } else if(sx>sy && sx>sz) {
+      object.rotation.z=Math.PI/2;  // X-up → Y-up
+    }
+    object.updateMatrixWorld(true);
+
+    const box=new THREE.Box3().setFromObject(object);
     const scene=new THREE.Scene();
     const w=160,h=160;
     const cam=new THREE.PerspectiveCamera(45,1,0.1,1e6);
@@ -907,23 +1017,46 @@ function render3DPreview(cid,url,partId){
     ren.setSize(w,h);ren.setClearColor(0xf2f5f7);
     ren.domElement.style.cssText='display:block;flex-shrink:0;border-radius:6px;';
     c.innerHTML='';c.appendChild(ren.domElement);
-    const mat=new THREE.MeshPhongMaterial({color:0x2e4d5e,specular:0x5a8fa8,shininess:50,flatShading:false});
-    const mesh=new THREE.Mesh(geo,mat);
-    scene.add(mesh);
+    scene.add(object);
     const dl=new THREE.DirectionalLight(0xffffff,1.1);dl.position.set(3,4,5);scene.add(dl);
     const dl2=new THREE.DirectionalLight(0xffffff,0.3);dl2.position.set(-3,-2,1);scene.add(dl2);
     scene.add(new THREE.AmbientLight(0xffffff,0.5));
-    const b=geo.boundingBox;
-    const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
-    const cx=(b.max.x+b.min.x)/2,cy=(b.max.y+b.min.y)/2,cz=(b.max.z+b.min.z)/2;
-    cam.position.set(cx+mx*0.3,cy+mx*0.4,cz+mx*2.0);cam.lookAt(cx,cy,cz);
-    ren.render(scene,cam);
+    const mx=Math.max(box.max.x-box.min.x,box.max.y-box.min.y,box.max.z-box.min.z);
+    const cx=(box.max.x+box.min.x)/2,cy=(box.max.y+box.min.y)/2,cz=(box.max.z+box.min.z)/2;
+    cam.position.set(cx+mx*1.2,cy+mx*0.9,cz+mx*1.4);cam.lookAt(cx,cy,cz);
+    const ctrl=new THREE.OrbitControls(cam,ren.domElement);
+    ctrl.enableDamping=true; ctrl.dampingFactor=0.1;
+    ctrl.enableZoom=true; ctrl.enablePan=false;
+    ctrl.target.set(cx,cy,cz); ctrl.update();
+    let alive=true;
+    if(previewStates[partId]) previewStates[partId].stop=true;
+    previewStates[partId]={stop:false};
+    (function loop(){
+      if(previewStates[partId]?.stop) return;
+      requestAnimationFrame(loop);
+      ctrl.update();
+      ren.render(scene,cam);
+    })();
     const badge=document.createElement('div');
     badge.className='badge-3d';badge.textContent='3D ↗';
     badge.style.cursor='pointer';
     badge.onclick=()=>openViewer(partId);
     c.appendChild(badge);
-  }).catch(()=>{});
+  }
+
+  const part=parts.find(x=>x.id===partId);
+  const isObj=/\.obj$/i.test(part?.name||'');
+  if(isObj){
+    new THREE.OBJLoader().load(url, obj=>{
+      obj.traverse(child=>{ if(child.isMesh) child.material=mat; });
+      doRender(obj);
+    });
+  } else {
+    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+      const geo=new THREE.STLLoader().parse(buf);
+      doRender(new THREE.Mesh(geo,mat));
+    }).catch(()=>{});
+  }
 }
 
 function openViewer(id){
@@ -932,20 +1065,37 @@ function openViewer(id){
   document.getElementById('viewerModal').classList.add('show');
   document.body.style.overflow='hidden';
   const c=document.getElementById('viewer-cnt');c.innerHTML='';
-  const scene=new THREE.Scene();scene.background=new THREE.Color(0xf9fafb);
-  const cam=new THREE.PerspectiveCamera(45,c.clientWidth/520,0.1,1e6);
-  const ren=new THREE.WebGLRenderer({antialias:true});ren.setSize(c.clientWidth,520);c.appendChild(ren.domElement);
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xf2f5f7);
+  const w=c.clientWidth||800, h=520;
+  const cam=new THREE.PerspectiveCamera(45,w/h,0.1,1e6);
+  const ren=new THREE.WebGLRenderer({antialias:true});ren.setSize(w,h);c.appendChild(ren.domElement);
   const ctrl=new THREE.OrbitControls(cam,ren.domElement);ctrl.enableDamping=true;
-  fetch(p.localUrl).then(r=>r.arrayBuffer()).then(buf=>{
-    const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
-    scene.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0xa0adb5,specular:0xffffff,shininess:60,flatShading:false})));
-    const dl=new THREE.DirectionalLight(0x7dc3fd,1.2);dl.position.set(5,5,5);scene.add(dl);
-    scene.add(new THREE.AmbientLight(0xffffff,0.7));
-    const b=geo.boundingBox;const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
-    cam.position.set(0,mx,mx*3);ctrl.target.set(0,0,0);
+  const mat=new THREE.MeshPhongMaterial({color:0xa0adb5,specular:0xffffff,shininess:60,flatShading:false});
+  const dl=new THREE.DirectionalLight(0xffffff,1.2);dl.position.set(5,5,5);scene.add(dl);
+  const dl2=new THREE.DirectionalLight(0xffffff,0.4);dl2.position.set(-5,-3,2);scene.add(dl2);
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+
+  function startLoop(object){
+    const box=new THREE.Box3().setFromObject(object);
+    const mx=Math.max(box.max.x-box.min.x,box.max.y-box.min.y,box.max.z-box.min.z);
+    const cx=(box.max.x+box.min.x)/2,cy=(box.max.y+box.min.y)/2,cz=(box.max.z+box.min.z)/2;
+    cam.position.set(cx,cy+mx*0.5,cz+mx*2.5);ctrl.target.set(cx,cy,cz);ctrl.update();
     let alive=true;window._vstop=()=>{alive=false;};
     (function a(){if(!alive)return;requestAnimationFrame(a);ctrl.update();ren.render(scene,cam);})();
-  });
+  }
+
+  if(/\.obj$/i.test(p.name)){
+    new THREE.OBJLoader().load(p.localUrl, obj=>{
+      obj.traverse(child=>{ if(child.isMesh) child.material=mat; });
+      scene.add(obj);startLoop(obj);
+    });
+  } else {
+    fetch(p.localUrl).then(r=>r.arrayBuffer()).then(buf=>{
+      const geo=new THREE.STLLoader().parse(buf);
+      const mesh=new THREE.Mesh(geo,mat);
+      scene.add(mesh);startLoop(mesh);
+    });
+  }
 }
 function closeViewer(){if(window._vstop){window._vstop();window._vstop=null;}document.getElementById('viewerModal').classList.remove('show');document.body.style.overflow='';document.getElementById('viewer-cnt').innerHTML='';}
 document.getElementById('viewerModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeViewer();});
