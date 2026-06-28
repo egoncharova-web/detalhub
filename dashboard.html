@@ -454,7 +454,22 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     .greeting-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
     .greeting-title { font-size:20px; font-weight:700; color:#111; }
     .toggle-tips { font-size:12px; color:#6b7280; cursor:pointer; display:flex; align-items:center; gap:4px; background:none; border:none; font-family:inherit; }
-  </style>
+  
+    .db-topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      width: 100%;
+    }
+    .db-topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+    .db-topbar-right { display: flex; align-items: center; gap: 10px; }
+</style>
 </head>
 <body>
 <div class="layout">
