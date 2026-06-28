@@ -864,7 +864,7 @@ async function init() {
 }
 
 function setQuoteNum(n) {
-  document.getElementById('order-num').textContent = '№' + n;
+  const el = document.getElementById('order-num'); if(el) el.textContent = '№' + n;
   const ql = document.getElementById('q-num-label'); if(ql) ql.textContent = '№' + n;
   const ql2 = document.getElementById('q-num-label2'); if(ql2) ql2.textContent = '№' + n;
 }
