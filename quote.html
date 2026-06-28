@@ -641,6 +641,7 @@
 const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
 const CALCULATE_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
 const BITRIX_URL    = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
+const AUTH_URL      = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
 
 // ---- REFS ----
 const TECHS = [
@@ -1519,12 +1520,44 @@ async function checkout(){
   location.href='orders.html';
 }
 
-function saveProject(){
+async function saveProject(){
   if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
-  const prj=JSON.parse(localStorage.getItem('projects')||'[]');
-  prj.push({id:Date.now(),quoteNumber:quoteNum,date:new Date().toLocaleString('ru-RU'),parts:JSON.parse(JSON.stringify(parts)),totalPrice:parts.reduce((s,p)=>s+p.price,0).toLocaleString('ru-RU')+' ₽',leadTime:'3–7 дней',status:'Черновик'});
-  localStorage.setItem('projects',JSON.stringify(prj));localStorage.removeItem('currentQuote');
-  alert('Проект сохранён!');location.href='projects.html';
+  const userId = localStorage.getItem('userId');
+  const totalPrice = parts.reduce((s,p)=>s+p.price,0);
+  const totalWeight = parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0).toFixed(1)+' г';
+
+  const projectData = {
+    action: 'createProject',
+    userId,
+    quoteNumber: quoteNum,
+    totalWeight,
+    totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
+    leadTime: '3–7 дней',
+    status: 'Черновик',
+    parts: parts.map(p=>({
+      name:p.name, tech:p.tech, material:p.material,
+      finish:p.finish, qty:p.qty, price:p.price,
+      dims:p.dims, weight:p.weight
+    }))
+  };
+
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(projectData)
+    });
+    const data = await r.json();
+    if(data.success) {
+      localStorage.removeItem('currentQuote');
+      alert('Проект сохранён!');
+      location.href='projects.html';
+    } else {
+      alert('Ошибка: ' + data.error);
+    }
+  } catch(e) {
+    alert('Ошибка сохранения: ' + e.message);
+  }
 }
 
 function downloadPDF(){

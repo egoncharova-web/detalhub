@@ -67,37 +67,68 @@
 </div>
 <script src="cabinet.js"></script>
 <script>
-function renderProjects() {
-  const projects = JSON.parse(localStorage.getItem('projects')||'[]').reverse();
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
+async function renderProjects() {
   const cont = document.getElementById('projectsList');
-  if (!projects.length) {
-    cont.innerHTML='<div class="empty-state"><h3>Нет сохранённых проектов</h3><p>Загрузите детали и нажмите «В проекты»</p></div>';
+  cont.innerHTML = '<div class="empty-state"><p>Загружаем проекты...</p></div>';
+
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    cont.innerHTML = '<div class="empty-state"><h3>Нет сохранённых проектов</h3><p>Загрузите детали и нажмите «Сохранить проект»</p></div>';
     return;
   }
-  cont.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>№ запроса</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
-        <tbody>
-          ${projects.map(p=>`<tr>
-            <td class="text-mono">#${p.quoteNumber}</td>
-            <td class="text-muted">${p.date}</td>
-            <td><b>${p.parts.length}</b> дет.</td>
-            <td class="text-muted">${p.leadTime}</td>
-            <td style="font-weight:600">${p.totalPrice}</td>
-            <td><span class="badge badge-draft">Черновик</span></td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id})">Удалить</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
+
+  try {
+    const r = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getProjects', userId })
+    });
+    const data = await r.json();
+    const projects = (data.projects || []).reverse();
+
+    if (!projects.length) {
+      cont.innerHTML = '<div class="empty-state"><h3>Нет сохранённых проектов</h3><p>Загрузите детали и нажмите «Сохранить проект»</p></div>';
+      return;
+    }
+
+    cont.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>№ запроса</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
+          <tbody>
+            ${projects.map(p=>`<tr>
+              <td class="text-mono">#${p.quote_number}</td>
+              <td class="text-muted">${new Date(p.created_at).toLocaleDateString('ru-RU')}</td>
+              <td><b>${(p.parts||[]).length}</b> дет.</td>
+              <td class="text-muted">${p.lead_time||'3–7 дней'}</td>
+              <td style="font-weight:600">${p.total_price||'—'}</td>
+              <td><span class="badge badge-draft">${p.status||'Черновик'}</span></td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Удалить</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки проектов</h3></div>';
+  }
 }
-function deleteProject(id) {
+
+async function deleteProject(id) {
   if (!confirm('Удалить проект?')) return;
-  let p = JSON.parse(localStorage.getItem('projects')||'[]');
-  localStorage.setItem('projects', JSON.stringify(p.filter(x=>x.id!==id)));
-  renderProjects();
+  try {
+    await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'deleteProject', projectId: id })
+    });
+    renderProjects();
+  } catch(e) {
+    alert('Ошибка удаления: ' + e.message);
+  }
 }
+
 renderProjects();
 </script>
 </body>
