@@ -208,6 +208,11 @@
     .chip-price   { font-size:16px; font-weight:700; color:#071f2a; }
     .spin { width:11px; height:11px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin .7s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes progress-bar {
+      0%   { transform: translateX(-100%); }
+      50%  { transform: translateX(0%); }
+      100% { transform: translateX(100%); }
+    }
 
     /* Note textarea */
     .note-box {
@@ -682,7 +687,7 @@ function removePendingFile(idx) {
 async function startCalculation() {
   if (!pendingFiles.length) return;
   document.getElementById('files-section').style.display = 'none';
-  document.getElementById('parts-section').style.display = '';
+  document.getElementById('parts-section').style.display = 'block';
 
   for (const file of pendingFiles) {
     const url = URL.createObjectURL(file);
@@ -773,7 +778,33 @@ function buildCardHTML(p) {
     ? `<span class="chip chip-manual">Мануальный запрос (24–48 ч)</span>`
     : `<span class="chip chip-ready">✓ Геометрия определена</span>`;
 
-  const prevHTML = isStl
+  const analysingPrev = `
+    <div class="pc-preview" style="cursor:default;flex-direction:column;gap:0;">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;padding:24px;">
+        <div style="position:relative;width:72px;height:72px;">
+          <svg style="animation:spin 1.8s linear infinite;position:absolute;inset:0;" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="36" cy="36" r="28" stroke="#e5e7eb" stroke-width="4"/>
+            <circle cx="36" cy="36" r="28" stroke="#7dc3fd" stroke-width="4" stroke-linecap="round" stroke-dasharray="60 116"/>
+          </svg>
+          <svg style="position:absolute;inset:0;margin:auto;width:36px;height:36px;" viewBox="0 0 24 24" fill="none" stroke="#071f2a" stroke-width="1.4">
+            <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" opacity=".15" fill="#071f2a" stroke="none"/>
+            <path d="M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:13px;font-weight:600;color:#071f2a;margin-bottom:4px;">Анализируем геометрию</div>
+          <div style="font-size:11px;color:#9ca3af;">Подождите, это займёт несколько секунд...</div>
+        </div>
+        <div style="width:120px;height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden;">
+          <div style="height:100%;background:linear-gradient(90deg,#7dc3fd,#071f2a);border-radius:2px;animation:progress-bar 2s ease-in-out infinite;"></div>
+        </div>
+      </div>
+    </div>`;
+
+  const prevHTML = p.status === 'analysing'
+    ? analysingPrev
+    : isStl
     ? `<div class="pc-preview" id="prev-${p.id}" onclick="openViewer(${JSON.stringify(p.id)})">
          <div class="pc-preview-placeholder"><div style="font-size:11px;color:#9ca3af;">Загрузка 3D...</div></div>
          <div class="badge-3d">3D ↗</div>
