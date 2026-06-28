@@ -1059,7 +1059,7 @@ function openSpecEditor(id) {
         </div>
         <div class="spec-field">
           <div class="spec-field-label">Материал <span id="se-mat-count" style="color:#9ca3af;font-weight:400;font-size:11px;"></span></div>
-          <select class="spec-select" id="se-mat">${matOpts}</select>
+          <select class="spec-select" id="se-mat" onchange="seUpdateFins()">${matOpts}</select>
         </div>
       </div>
 
@@ -1156,6 +1156,17 @@ function seUpdateMats() {
   sel.innerHTML = mats.map(m=>`<option>${m}</option>`).join('');
   const cnt = document.getElementById('se-mat-count');
   if(cnt) cnt.textContent = `${mats.length} вариантов`;
+  seUpdateFins();
+}
+
+function seUpdateFins() {
+  const tech = document.getElementById('se-tech').value;
+  const mat  = document.getElementById('se-mat').value;
+  const fins = getFinishes(tech, mat);
+  const prev = document.getElementById('se-fin').value;
+  const sel  = document.getElementById('se-fin');
+  sel.innerHTML = fins.map(f=>`<option value="${f.v}"${f.v===prev?' selected':''}>${f.l}</option>`).join('');
+  if(!fins.find(f=>f.v===prev)) sel.value = fins[0].v;
 }
 
 function renderSpecViewer(p) {
@@ -1329,8 +1340,8 @@ function refreshCard(p) {
 }
 
 // ---- PARAM CHANGES ----
-function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
-function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material')p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function dupPart(id){const p=parts.find(x=>x.id===id);if(!p)return;const n={...p,id:Date.now()+Math.random(),name:'Копия: '+p.name};parts.push(n);appendPartCard(n);updateSummary();}
 function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=>x.id===id);if(p?.localUrl)URL.revokeObjectURL(p.localUrl);parts=parts.filter(x=>x.id!==id);document.getElementById('pw-'+id)?.remove();if(!parts.length){document.getElementById('upload-section').style.display='';document.getElementById('parts-section').style.display='none';}updateSummary();}
