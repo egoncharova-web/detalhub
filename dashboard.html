@@ -5,585 +5,692 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — DetalHub</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="cabinet.css">
   <style>
-    /* === TOPBAR === */
-    .topbar {
-      position: sticky; top: 0; z-index: 100;
-      background: #fff; border-bottom: 1px solid #e5e7eb;
-      height: 56px; display: flex; align-items: center;
-      padding: 0 28px; gap: 32px;
-    }
-    .topbar-nav { display: flex; flex: 1; }
-    .topbar-nav a {
-      height: 56px; display: flex; align-items: center;
-      padding: 0 14px; font-size: 13px; font-weight: 500;
-      color: #6b7280; text-decoration: none;
-      border-bottom: 2px solid transparent; transition: all .15s;
-      white-space: nowrap;
-    }
-    .topbar-nav a:hover { color: #111; }
-    .topbar-nav a.active { color: #071f2a; border-bottom-color: #071f2a; }
-    .topbar-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-    .topbar-user {
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; padding: 6px 10px; border-radius: 8px;
-      transition: background .15s;
-    }
-    .topbar-user:hover { background: #f3f4f6; }
-    .user-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, #071f2a 0%, #0c2d40 100%); color: #7dc3fd;
-      font-size: 13px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .user-info { line-height: 1.3; }
-    .user-name { font-size: 12px; font-weight: 600; color: #111; }
-    .user-ws   { font-size: 11px; color: #9ca3af; }
-    .points-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: #f9fafb; border: 1px solid #e5e7eb;
-      border-radius: 20px; padding: 4px 12px;
-      font-size: 12px; font-weight: 500; color: #6b7280;
-    }
-    .points-coin { width: 18px; height: 18px; background: linear-gradient(135deg,#7dc3fd,#071f2a); border-radius: 50%; }
+/* =============================================
+   DetalHub — Cabinet Shared Styles
+   Palette: #071f2a (dark navy), #7dc3fd (sky blue), #fff (white)
+   ============================================= */
 
-    /* === MAIN CONTENT === */
-    .page { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-    /* Greeting */
-    .greeting-row {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .greeting-title { font-size: 20px; font-weight: 700; color: #111; }
-    .toggle-tips {
-      font-size: 12px; color: #6b7280; cursor: pointer;
-      display: flex; align-items: center; gap: 4px;
-      background: none; border: none; font-family: inherit;
-    }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy:    #071f2a;
+  --navy-2:  #0c2d40;
+  --navy-3:  #113548;
+  --blue:    #7dc3fd;
+  --blue-2:  #5aaae8;
+  --blue-dim: rgba(125,195,253,0.12);
+  --blue-border: rgba(125,195,253,0.22);
+  --white:   #ffffff;
+  --gray-50: #f6f8fb;
+  --gray-100:#eef1f5;
+  --gray-200:#dde3eb;
+  --gray-400:#9aa3ae;
+  --gray-600:#5a6472;
+  --gray-900:#111927;
+  --radius:  8px;
+  --radius-lg: 12px;
+  --shadow:  0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ---- LAYOUT ---- */
+.layout { display: flex; min-height: 100vh; }
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  width: 224px;
+  flex-shrink: 0;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--blue-border);
+}
+
+.sidebar-logo img { height: 32px; width: auto; display: block; }
+
+.sidebar-lang {
+  display: flex;
+  gap: 6px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--blue-border);
+}
+
+.lang-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--blue-border);
+  background: transparent;
+  color: rgba(125,195,253,0.5);
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: .04em;
+}
+.lang-btn.active,
+.lang-btn:hover {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-color: rgba(125,195,253,0.5);
+}
+
+.sidebar-section {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  padding: 16px 18px 6px;
+}
+
+.sidebar-nav { flex: 1; padding: 8px; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .15s;
+  margin-bottom: 2px;
+}
+
+.nav-link svg { flex-shrink: 0; opacity: .7; }
+.nav-link:hover { background: var(--blue-dim); color: rgba(255,255,255,0.85); }
+.nav-link:hover svg { opacity: 1; }
+.nav-link.active { background: var(--blue-dim); color: var(--blue); }
+.nav-link.active svg { opacity: 1; color: var(--blue); }
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--blue-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-sm {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.sidebar-user-name { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user-role { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+/* ---- MAIN ---- */
+.main { margin-left: 224px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ---- TOPBAR ---- */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-title { font-size: 16px; font-weight: 600; color: var(--gray-900); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* ---- BUTTONS ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--navy);
+  color: var(--blue);
+  border: 1px solid rgba(125,195,253,0.3);
+}
+.btn-primary:hover { background: var(--navy-2); border-color: var(--blue); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+}
+.btn-ghost:hover { background: var(--gray-100); color: var(--gray-900); }
+
+.btn-danger {
+  background: #fff0f0;
+  color: #c0392b;
+  border: 1px solid #fcc;
+}
+.btn-danger:hover { background: #ffe0e0; }
+
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-icon { padding: 7px; width: 32px; height: 32px; justify-content: center; }
+
+/* ---- PAGE CONTENT ---- */
+.page-content { padding: 28px; flex: 1; }
+
+/* ---- STATS ROW ---- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.stat-label { font-size: 11px; font-weight: 500; color: var(--gray-400); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: 600; color: var(--gray-900); }
+.stat-sub { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+.stat-accent { color: var(--navy); }
+
+/* ---- CARD ---- */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+.card-body { padding: 20px; }
+
+/* ---- TABLE ---- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--gray-50); }
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+td {
+  padding: 13px 16px;
+  font-size: 13px;
+  color: var(--gray-900);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--gray-50); }
+
+/* ---- BADGES ---- */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+.badge-new      { background: #e6f1fb; color: #185fa5; }
+.badge-progress { background: #fef3cd; color: #856404; }
+.badge-review   { background: #fdf0f6; color: #993556; }
+.badge-done     { background: #eaf3de; color: #3b6d11; }
+.badge-draft    { background: var(--gray-100); color: var(--gray-600); }
+
+/* ---- UPLOAD ZONE ---- */
+.upload-zone {
+  border: 1.5px dashed var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--white);
+}
+.upload-zone:hover {
+  border-color: var(--blue-2);
+  background: #f0f8ff;
+}
+.upload-zone input[type="file"] { display: none; }
+.upload-zone-icon { font-size: 28px; margin-bottom: 12px; color: var(--gray-400); }
+.upload-zone h3 { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; }
+.upload-zone p { font-size: 12px; color: var(--gray-400); }
+
+/* ---- FORM ---- */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-600); margin-bottom: 6px; }
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--gray-900);
+  background: var(--white);
+  transition: border-color .15s;
+}
+.form-control:focus { outline: none; border-color: var(--blue-2); }
+textarea.form-control { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ---- MODAL ---- */
+.modal-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.show { display: flex; }
+.modal-box {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 90%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 4px; border-radius: 6px; }
+.modal-close:hover { background: var(--gray-100); color: var(--gray-900); }
+
+/* ---- EMPTY STATE ---- */
+.empty-state { text-align: center; padding: 56px 24px; color: var(--gray-400); }
+.empty-state h3 { font-size: 15px; font-weight: 500; color: var(--gray-600); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+/* ---- ALERT ---- */
+.alert { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 14px; display: none; }
+.alert-error { background: #fff0f0; color: #c0392b; border: 1px solid #fcc; }
+.alert-success { background: #eaf3de; color: #3b6d11; border: 1px solid #c0dd97; }
+.alert.show { display: block; }
+
+/* ---- MISC ---- */
+.text-muted { color: var(--gray-400); }
+.text-mono { font-family: 'Courier New', monospace; font-size: 12px; color: var(--gray-600); }
+.divider { height: 1px; background: var(--gray-100); margin: 20px 0; }
+.gap-row { display: flex; gap: 10px; align-items: center; }
+
+/* ---- MOBILE ---- */
+
+  </style>
+  <style>
+    /* Topbar */
+    .topbar { background:#fff; border-bottom:1px solid #e5e7eb; height:56px; display:flex; align-items:center; padding:0 28px; position:sticky; top:0; z-index:50; justify-content:space-between; }
+    .topbar-title { font-size:16px; font-weight:600; color:#111; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
 
     /* Order type cards */
-    .order-cards {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 14px; margin-bottom: 24px;
-    }
-    .oc {
-      border: 1px solid #e5e7eb; border-radius: 10px;
-      padding: 22px; background: #fff;
-      transition: box-shadow .2s, border-color .2s;
-      position: relative;
-    }
-    .oc:hover { border-color: #7dc3fd; box-shadow: 0 4px 20px rgba(125,195,253,0.2); }
-    .oc.featured { background: linear-gradient(135deg, #f8fbff 0%, #fff 60%); }
-    .oc-icon {
-      width: 40px; height: 40px; border-radius: 8px;
-      background: rgba(7,31,42,.06); display: flex;
-      align-items: center; justify-content: center;
-      color: #071f2a; margin-bottom: 12px;
-    }
-    .oc-title { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 2px; }
-    .oc-sub   { font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
-    .oc-best  {
-      font-size: 11px; font-weight: 600; color: #065f46;
-      background: #d1fae5; border-radius: 20px;
-      padding: 2px 10px; display: inline-block; margin-bottom: 12px;
-    }
-    .oc-list  { margin: 0 0 16px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
-    .oc-list li { font-size: 12px; color: #374151; display: flex; gap: 7px; align-items: flex-start; line-height: 1.5; }
-    .oc-list li::before { content: '•'; color: #7dc3fd; font-size: 14px; line-height: 1.3; flex-shrink: 0; }
-    .oc-lock { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9ca3af; margin-top: 8px; }
-    .btn-instant {
-      display: block; text-align: center;
-      padding: 11px 20px;
-      background: linear-gradient(135deg, #071f2a 0%, #0c2d40 100%); color: #7dc3fd;
-      border: none; border-radius: 7px;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      text-decoration: none; transition: background .15s;
-    }
-    .btn-instant:hover { background: #0c2d40; }
+    .order-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:24px; }
+    .oc { border:1px solid #e5e7eb; border-radius:10px; padding:22px; background:#fff; transition:border-color .2s, box-shadow .2s; cursor:pointer; }
+    .oc:hover { border-color:#7dc3fd; box-shadow:0 4px 20px rgba(125,195,253,0.18); }
+    .oc.featured { background:linear-gradient(135deg,#f8fbff 0%,#fff 60%); }
+    .oc-icon { width:40px; height:40px; border-radius:8px; background:rgba(7,31,42,.06); display:flex; align-items:center; justify-content:center; color:#071f2a; margin-bottom:12px; }
+    .oc-title { font-size:15px; font-weight:700; color:#111; margin-bottom:2px; }
+    .oc-sub { font-size:12px; color:#9ca3af; margin-bottom:12px; }
+    .oc-best { font-size:11px; font-weight:600; color:#065f46; background:#d1fae5; border-radius:20px; padding:2px 10px; display:inline-block; margin-bottom:12px; }
+    .oc-list { margin:0 0 16px; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; }
+    .oc-list li { font-size:12px; color:#374151; display:flex; gap:7px; align-items:flex-start; line-height:1.5; }
+    .oc-list li::before { content:"•"; color:#7dc3fd; font-size:14px; line-height:1.3; flex-shrink:0; }
+    .oc-lock { display:flex; align-items:center; gap:6px; font-size:12px; color:#9ca3af; margin-top:8px; }
+    .btn-instant { display:block; text-align:center; padding:11px 20px; background:linear-gradient(135deg,#071f2a,#0c2d40); color:#7dc3fd; border:none; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; text-decoration:none; transition:background .15s; }
+    .btn-instant:hover { background:#0c2d40; }
 
     /* Bottom grid */
-    .bottom-grid {
-      display: grid; grid-template-columns: 1fr 320px;
-      gap: 16px; align-items: start;
-    }
+    .bottom-grid { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
 
-    /* Projects + Messages cards */
-    .panel {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 10px; overflow: hidden;
-      margin-bottom: 14px; transition: border-color .2s, box-shadow .2s;
-    }
-    .panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
-    .panel:last-child { margin-bottom: 0; }
-    .panel-header {
-      padding: 13px 18px; display: flex;
-      align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #f3f4f6;
-    }
-    .panel-header-left { display: flex; align-items: center; gap: 8px; }
-    .panel-title { font-size: 14px; font-weight: 600; color: #111; }
-    .collapse-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 12px; }
-    .panel-link { font-size: 12px; font-weight: 600; color: #071f2a; text-decoration: none; }
-    .panel-link:hover { text-decoration: underline; }
+    /* Panels */
+    .panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:14px; transition:border-color .2s, box-shadow .2s; }
+    .panel:hover { border-color:#7dc3fd; box-shadow:0 4px 16px rgba(125,195,253,0.15); }
+    .panel:last-child { margin-bottom:0; }
+    .panel-header { padding:13px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f3f4f6; }
+    .panel-header-left { display:flex; align-items:center; gap:8px; }
+    .panel-title { font-size:14px; font-weight:600; color:#111; }
+    .collapse-btn { background:none; border:none; cursor:pointer; color:#9ca3af; font-size:12px; }
+    .panel-link { font-size:12px; font-weight:600; color:#071f2a; text-decoration:none; }
+    .panel-link:hover { text-decoration:underline; }
 
     /* Projects table */
-    .proj-table { width: 100%; }
-    .proj-th {
-      display: grid; grid-template-columns: 56px 1fr 160px 80px 90px;
-      padding: 9px 18px; background: #f9fafb;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .05em; color: #9ca3af;
-    }
-    .proj-row {
-      display: grid; grid-template-columns: 56px 1fr 160px 80px 90px;
-      padding: 12px 18px; border-bottom: 1px solid #f3f4f6;
-      align-items: center; font-size: 13px;
-      cursor: pointer; transition: background .1s;
-    }
-    .proj-row:last-child { border-bottom: none; }
-    .proj-row:hover { background: #f9fafb; }
-    .proj-thumb {
-      width: 44px; height: 44px; border-radius: 6px;
-      background: #f3f4f6; border: 1px solid #e5e7eb;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-    .proj-num { font-weight: 600; color: #071f2a; font-size: 13px; }
-    .proj-tech { font-size: 11px; color: #9ca3af; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .s-auto   { color: #065f46; font-weight: 600; font-size: 12px; }
-    .s-manual { color: #92400e; font-weight: 600; font-size: 12px; }
-    .s-new    { color: #1e40af; font-weight: 600; font-size: 12px; }
-    .s-done   { color: #065f46; font-weight: 600; font-size: 12px; }
-    .proj-val { font-weight: 600; font-size: 13px; text-align: right; }
+    .proj-th { display:grid; grid-template-columns:48px 1fr 150px 70px 90px; padding:9px 18px; background:#f9fafb; border-bottom:1px solid #f3f4f6; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#9ca3af; }
+    .proj-row { display:grid; grid-template-columns:48px 1fr 150px 70px 90px; padding:12px 18px; border-bottom:1px solid #f3f4f6; align-items:center; font-size:13px; cursor:pointer; transition:background .1s; }
+    .proj-row:last-child { border-bottom:none; }
+    .proj-row:hover { background:#f9fafb; }
+    .proj-thumb { width:44px; height:44px; border-radius:6px; background:#f3f4f6; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .proj-num { font-weight:600; color:#071f2a; font-size:13px; }
+    .proj-tech { font-size:11px; color:#9ca3af; margin-top:2px; }
+    .s-auto { color:#065f46; font-weight:600; font-size:12px; }
+    .s-manual { color:#92400e; font-weight:600; font-size:12px; }
+    .s-new { color:#1e40af; font-weight:600; font-size:12px; }
+    .s-done { color:#065f46; font-weight:600; font-size:12px; }
+    .proj-val { font-weight:600; font-size:13px; text-align:right; }
 
-    /* Empty states */
-    .empty-panel { padding: 36px 20px; text-align: center; color: #9ca3af; }
-    .empty-panel svg { display: block; margin: 0 auto 12px; }
-    .empty-panel p { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
-    .empty-panel small { font-size: 12px; }
+    /* Right col */
+    .right-col { display:flex; flex-direction:column; gap:14px; }
+    .team-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px; transition:border-color .2s, box-shadow .2s; }
+    .team-panel:hover { border-color:#7dc3fd; box-shadow:0 4px 16px rgba(125,195,253,0.15); }
+    .team-title { font-size:14px; font-weight:700; color:#111; text-align:center; margin-bottom:4px; }
+    .team-sub { font-size:12px; color:#9ca3af; text-align:center; margin-bottom:16px; }
+    .team-feature { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:13px; color:#374151; }
+    .team-feature:last-of-type { border-bottom:none; margin-bottom:12px; }
+    .team-feature svg { color:#7dc3fd; flex-shrink:0; }
+    .btn-team { display:block; width:100%; padding:9px; background:#071f2a; color:#7dc3fd; border:none; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; text-align:center; text-decoration:none; margin-bottom:8px; transition:background .15s; }
+    .btn-team:hover { background:#0c2d40; }
+    .btn-team-ghost { display:block; text-align:center; font-size:12px; color:#6b7280; text-decoration:none; }
+    .features-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; transition:border-color .2s, box-shadow .2s; }
+    .features-panel:hover { border-color:#7dc3fd; box-shadow:0 4px 16px rgba(125,195,253,0.15); }
+    .features-header { padding:13px 18px; font-size:13px; font-weight:600; color:#111; border-bottom:1px solid #f3f4f6; }
+    .feature-item { padding:14px 18px; border-bottom:1px solid #f3f4f6; }
+    .feature-item:last-child { border-bottom:none; }
+    .feature-item p { font-size:12px; color:#6b7280; line-height:1.5; margin:4px 0 8px; }
+    .feature-link { font-size:12px; font-weight:600; color:#071f2a; text-decoration:none; }
+    .toggle-sw { width:36px; height:20px; background:#e5e7eb; border-radius:20px; position:relative; cursor:pointer; transition:background .2s; border:none; }
+    .toggle-sw::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .toggle-sw.on { background:#7dc3fd; }
+    .toggle-sw.on::after { left:18px; }
+    .msg-empty { padding:28px 18px; text-align:center; }
+    .msg-empty svg { display:block; margin:0 auto 10px; }
 
-    /* Right column */
-    .right-col { display: flex; flex-direction: column; gap: 14px; }
-
-    /* Teamspace panel */
-    .team-panel {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 10px; padding: 20px;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .team-panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
-    .team-icon-wrap { text-align: center; margin-bottom: 12px; }
-    .team-title { font-size: 14px; font-weight: 700; color: #111; text-align: center; margin-bottom: 4px; }
-    .team-sub   { font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 16px; }
-    .team-feature {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 0; border-bottom: 1px solid #f3f4f6;
-      font-size: 13px; color: #374151;
-    }
-    .team-feature:last-of-type { border-bottom: none; margin-bottom: 12px; }
-    .team-feature svg { color: #7dc3fd; flex-shrink: 0; }
-    .btn-team {
-      display: block; width: 100%; padding: 9px;
-      background: #071f2a; color: #7dc3fd;
-      border: none; border-radius: 7px;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      text-align: center; text-decoration: none;
-      margin-bottom: 8px; transition: background .15s;
-    }
-    .btn-team:hover { background: #0c2d40; }
-    .btn-team-ghost {
-      display: block; text-align: center;
-      font-size: 12px; color: #6b7280; text-decoration: none;
-    }
-    .btn-team-ghost:hover { color: #111; }
-
-    /* Features panel */
-    .features-panel {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 10px; overflow: hidden;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .features-panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
-    .features-header { padding: 13px 18px; font-size: 13px; font-weight: 600; color: #111; border-bottom: 1px solid #f3f4f6; }
-    .feature-item { padding: 14px 18px; border-bottom: 1px solid #f3f4f6; }
-    .feature-item:last-child { border-bottom: none; }
-    .feature-item p { font-size: 12px; color: #6b7280; line-height: 1.5; margin: 6px 0 8px; }
-    .feature-link { font-size: 12px; font-weight: 600; color: #071f2a; text-decoration: none; }
-    .feature-link:hover { text-decoration: underline; }
-    .email-toggle {
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .toggle-sw {
-      width: 36px; height: 20px; background: #e5e7eb;
-      border-radius: 20px; position: relative; cursor: pointer;
-      transition: background .2s; border: none;
-    }
-    .toggle-sw::after {
-      content: ''; position: absolute; top: 2px; left: 2px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: #fff; transition: left .2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,.2);
-    }
-    .toggle-sw.on { background: #7dc3fd; }
-    .toggle-sw.on::after { left: 18px; }
-
-    /* Footer */
-    .footer {
-      border-top: 1px solid #e5e7eb; margin-top: 32px;
-      padding: 20px 32px; font-size: 11px; color: #9ca3af;
-    }
-    .footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
-    .footer-col-title { font-weight: 600; color: #6b7280; margin-bottom: 6px; }
-    .footer-col a { display: block; color: #9ca3af; text-decoration: none; margin-bottom: 3px; }
-    .footer-col a:hover { color: #111; }
-    .footer-bottom { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
-
-    /* Messages */
-    .msg-empty { padding: 28px 18px; text-align: center; }
-    .msg-empty svg { display: block; margin: 0 auto 10px; }
+    /* Greeting */
+    .greeting-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .greeting-title { font-size:20px; font-weight:700; color:#111; }
+    .toggle-tips { font-size:12px; color:#6b7280; cursor:pointer; display:flex; align-items:center; gap:4px; background:none; border:none; font-family:inherit; }
   </style>
 </head>
-<body style="background:#f9fafb;font-family:'Inter',sans-serif;color:#111;">
+<body>
+<div class="layout">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <!-- Logo -->
-  <a href="dashboard.html" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;">
-    <svg width="44" height="44" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
-      <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#lg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
-    </svg>
-    <span style="font-size:18px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#071f2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px;">DetalHub</span>
-  </a>
-
-  <!-- User pill -->
-  <div class="topbar-user" onclick="location.href='profile.html'">
-    <div class="user-avatar" id="t-avatar">E</div>
-    <div class="user-info">
-      <div class="user-name" id="t-ws">Личный кабинет</div>
-      <div class="user-ws" id="t-name">—</div>
-    </div>
-    <svg width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-  </div>
-
-  <!-- Nav links -->
-  <nav class="topbar-nav">
-    <a href="dashboard.html" class="active">Dashboard</a>
-    <a href="projects.html">Мои проекты</a>
-    <a href="orders.html">Мои заказы</a>
-    <a href="profile.html">Профиль</a>
-    <a href="#" style="display:flex;align-items:center;gap:4px;">Помощь</a>
-  </nav>
-
-  <!-- Points + avatar -->
-  <div class="topbar-right">
-    <div class="points-badge">
-      <div class="points-coin"></div>
-      <span id="t-points">0 бонусов</span>
-    </div>
-    <div class="user-avatar" id="t-avatar2" onclick="location.href='profile.html'" style="cursor:pointer;">E</div>
-    <button onclick="logout()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:12px;padding:6px 10px;border-radius:6px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">Выйти</button>
-  </div>
-</div>
-
-<!-- PAGE CONTENT -->
-<div class="page">
-
-  <!-- Greeting -->
-  <div class="greeting-row">
-    <div>
-      <div class="greeting-title" id="greeting">Привет! Добро пожаловать в DetalHub</div>
-    </div>
-    <button class="toggle-tips" onclick="toggleCards()" id="tips-btn">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
-      Скрыть подсказки
-    </button>
-  </div>
-
-  <!-- Order type cards -->
-  <div class="order-cards" id="order-cards">
-
-    <!-- Мгновенный расчёт -->
-    <div class="oc featured">
-      <div class="oc-icon">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-      </div>
-      <div class="oc-title">Мгновенный расчёт</div>
-      <div class="oc-sub">КП автоматически за 1 час</div>
-      <div class="oc-best">Лучший выбор для прототипов и малых серий</div>
-      <ul class="oc-list">
-        <li>ЧПУ-обработка, 3D-печать, Лазерная резка</li>
-        <li>Идеально для единичных деталей и серий до 1000 шт. или 500 000 ₽</li>
-        <li>Автоматический DFM-анализ геометрии</li>
-      </ul>
-      <a href="quote.html" class="btn-instant">Запросить мгновенный расчёт</a>
-    </div>
-
-    <!-- Мануальный заказ -->
-    <div class="oc">
-      <div class="oc-icon">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="oc-title">Запрос менеджеру</div>
-      <div class="oc-sub">Ответ инженера в течение 24–48 часов</div>
-      <br>
-      <ul class="oc-list">
-        <li>Все производственные технологии</li>
-        <li>Средние и крупные серии (от 1000 шт. или от 500 000 ₽)</li>
-        <li>Нестандартные материалы, покрытия, сборка</li>
-        <li>Рамочное производство с плановыми поставками</li>
-      </ul>
-      <div class="oc-lock">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Доступно для корпоративных клиентов
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Bottom grid -->
-  <div class="bottom-grid">
-
-    <!-- Left: projects + messages -->
-    <div>
-
-      <!-- Последние проекты -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-header-left">
-            <button class="collapse-btn" onclick="toggleSection('proj')">▼</button>
-            <span class="panel-title">Последние проекты</span>
-          </div>
-          <a href="projects.html" class="panel-link">Все проекты →</a>
-        </div>
-        <div id="proj-body">
-          <div class="proj-table">
-            <div class="proj-th">
-              <span></span>
-              <span>Название</span>
-              <span>Статус</span>
-              <span>Кол-во</span>
-              <span style="text-align:right;">Сумма</span>
-            </div>
-            <div id="proj-rows">
-              <!-- Заполняется JS -->
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Сообщения -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-header-left">
-            <button class="collapse-btn" onclick="toggleSection('msg')">▼</button>
-            <span class="panel-title">Актуальные сообщения</span>
-          </div>
-          <a href="#" class="panel-link">К сообщениям →</a>
-        </div>
-        <div id="msg-body">
-          <div class="msg-empty">
-            <svg width="36" height="36" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24">
-              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-            </svg>
-            <p>Сообщений пока нет</p>
-            <small style="color:#9ca3af;">После оформления заказа менеджер свяжется с вами здесь</small>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Right column -->
-    <div class="right-col">
-
-      <!-- Teamspace -->
-      <div class="team-panel">
-        <div class="team-icon-wrap">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="14" cy="16" r="6" fill="#7dc3fd" opacity=".3"/>
-            <circle cx="26" cy="16" r="6" fill="#071f2a" opacity=".3"/>
-            <circle cx="20" cy="10" r="6" fill="#7dc3fd" opacity=".5"/>
-            <path d="M8 32c0-5 5-8 12-8s12 3 12 8" stroke="#071f2a" stroke-width="1.5" fill="none"/>
-          </svg>
-        </div>
-        <div class="team-title">Работайте эффективнее</div>
-        <div class="team-sub">Все проекты вашей команды в одном месте</div>
-        <div class="team-feature">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
-          Общее пространство для команды
-        </div>
-        <div class="team-feature">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Безопасная совместная работа
-        </div>
-        <div class="team-feature">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Простое согласование и утверждение
-        </div>
-        <div class="team-feature">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          Быстрые командные решения
-        </div>
-        <a href="profile.html" class="btn-team">Попробовать</a>
-        <a href="#" class="btn-team-ghost">Узнать больше</a>
-      </div>
-
-      <!-- Features & Tools -->
-      <div class="features-panel">
-        <div class="features-header">Возможности и инструменты</div>
-
-        <div class="feature-item">
-          <div style="font-size:13px;font-weight:600;color:#111;">📐 Библиотека деталей</div>
-          <p>Сохраняйте часто заказываемые детали и повторяйте заказы в один клик.</p>
-          <a href="projects.html" class="feature-link">Открыть библиотеку</a>
-        </div>
-
-        <div class="feature-item">
-          <div class="email-toggle">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#111;">📧 Email-рассылка</div>
-              <p style="margin:4px 0 0;">Подпишитесь и получите скидку 7% на первый заказ.</p>
-            </div>
-            <button class="toggle-sw" id="email-toggle" onclick="toggleEmail(this)"></button>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
-
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  <div class="footer-grid">
-    <div class="footer-col">
-      <div class="footer-col-title">DetalHub</div>
-      <div>© 2026, DetalHub</div>
-      <div style="margin-top:4px;" id="f-account">Аккаунт: #—</div>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Правовое</div>
-      <a href="#">Условия использования</a>
-      <a href="#">Политика конфиденциальности</a>
-      <a href="#">Контакты</a>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Поддержка</div>
-      <a href="mailto:info@detalhub.com">info@detalhub.com</a>
-      <a href="#">Чат с менеджером</a>
-      <a href="#">Тикеты поддержки</a>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Адрес</div>
-      <div>detalhub.com</div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ---- USER ----
-function initUser() {
-  const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
-  if (!localStorage.getItem('isLoggedIn')) { location.href = 'auth.html'; return; }
-  const name  = p.name  || p.email || 'Клиент';
-  const first = name.split(' ')[0];
-  const init  = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('greeting').textContent = `Привет, ${first}! Добро пожаловать в DetalHub`;
-  document.getElementById('t-name').textContent  = name;
-  document.getElementById('t-ws').textContent    = 'Личный кабинет';
-  document.getElementById('t-avatar').textContent  = init;
-  document.getElementById('t-avatar2').textContent = init;
-  document.getElementById('f-account').textContent = `Аккаунт: ${p.email || '—'}`;
-}
-
-function logout() {
-  localStorage.removeItem('isLoggedIn');
-  localStorage.removeItem('userId');
-  location.href = 'auth.html';
-}
-
-// ---- TOGGLE CARDS ----
-let cardsVisible = true;
-function toggleCards() {
-  cardsVisible = !cardsVisible;
-  document.getElementById('order-cards').style.display = cardsVisible ? '' : 'none';
-  const btn = document.getElementById('tips-btn');
-  btn.innerHTML = cardsVisible
-    ? '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg> Скрыть подсказки'
-    : '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg> Показать подсказки';
-}
-
-// ---- TOGGLE SECTIONS ----
-const collapsed = {};
-function toggleSection(id) {
-  collapsed[id] = !collapsed[id];
-  const body = document.getElementById(id + '-body');
-  if (body) body.style.display = collapsed[id] ? 'none' : '';
-}
-
-// ---- EMAIL TOGGLE ----
-function toggleEmail(btn) { btn.classList.toggle('on'); }
-
-// ---- PROJECTS ----
-function renderProjects() {
-  const rows = document.getElementById('proj-rows');
-  const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-  const orders   = JSON.parse(localStorage.getItem('orders')   || '[]');
-
-  const all = [
-    ...projects.map(p => ({ ...p, _src: 'project', status: p.status || 'Черновик' })),
-    ...orders.map(o   => ({ ...o, _src: 'order',   status: o.status || 'Новый' })),
-  ].sort((a,b) => b.id - a.id).slice(0, 5);
-
-  if (!all.length) {
-    rows.innerHTML = `
-      <div style="padding:36px 20px;text-align:center;">
-        <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;">
-          <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="display:flex;align-items:center;gap:2px;">
+        <svg width="30" height="30" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <defs><linearGradient id="sg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
+          <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#sg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
         </svg>
-        <p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p>
-        <p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж, чтобы начать</p>
-        <a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">
-          Новый заказ →
+        <span style="font-size:16px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#cce8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">DetalHub</span>
+      </div>
+    </div>
+    <div class="sidebar-lang">
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Кабинет</div>
+      <a href="dashboard.html" class="nav-link active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="quote.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
+        <span>Новый заказ</span>
+      </a>
+      <a href="projects.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <span>Мои проекты</span>
+      </a>
+      <a href="orders.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span>Мои заказы</span>
+      </a>
+      <div class="sidebar-section">Аккаунт</div>
+      <a href="profile.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Профиль</span>
+      </a>
+      <a href="#" class="nav-link" onclick="doLogout();return false;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+        <span>Выйти</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar-sm js-avatar" onclick="location.href='profile.html'" style="cursor:pointer;">?</div>
+      <div style="min-width:0">
+        <div class="sidebar-user-name js-user-name">—</div>
+        <div class="sidebar-user-role">Клиент</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="db-topbar">
+      <span class="db-topbar-title">Dashboard</span>
+      <div class="db-topbar-right">
+        <a href="quote.html" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Новый заказ
         </a>
-      </div>`;
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div style="max-width:960px;margin:0 auto;">
+
+        <!-- Greeting -->
+        <div class="greeting-row">
+          <div class="greeting-title" id="greeting">Добро пожаловать!</div>
+          <button class="toggle-tips" onclick="toggleCards()" id="tips-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
+            Скрыть подсказки
+          </button>
+        </div>
+
+        <!-- Order type cards -->
+        <div class="order-cards" id="order-cards">
+          <div class="oc featured" onclick="location.href='quote.html'">
+            <div class="oc-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+            <div class="oc-title">Мгновенный расчёт</div>
+            <div class="oc-sub">КП автоматически за 1 час</div>
+            <div class="oc-best">Лучший выбор для прототипов и малых серий</div>
+            <ul class="oc-list">
+              <li>ЧПУ-обработка, 3D-печать, Лазерная резка</li>
+              <li>Для единичных деталей и серий до 1000 шт. или 500 000 ₽</li>
+              <li>Автоматический DFM-анализ геометрии</li>
+            </ul>
+            <a href="quote.html" class="btn-instant" onclick="event.stopPropagation()">Запросить мгновенный расчёт</a>
+          </div>
+
+          <div class="oc" onclick="location.href='quote.html'">
+            <div class="oc-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="oc-title">Запрос менеджеру</div>
+            <div class="oc-sub">Ответ инженера в течение 24–48 часов</div>
+            <br>
+            <ul class="oc-list">
+              <li>Все производственные технологии</li>
+              <li>Средние и крупные серии (от 1000 шт. или от 500 000 ₽)</li>
+              <li>Нестандартные материалы, покрытия, сборка</li>
+              <li>Рамочное производство с плановыми поставками</li>
+            </ul>
+            <div class="oc-lock">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Доступно для корпоративных клиентов
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom grid -->
+        <div class="bottom-grid">
+          <div>
+            <!-- Последние проекты -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-header-left">
+                  <button class="collapse-btn" onclick="toggleSection('proj')">▼</button>
+                  <span class="panel-title">Последние проекты</span>
+                </div>
+                <a href="projects.html" class="panel-link">Все проекты →</a>
+              </div>
+              <div id="proj-body">
+                <div class="proj-th"><span></span><span>Название</span><span>Статус</span><span>Кол-во</span><span style="text-align:right;">Сумма</span></div>
+                <div id="proj-rows"></div>
+              </div>
+            </div>
+
+            <!-- Сообщения -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-header-left">
+                  <button class="collapse-btn" onclick="toggleSection('msg')">▼</button>
+                  <span class="panel-title">Актуальные сообщения</span>
+                </div>
+                <a href="#" class="panel-link">К сообщениям →</a>
+              </div>
+              <div id="msg-body">
+                <div class="msg-empty">
+                  <svg width="36" height="36" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                  <p style="font-size:13px;color:#374151;margin-bottom:4px;">Сообщений пока нет</p>
+                  <small style="font-size:12px;color:#9ca3af;">После оформления заказа менеджер свяжется с вами здесь</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right -->
+          <div class="right-col">
+            <div class="team-panel">
+              <div style="text-align:center;margin-bottom:12px;">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="14" cy="16" r="6" fill="#7dc3fd" opacity=".3"/><circle cx="26" cy="16" r="6" fill="#071f2a" opacity=".3"/><circle cx="20" cy="10" r="6" fill="#7dc3fd" opacity=".5"/><path d="M8 32c0-5 5-8 12-8s12 3 12 8" stroke="#071f2a" stroke-width="1.5" fill="none"/></svg>
+              </div>
+              <div class="team-title">Работайте эффективнее</div>
+              <div class="team-sub">Все проекты вашей команды в одном месте</div>
+              <div class="team-feature"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>Общее пространство для команды</div>
+              <div class="team-feature"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Безопасная совместная работа</div>
+              <div class="team-feature"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Простое согласование</div>
+              <div class="team-feature"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Быстрые командные решения</div>
+              <a href="profile.html" class="btn-team">Попробовать</a>
+              <a href="#" class="btn-team-ghost">Узнать больше</a>
+            </div>
+
+            <div class="features-panel">
+              <div class="features-header">Возможности</div>
+              <div class="feature-item">
+                <div style="font-size:13px;font-weight:600;color:#111;">📐 Библиотека деталей</div>
+                <p>Сохраняйте часто заказываемые детали и повторяйте заказы в один клик.</p>
+                <a href="projects.html" class="feature-link">Открыть библиотеку</a>
+              </div>
+              <div class="feature-item">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:#111;">📧 Email-рассылка</div>
+                    <p style="margin:4px 0 0;">Подпишитесь и получите скидку 7% на первый заказ.</p>
+                  </div>
+                  <button class="toggle-sw" onclick="this.classList.toggle('on')"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="cabinet.js"></script>
+<script>
+function doLogout() { localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userId'); location.href='auth.html'; }
+
+function initUser() {
+  if (!localStorage.getItem('isLoggedIn')) { location.href='auth.html'; return; }
+  const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
+  const name = p.name||p.email||'Клиент';
+  const first = name.split(' ')[0];
+  const init = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+  document.getElementById('greeting').textContent = `Привет, ${first}! Добро пожаловать в DetalHub`;
+  document.querySelectorAll('.js-avatar').forEach(el=>el.textContent=init);
+  document.querySelectorAll('.js-user-name').forEach(el=>el.textContent=name);
+}
+
+let cardsVisible=true;
+function toggleCards() {
+  cardsVisible=!cardsVisible;
+  document.getElementById('order-cards').style.display=cardsVisible?'':'none';
+  document.getElementById('tips-btn').innerHTML=cardsVisible
+    ?'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg> Скрыть подсказки'
+    :'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg> Показать подсказки';
+}
+
+const collapsed={};
+function toggleSection(id) { collapsed[id]=!collapsed[id]; const b=document.getElementById(id+'-body'); if(b) b.style.display=collapsed[id]?'none':''; }
+
+function renderProjects() {
+  const rows=document.getElementById('proj-rows');
+  const projects=JSON.parse(localStorage.getItem('projects')||'[]');
+  const orders=JSON.parse(localStorage.getItem('orders')||'[]');
+  const all=[...projects.map(p=>({...p,_src:'project',status:p.status||'Черновик'})),...orders.map(o=>({...o,_src:'order',status:o.status||'Новый'}))].sort((a,b)=>b.id-a.id).slice(0,5);
+  if(!all.length) {
+    rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
     return;
   }
-
-  const ICONS = { cnc_mill:'⚙️', cnc_turn:'🔩', fdm:'🖨️', sla:'🖨️', sls:'🖨️', mjf:'🖨️', laser:'✂️', other:'📋' };
-  const STATUS = {
-    'Черновик':  { cls:'s-manual', text:'Черновик' },
-    'Новый':     { cls:'s-new',    text:'Новый заказ' },
-    'В работе':  { cls:'s-auto',   text:'В работе' },
-    'Выполнен':  { cls:'s-done',   text:'Выполнен' },
-  };
-
-  rows.innerHTML = all.map(p => {
-    const tech = (p.parts||[])[0]?.tech || 'other';
-    const icon = ICONS[tech] || '📋';
-    const qty  = (p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
-    const s    = STATUS[p.status] || { cls:'s-new', text: p.status };
-    const href = p._src==='order' ? 'orders.html' : 'projects.html';
-    const techLabel = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',sla:'3D-печать SLA',laser:'Лазерная резка',other:'Прочее'}[tech] || tech;
-    return `
-    <div class="proj-row" onclick="location.href='${href}'">
-      <div class="proj-thumb">${icon}</div>
-      <div>
-        <div class="proj-num">КП №${p.quoteNumber}</div>
-        <div class="proj-tech">${techLabel}</div>
-      </div>
-      <div class="${s.cls}">${s.text}</div>
-      <div style="color:#6b7280;">${qty} шт.</div>
-      <div class="proj-val">${p.totalPrice || '—'}</div>
-    </div>`;
+  const ICONS={cnc_mill:'⚙️',cnc_turn:'🔩',fdm:'🖨️',sla:'🖨️',sls:'🖨️',mjf:'🖨️',laser:'✂️',other:'📋'};
+  const STATUS={'Черновик':{cls:'s-manual',text:'Черновик'},'Новый':{cls:'s-new',text:'Новый'},'В работе':{cls:'s-auto',text:'В работе'},'Выполнен':{cls:'s-done',text:'Выполнен'}};
+  rows.innerHTML=all.map(p=>{
+    const tech=(p.parts||[])[0]?.tech||'other';
+    const qty=(p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
+    const s=STATUS[p.status]||{cls:'s-new',text:p.status};
+    const href=p._src==='order'?'orders.html':'projects.html';
+    const tl={cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',laser:'Лазерная резка',other:'Прочее'}[tech]||tech;
+    return `<div class="proj-row" onclick="location.href='${href}'"><div class="proj-thumb">${ICONS[tech]||'📋'}</div><div><div class="proj-num">КП №${p.quoteNumber}</div><div class="proj-tech">${tl}</div></div><div class="${s.cls}">${s.text}</div><div style="color:#6b7280;">${qty} шт.</div><div class="proj-val">${p.totalPrice||'—'}</div></div>`;
   }).join('');
 }
 
