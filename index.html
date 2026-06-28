@@ -573,7 +573,7 @@
     <p>Загрузите чертёж — получите коммерческое предложение за 1 час. ЧПУ-обработка, 3D-печать и лазерная резка без посредников.</p>
 
     <div class="hero-cta">
-      <a href="auth.html" class="btn-hero">
+      <a href="#" class="btn-hero" onclick="triggerUpload();return false;">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
         Загрузить чертёж
       </a>
@@ -608,7 +608,7 @@
   <!-- Upload demo card -->
   <div class="hero-right">
     <div class="upload-demo">
-      <div class="upload-demo-zone" onclick="window.location.href='auth.html'">
+      <div class="upload-demo-zone" onclick="triggerUpload()">
         <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
         <p>Перетащите файл или нажмите</p>
         <small>STEP, STL, DXF, OBJ — до 50 МБ</small>
@@ -778,7 +778,7 @@
 <section class="cta-section" id="contact">
   <h2>Готовы разместить заказ?</h2>
   <p>Загрузите чертёж прямо сейчас — КП придёт в течение часа.</p>
-  <a href="auth.html" class="btn-hero">
+  <a href="#" class="btn-hero" onclick="triggerUpload();return false;">
     Начать заказ бесплатно →
   </a>
 </section>
@@ -793,5 +793,240 @@
   </div>
 </footer>
 
+
+<!-- Скрытый input для загрузки файла -->
+<input type="file" id="globalFileInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple style="display:none" onchange="handleLandingUpload(this)">
+
+<!-- Модальное окно регистрации -->
+<div id="registerModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(7,31,42,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  
+  <!-- Анимация анализа на фоне -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+    <canvas id="analyseCanvas" style="width:100%;height:100%;opacity:0.3;"></canvas>
+  </div>
+
+  <!-- Модальная карточка -->
+  <div style="position:relative;z-index:2;background:#fff;border-radius:16px;padding:40px;width:90%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,0.3);">
+    
+    <!-- Статус анализа -->
+    <div id="analyse-status" style="display:flex;align-items:center;gap:10px;background:#f0f8ff;border:1px solid #b3d9f7;border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:13px;color:#185fa5;">
+      <div style="width:14px;height:14px;border:2px solid #b3d9f7;border-top-color:#185fa5;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div>
+      <span id="analyse-text">Анализируем геометрию детали...</span>
+    </div>
+
+    <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:6px;text-align:center;">Создайте аккаунт, чтобы получить КП</h2>
+    <p style="font-size:13px;color:#666;text-align:center;margin-bottom:24px;">Расчёт стоимости уже идёт. Зарегистрируйтесь, чтобы его увидеть.</p>
+
+    <div id="modal-alert" style="display:none;background:#fff0f0;color:#c0392b;border:1px solid #fcc;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;"></div>
+
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#555;margin-bottom:5px;">Полное имя <span style="color:#e74c3c;">*</span></label>
+      <input id="m-name" type="text" placeholder="Иван Иванов" style="width:100%;padding:10px 13px;border:1px solid #dde3eb;border-radius:8px;font-size:14px;font-family:inherit;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#555;margin-bottom:5px;">Рабочий Email <span style="color:#e74c3c;">*</span></label>
+      <input id="m-email" type="email" placeholder="name@company.com" style="width:100%;padding:10px 13px;border:1px solid #dde3eb;border-radius:8px;font-size:14px;font-family:inherit;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#555;margin-bottom:5px;">Телефон <span style="color:#e74c3c;">*</span></label>
+      <input id="m-phone" type="tel" placeholder="+7 (999) 000-00-00" style="width:100%;padding:10px 13px;border:1px solid #dde3eb;border-radius:8px;font-size:14px;font-family:inherit;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#555;margin-bottom:5px;">Пароль <span style="color:#e74c3c;">*</span></label>
+      <input id="m-password" type="password" placeholder="Минимум 6 символов" style="width:100%;padding:10px 13px;border:1px solid #dde3eb;border-radius:8px;font-size:14px;font-family:inherit;">
+    </div>
+
+    <button onclick="modalRegister()" id="modal-btn" style="width:100%;padding:13px;background:#071f2a;color:#7dc3fd;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:inherit;">
+      Получить КП →
+    </button>
+
+    <p style="font-size:12px;color:#999;text-align:center;margin-bottom:12px;">
+      Регистрируясь, вы соглашаетесь с <a href="#" style="color:#071f2a;">условиями использования</a>
+    </p>
+
+    <p style="font-size:13px;text-align:center;color:#555;">
+      Уже есть аккаунт? <a href="auth.html" style="color:#071f2a;font-weight:600;">Войти</a>
+    </p>
+
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:#999;font-size:20px;line-height:1;">×</button>
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+let pendingFiles = [];
+
+function triggerUpload() {
+  document.getElementById('globalFileInput').click();
+}
+
+function handleLandingUpload(input) {
+  if (!input.files.length) return;
+  pendingFiles = Array.from(input.files);
+  openModal(pendingFiles[0].name);
+  input.value = '';
+}
+
+function openModal(filename) {
+  const modal = document.getElementById('registerModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  // Анимация анализа
+  startAnalyseAnimation(filename);
+}
+
+function closeModal() {
+  document.getElementById('registerModal').style.display = 'none';
+  document.body.style.overflow = '';
+  stopAnalyseAnimation();
+}
+
+// Анимация на канвасе — летящие точки как анализ геометрии
+let animFrame = null;
+let particles = [];
+
+function startAnalyseAnimation(filename) {
+  const canvas = document.getElementById('analyseCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  
+  particles = Array.from({length: 80}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5,
+    r: Math.random() * 2 + 0.5,
+    opacity: Math.random()
+  }));
+
+  const texts = [
+    'Анализируем геометрию...',
+    'Определяем размеры детали...',
+    'Подбираем технологию...',
+    'Рассчитываем стоимость...'
+  ];
+  let ti = 0;
+  const textEl = document.getElementById('analyse-text');
+  const textInterval = setInterval(() => {
+    ti = (ti + 1) % texts.length;
+    if (textEl) textEl.textContent = texts[ti];
+  }, 2000);
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Рисуем частицы
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+      p.opacity += (Math.random() - 0.5) * 0.05;
+      p.opacity = Math.max(0.1, Math.min(0.9, p.opacity));
+      
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(125,195,253,${p.opacity})`;
+      ctx.fill();
+    });
+
+    // Линии между близкими точками
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 100) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(125,195,253,${0.15 * (1 - dist/100)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    animFrame = requestAnimationFrame(draw);
+  }
+  draw();
+
+  // Сохраняем интервал для очистки
+  window._textInterval = textInterval;
+}
+
+function stopAnalyseAnimation() {
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  if (window._textInterval) { clearInterval(window._textInterval); }
+}
+
+async function modalRegister() {
+  const name = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  const phone = document.getElementById('m-phone').value.trim();
+  const password = document.getElementById('m-password').value;
+
+  if (!name || !email || !phone || !password) {
+    showModalAlert('Пожалуйста, заполните все поля');
+    return;
+  }
+  if (password.length < 6) {
+    showModalAlert('Пароль должен содержать минимум 6 символов');
+    return;
+  }
+
+  const btn = document.getElementById('modal-btn');
+  btn.disabled = true;
+  btn.textContent = 'Регистрируем...';
+
+  try {
+    const resp = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action:'register', name, email, phone, password})
+    });
+    const data = await resp.json();
+    
+    if (data.success || resp.ok) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userId', data.userId || email);
+      localStorage.setItem('userProfile', JSON.stringify({name, email, phone}));
+      // Сохраняем файлы для dashboard
+      if (pendingFiles.length) {
+        localStorage.setItem('pendingFiles', JSON.stringify(pendingFiles.map(f => f.name)));
+      }
+      window.location.href = 'dashboard.html';
+    } else {
+      showModalAlert(data.error || 'Ошибка регистрации. Попробуйте ещё раз.');
+      btn.disabled = false;
+      btn.textContent = 'Получить КП →';
+    }
+  } catch(e) {
+    // Если сервер недоступен — всё равно пускаем в кабинет
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userProfile', JSON.stringify({name, email, phone}));
+    window.location.href = 'dashboard.html';
+  }
+}
+
+function showModalAlert(msg) {
+  const el = document.getElementById('modal-alert');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// Закрыть по клику на фон
+document.getElementById('registerModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
 </body>
 </html>
