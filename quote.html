@@ -139,10 +139,12 @@
     }
     .pc-inner { display:grid; grid-template-columns:180px 1fr; }
     .pc-preview {
-      background:#eef4f8; border-right:1px solid #e0eaf2;
-      height:200px; display:flex; align-items:center;
+      background:#f2f5f7; border-right:1px solid #e0eaf2;
+      min-height:200px; display:flex; align-items:center;
       justify-content:center; cursor:default; position:relative; overflow:hidden;
+      align-self:stretch;
     }
+    .pc-preview canvas { display:block; }
     .pc-preview-placeholder { text-align:center; color:#9ca3af; }
     .pc-preview-placeholder svg { display:block; margin:0 auto 8px; }
     .badge-3d {
@@ -899,10 +901,11 @@ function render3DPreview(cid,url,partId){
   fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
     const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
     const scene=new THREE.Scene();
-    const w=c.clientWidth||300,h=c.clientHeight||280;
-    const cam=new THREE.PerspectiveCamera(45,w/h,0.1,1e6);
-    const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    const w=160,h=160;
+    const cam=new THREE.PerspectiveCamera(45,1,0.1,1e6);
+    const ren=new THREE.WebGLRenderer({antialias:true,alpha:false});
     ren.setSize(w,h);ren.setClearColor(0xf2f5f7);
+    ren.domElement.style.cssText='display:block;flex-shrink:0;border-radius:6px;';
     c.innerHTML='';c.appendChild(ren.domElement);
     const mat=new THREE.MeshPhongMaterial({color:0x2e4d5e,specular:0x5a8fa8,shininess:50,flatShading:false});
     const mesh=new THREE.Mesh(geo,mat);
