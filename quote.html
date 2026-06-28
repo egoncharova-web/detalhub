@@ -844,7 +844,7 @@ function buildCardHTML(p) {
         <div class="spec-row"><span class="spec-label">Материал</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'material',this.value)">${matOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
-        <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм</span></div>
+        <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм<br><span style="font-size:11px;color:#f59e0b;">⚠ Убедитесь, что файл экспортирован в мм</span></span></div>
         <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
         <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" onchange="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
         <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
