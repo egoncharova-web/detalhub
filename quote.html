@@ -275,46 +275,85 @@
       text-align:center; padding:24px; font-size:11px; color:#9ca3af;
       border-top:1px solid #e5e7eb; margin-top:32px;
     }
-  </style>
-</head>
+  
+    /* Layout with sidebar */
+    .layout { display:flex; min-height:100vh; }
+    .sidebar { width:224px; flex-shrink:0; background:#071f2a; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; overflow-y:auto; }
+    .sidebar-logo { padding:18px 18px 14px; border-bottom:1px solid rgba(125,195,253,0.15); }
+    .sidebar-lang { display:flex; gap:6px; padding:12px 18px; border-bottom:1px solid rgba(125,195,253,0.15); }
+    .lang-btn { font-size:11px; font-weight:600; padding:3px 10px; border-radius:6px; border:1px solid rgba(125,195,253,0.3); background:transparent; color:rgba(125,195,253,0.5); cursor:pointer; transition:all .15s; }
+    .lang-btn.active, .lang-btn:hover { background:rgba(125,195,253,0.15); color:#7dc3fd; border-color:rgba(125,195,253,0.5); }
+    .sidebar-section { font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,0.25); padding:14px 18px 4px; }
+    .sidebar-nav { flex:1; padding:8px; }
+    .nav-link { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:rgba(255,255,255,0.5); text-decoration:none; font-size:13px; font-weight:500; transition:all .15s; margin-bottom:2px; }
+    .nav-link svg { flex-shrink:0; opacity:.7; }
+    .nav-link:hover { background:rgba(125,195,253,0.1); color:rgba(255,255,255,0.85); }
+    .nav-link.active { background:rgba(125,195,253,0.18); color:#7dc3fd; }
+    .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(125,195,253,0.15); display:flex; align-items:center; gap:10px; }
+    .avatar-sm { width:32px; height:32px; border-radius:50%; background:rgba(125,195,253,0.2); border:1px solid rgba(125,195,253,0.3); color:#7dc3fd; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+    .sidebar-user-name { font-size:12px; font-weight:500; color:rgba(255,255,255,0.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sidebar-user-role { font-size:11px; color:rgba(255,255,255,0.3); }
+    .main { margin-left:224px; flex:1; display:flex; flex-direction:column; min-height:100vh; background:#f9fafb; }
+    .topbar { background:#fff; border-bottom:1px solid #e5e7eb; height:56px; display:flex; align-items:center; padding:0 28px; position:sticky; top:0; z-index:50; justify-content:space-between; }
+</style>
 <body>
-
-<!-- TOPBAR -->
-<div class="topbar">
-  <a href="dashboard.html" class="topbar-logo">
-    <svg width="44" height="44" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
-      <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#lg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
-    </svg>
-    <span style="font-size:18px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#071f2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px;">DetalHub</span>
-  </a>
-
-  <div class="topbar-user" onclick="location.href='profile.html'">
-    <div class="u-avatar" id="q-avatar">E</div>
-    <div>
-      <div class="u-name">Личный кабинет</div>
-      <div class="u-ws" id="q-name">—</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="display:flex;align-items:center;gap:2px;">
+        <svg width="30" height="30" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <defs><linearGradient id="sg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
+          <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#sg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
+        </svg>
+        <span style="font-size:16px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#cce8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">DetalHub</span>
+      </div>
     </div>
-    <svg width="12" height="12" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-  </div>
-
-  <nav class="topbar-nav">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="projects.html">Мои проекты</a>
-    <a href="orders.html" class="active">Новый заказ</a>
-    <a href="profile.html">Профиль</a>
-  </nav>
-
-  <div class="topbar-right">
-    <div class="points-pill">
-      <div class="points-coin"></div>
-      <span>0 бонусов</span>
+    <div class="sidebar-lang">
+      <button class="lang-btn active" data-lang="ru" onclick="this.classList.add('active');this.nextElementSibling.classList.remove('active')">RU</button>
+      <button class="lang-btn" data-lang="en" onclick="this.classList.add('active');this.previousElementSibling.classList.remove('active')">EN</button>
     </div>
-    <div class="u-avatar" id="q-avatar2" onclick="location.href='profile.html'" style="cursor:pointer;">E</div>
-  </div>
-</div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Кабинет</div>
+      <a href="dashboard.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="quote.html" class="nav-link active">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
+        <span>Новый заказ</span>
+      </a>
+      <a href="projects.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <span>Мои проекты</span>
+      </a>
+      <a href="orders.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span>Мои заказы</span>
+      </a>
+      <div class="sidebar-section">Аккаунт</div>
+      <a href="profile.html" class="nav-link">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Профиль</span>
+      </a>
+      <a href="#" class="nav-link" onclick="doLogout();return false;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+        <span>Выйти</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar-sm js-avatar" onclick="location.href='profile.html'">?</div>
+      <div style="min-width:0">
+        <div class="sidebar-user-name js-user-name">—</div>
+        <div class="sidebar-user-role">Клиент</div>
+      </div>
+    </div>
+  </aside>
 
-<!-- QUOTE PAGE -->
+  <div class="main">
+    <div class="topbar">
+      <span style="font-size:15px;font-weight:600;color:#111;">Новый заказ</span>
+    </div>
+    <div style="padding:28px;">
 <div class="qpage">
 
   <!-- Back + title -->
@@ -422,22 +461,10 @@
 </div>
 
 <!-- Footer -->
-<div class="page-footer">
-  © 2026, DetalHub · <a href="#" style="color:#9ca3af;">Условия</a> · <a href="#" style="color:#9ca3af;">Конфиденциальность</a>
-</div>
 
-<!-- 3D Viewer -->
-<div class="viewer-overlay" id="viewerModal">
-  <div class="viewer-box">
-    <div class="viewer-hdr">
-      <span id="viewer-name">3D просмотр</span>
-      <button class="viewer-close" onclick="closeViewer()">×</button>
     </div>
-    <div id="viewer-cnt"></div>
-    <div class="viewer-hint">Левая кнопка — вращение · Колесо — масштаб · Правая — перемещение</div>
   </div>
 </div>
-
 <script>
 // ---- CONFIG ----
 const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
@@ -475,14 +502,17 @@ const DENS = {'Алюминий AL6061':2.70,'Алюминий AL7075':2.81,'С�
 let parts = [], quoteNum = null;
 
 // ---- INIT ----
+function doLogout() { localStorage.removeItem('isLoggedIn'); location.href='auth.html'; }
 function init() {
   if (!localStorage.getItem('isLoggedIn')) { location.href = 'auth.html'; return; }
   const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
   const name = p.name || p.email || '—';
-  const init = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+  const init2 = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
   document.getElementById('q-avatar').textContent  = init;
   document.getElementById('q-avatar2').textContent = init;
   document.getElementById('q-name').textContent    = name;
+  document.querySelectorAll('.js-avatar').forEach(el=>el.textContent=init2);
+  document.querySelectorAll('.js-user-name').forEach(el=>el.textContent=name);
 
   const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
   if (saved) { quoteNum = saved.number; }
