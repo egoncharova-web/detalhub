@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Новый заказ — DetalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#f9fafb; color:#111; font-size:14px; }
+
+    /* TOPBAR */
+    .topbar {
+      position:sticky; top:0; z-index:100;
+      background:#fff;
+      border-bottom: 1px solid #e5e7eb;
+      height:56px; display:flex; align-items:center; padding:0 28px; gap:24px;
+    }
+    .topbar-logo { display:flex; align-items:center; gap:4px; text-decoration:none; flex-shrink:0; }
+    .topbar-user {
+      display:flex; align-items:center; gap:8px;
+      cursor:pointer; padding:5px 10px; border-radius:8px;
+      transition:background .15s; flex-shrink:0;
+    }
+    .topbar-user:hover { background:#f3f4f6; }
+    .u-avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:#071f2a; color:#7dc3fd;
+      font-size:13px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .u-name  { font-size:12px; font-weight:600; color:#111; }
+    .u-ws    { font-size:11px; color:#9ca3af; }
+    .topbar-nav { display:flex; flex:1; }
+    .topbar-nav a {
+      height:56px; display:flex; align-items:center;
+      padding:0 14px; font-size:13px; font-weight:500;
+      color:#6b7280; text-decoration:none;
+      border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap;
+    }
+    .topbar-nav a:hover { color:#111; }
+    .topbar-nav a.active { color:#071f2a; font-weight:600; }
+    .topbar-right { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+    .points-pill {
+      display:flex; align-items:center; gap:6px;
+      background:#f9fafb; border:1px solid #e5e7eb;
+      border-radius:20px; padding:4px 12px;
+      font-size:12px; font-weight:500; color:#6b7280;
+    }
+    .points-coin { width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#7dc3fd,#071f2a); }
+
+    /* QUOTE PAGE LAYOUT */
+    .qpage { max-width:900px; margin:0 auto; padding:32px 24px; }
+
+    /* Back link */
+    .back-row {
+      display:flex; align-items:center; gap:8px;
+      margin-bottom:24px;
+    }
+    .back-link {
+      display:flex; align-items:center; gap:6px;
+      font-size:13px; color:#6b7280; text-decoration:none; transition:color .15s;
+    }
+    .back-link:hover { color:#111; }
+    .q-title { font-size:18px; font-weight:700; color:#111; margin-bottom:20px; }
+
+    /* Upload container */
+    .upload-container {
+      background:#fff; border-radius:10px;
+      border:1px solid #e5e7eb; padding:20px;
+      margin-bottom:20px;
+    }
+    .upload-zone {
+      border:2px dashed #7dc3fd;
+      border-radius:8px; padding:48px 24px;
+      text-align:center; cursor:pointer;
+      transition:border-color .2s, background .2s;
+      background:#fafeff;
+      user-select:none;
+    }
+    .upload-zone:hover { background:#f0f8ff; border-color:#071f2a; border-style:solid; }
+    .upload-zone { cursor:pointer; }
+
+    /* 3 part icons like Xometry */
+    .part-icons { display:flex; justify-content:center; gap:16px; margin-bottom:18px; }
+    .picon {
+      width:72px; height:72px; border-radius:8px;
+      background:linear-gradient(135deg,#e0f0ff,#f8fbff);
+      border:1px solid #7dc3fd; display:flex; align-items:center;
+      justify-content:center; color:#071f2a;
+      box-shadow: 0 2px 8px rgba(125,195,253,0.2);
+    }
+
+    .upload-main-text { font-size:15px; font-weight:500; color:#111; margin-bottom:6px; }
+    .upload-main-text span { color:#071f2a; font-weight:600; cursor:pointer; }
+    .upload-main-text span:hover { text-decoration:underline; }
+    .upload-multi { font-size:12px; color:#6b7280; margin-bottom:10px; }
+    .upload-formats { font-size:11px; color:#9ca3af; line-height:1.8; }
+    .upload-secure {
+      display:flex; align-items:center; justify-content:center; gap:5px;
+      font-size:12px; color:#9ca3af; margin-top:12px;
+    }
+    .upload-secure svg { color:#7dc3fd; }
+
+    /* Video link */
+    .video-link {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      margin-top:16px; font-size:13px; color:#6b7280; text-decoration:none;
+    }
+    .video-link:hover { color:#111; }
+    .play-btn {
+      width:22px; height:22px; border-radius:50%;
+      background:#071f2a; display:flex; align-items:center; justify-content:center;
+    }
+
+    /* ======= PARTS SECTION ======= */
+    #parts-section { display:none; }
+
+    .order-title-row {
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
+    }
+    .order-title { font-size:18px; font-weight:700; color:#111; }
+    .order-subtitle { font-size:12px; color:#9ca3af; margin-top:2px; }
+    .add-more-btn {
+      display:flex; align-items:center; gap:6px;
+      font-size:13px; font-weight:600; color:#071f2a;
+      text-decoration:none; cursor:pointer; background:none; border:none;
+      font-family:inherit; padding:0;
+    }
+
+    /* Part card */
+    .part-card {
+      background:#fff; border:1px solid #e5e7eb;
+      border-radius:10px; overflow:hidden; margin-bottom:12px;
+    }
+    .pc-inner { display:grid; grid-template-columns:300px 1fr; }
+    .pc-preview {
+      background:#f9fafb; border-right:1px solid #f3f4f6;
+      min-height:280px; display:flex; align-items:center;
+      justify-content:center; cursor:pointer; position:relative; overflow:hidden;
+    }
+    .pc-preview-placeholder { text-align:center; color:#9ca3af; }
+    .pc-preview-placeholder svg { display:block; margin:0 auto 8px; }
+    .badge-3d {
+      position:absolute; bottom:8px; right:8px;
+      background:rgba(7,31,42,.75); color:#7dc3fd;
+      font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px;
+    }
+    .badge-3d-open {
+      position:absolute; top:8px; right:8px;
+      background:rgba(7,31,42,.75); color:#7dc3fd;
+      font-size:10px; font-weight:600; padding:3px 8px; border-radius:4px;
+      cursor:pointer; text-decoration:none;
+    }
+    .badge-3d-open:hover { background:#071f2a; }
+
+    /* Specs */
+    .pc-specs { padding:0; }
+    .spec-row {
+      display:grid; grid-template-columns:160px 1fr;
+      padding:10px 18px; border-bottom:1px solid #f3f4f6;
+      align-items:center; font-size:13px;
+    }
+    .spec-row:last-child { border-bottom:none; }
+    .spec-label { color:#6b7280; font-weight:500; }
+    .spec-val   { color:#111; font-weight:500; }
+    .spec-val select, .spec-val input[type=number] {
+      border:1px solid #e5e7eb; border-radius:6px;
+      padding:5px 8px; font-size:13px; color:#111;
+      background:#fff; font-family:inherit;
+      width:100%; max-width:240px;
+    }
+    .spec-val select:focus, .spec-val input:focus { outline:none; border-color:#7dc3fd; }
+
+    /* Part footer */
+    .pc-footer {
+      padding:11px 18px; border-top:1px solid #f3f4f6;
+      background:#f9fafb; display:flex;
+      align-items:center; justify-content:space-between; gap:12px;
+    }
+    .pc-name { font-size:13px; font-weight:600; color:#111; }
+    .pc-actions { display:flex; gap:8px; }
+    .btn-dup {
+      padding:6px 14px; border:1px solid #e5e7eb; border-radius:6px;
+      background:#fff; font-size:12px; font-weight:500; color:#374151;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .btn-dup:hover { background:#f9fafb; border-color:#d1d5db; }
+    .btn-del {
+      padding:6px 14px; border:1px solid #fee2e2; border-radius:6px;
+      background:#fff5f5; font-size:12px; font-weight:500; color:#dc2626;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .btn-del:hover { background:#fee2e2; }
+
+    /* Status chips */
+    .chip {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;
+    }
+    .chip-loading { background:#fef9c3; color:#854d0e; }
+    .chip-ready   { background:#dcfce7; color:#166534; }
+    .chip-manual  { background:#dbeafe; color:#1e40af; }
+    .chip-price   { font-size:16px; font-weight:700; color:#071f2a; }
+    .spin { width:11px; height:11px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Note textarea */
+    .note-box {
+      background:#fff; border:1px solid #e5e7eb;
+      border-radius:10px; padding:16px 18px; margin-bottom:12px;
+    }
+    .note-title { font-size:13px; font-weight:600; color:#111; margin-bottom:10px; }
+    .note-textarea {
+      width:100%; border:1px solid #e5e7eb; border-radius:7px;
+      padding:10px 14px; font-size:13px; font-family:inherit;
+      color:#111; resize:vertical; min-height:80px;
+    }
+    .note-textarea:focus { outline:none; border-color:#7dc3fd; }
+
+    /* Summary */
+    .summary {
+      background:#fff; border:1px solid #e5e7eb;
+      border-radius:10px; overflow:hidden;
+      position:sticky; top:68px;
+    }
+    .summary-title { padding:14px 18px; font-size:14px; font-weight:700; color:#111; border-bottom:1px solid #f3f4f6; }
+    .s-row { display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-bottom:1px solid #f3f4f6; font-size:13px; }
+    .s-row .sl { color:#6b7280; }
+    .s-row .sv { font-weight:600; }
+    .s-total { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; font-size:16px; font-weight:700; }
+    .s-actions { padding:0 18px 18px; display:flex; flex-direction:column; gap:8px; }
+    .btn-checkout {
+      width:100%; padding:12px; background:linear-gradient(135deg,#071f2a,#0c2d40); color:#7dc3fd;
+      border:none; border-radius:8px; font-size:14px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:background .15s;
+    }
+    .btn-checkout:hover { background:#0c2d40; }
+    .btn-save {
+      width:100%; padding:9px; border:1px solid #e5e7eb;
+      border-radius:8px; font-size:13px; font-weight:500; color:#374151;
+      background:#fff; cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .btn-save:hover { background:#f9fafb; }
+
+    /* Viewer */
+    .viewer-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.55); z-index:200;
+      align-items:center; justify-content:center;
+    }
+    .viewer-overlay.show { display:flex; }
+    .viewer-box {
+      background:#fff; border-radius:12px; width:90%; max-width:840px;
+      box-shadow:0 24px 64px rgba(0,0,0,.2); overflow:hidden;
+    }
+    .viewer-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 20px; border-bottom:1px solid #f3f4f6;
+    }
+    .viewer-hdr span { font-size:14px; font-weight:600; }
+    .viewer-close { background:none; border:none; cursor:pointer; color:#9ca3af; font-size:24px; line-height:1; }
+    #viewer-cnt { width:100%; height:520px; background:#f9fafb; }
+    .viewer-hint { padding:8px 20px; text-align:center; font-size:12px; color:#9ca3af; border-top:1px solid #f3f4f6; }
+
+    /* Content grid */
+    .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; align-items:start; }
+
+    /* Footer */
+    .page-footer {
+      text-align:center; padding:24px; font-size:11px; color:#9ca3af;
+      border-top:1px solid #e5e7eb; margin-top:32px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="dashboard.html" class="topbar-logo">
+    <svg width="44" height="44" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
+      <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#lg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
+    </svg>
+    <span style="font-size:18px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#071f2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px;">DetalHub</span>
+  </a>
+
+  <div class="topbar-user" onclick="location.href='profile.html'">
+    <div class="u-avatar" id="q-avatar">E</div>
+    <div>
+      <div class="u-name">Личный кабинет</div>
+      <div class="u-ws" id="q-name">—</div>
+    </div>
+    <svg width="12" height="12" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+
+  <nav class="topbar-nav">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="projects.html">Мои проекты</a>
+    <a href="orders.html" class="active">Новый заказ</a>
+    <a href="profile.html">Профиль</a>
+  </nav>
+
+  <div class="topbar-right">
+    <div class="points-pill">
+      <div class="points-coin"></div>
+      <span>0 бонусов</span>
+    </div>
+    <div class="u-avatar" id="q-avatar2" onclick="location.href='profile.html'" style="cursor:pointer;">E</div>
+  </div>
+</div>
+
+<!-- QUOTE PAGE -->
+<div class="qpage">
+
+  <!-- Back + title -->
+  <div class="back-row">
+    <a href="dashboard.html" class="back-link">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Назад к моим заказам
+    </a>
+  </div>
+
+  <!-- UPLOAD SECTION -->
+  <div id="upload-section">
+    <div class="q-title">Создать новое предложение <span style="font-size:13px;font-weight:400;color:#9ca3af;margin-left:8px;" id="q-num-label"></span></div>
+    <div class="upload-container">
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple onchange="handleFiles(this)" style="display:none;">
+
+        <!-- 3 Part icons как у Xometry -->
+        <div class="part-icons">
+          <div class="picon">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div class="picon">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="picon">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18M9 21V9"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="upload-main-text">
+          Перетащите файлы или <span style="color:#071f2a;font-weight:600;text-decoration:underline;">выберите на компьютере</span>
+        </div>
+        <div class="upload-multi">Можно загрузить несколько файлов сразу</div>
+        <div class="upload-formats">
+          Мгновенный расчёт: STEP, STP, STL, OBJ, DXF<br>
+          Мануальный (24 ч): DWS, DWF, DWG, PDF
+        </div>
+        <div class="upload-secure">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Все загрузки защищены и конфиденциальны
+        </div>
+      </div>
+    </div>
+
+    <a href="#" class="video-link" onclick="return false;">
+      <div class="play-btn">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="#7dc3fd"><polygon points="2,1 9,5 2,9"/></svg>
+      </div>
+      Посмотреть видео — как работает система мгновенного расчёта
+    </a>
+  </div>
+
+  <!-- PARTS SECTION -->
+  <div id="parts-section">
+    <div class="order-title-row">
+      <div>
+        <div class="order-title">Предложение <span id="order-num" style="color:#9ca3af;font-weight:400;font-size:14px;"></span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="add-more-btn" onclick="document.getElementById('addInput').click()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Добавить ещё файлы
+        </button>
+        <input type="file" id="addInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple onchange="handleFiles(this)" style="display:none">
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <!-- Left: parts list -->
+      <div>
+        <div id="parts-list"></div>
+        <div class="note-box">
+          <div class="note-title">Примечание к заказу</div>
+          <textarea class="note-textarea" id="order-note" placeholder="Дополнительные требования, допуски, особые пожелания к производству..."></textarea>
+        </div>
+      </div>
+
+      <!-- Right: summary -->
+      <div class="summary">
+        <div class="summary-title">Сводка заказа</div>
+        <div class="s-row"><span class="sl">Срок изготовления</span><span class="sv" id="s-lead">—</span></div>
+        <div class="s-row"><span class="sl">Деталей</span><span class="sv" id="s-parts">0</span></div>
+        <div class="s-row"><span class="sl">Количество</span><span class="sv" id="s-qty">0 шт.</span></div>
+        <div class="s-row"><span class="sl">Вес</span><span class="sv" id="s-weight">—</span></div>
+        <div class="s-total"><span>Стоимость</span><span id="s-price">0 ₽</span></div>
+        <div class="s-actions">
+          <button class="btn-checkout" onclick="checkout()">Оформить заказ →</button>
+          <button class="btn-save" onclick="downloadPDF()">↓ Скачать КП (PDF)</button>
+          <button class="btn-save" onclick="saveProject()">Сохранить проект</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="page-footer">
+  © 2026, DetalHub · <a href="#" style="color:#9ca3af;">Условия</a> · <a href="#" style="color:#9ca3af;">Конфиденциальность</a>
+</div>
+
+<!-- 3D Viewer -->
+<div class="viewer-overlay" id="viewerModal">
+  <div class="viewer-box">
+    <div class="viewer-hdr">
+      <span id="viewer-name">3D просмотр</span>
+      <button class="viewer-close" onclick="closeViewer()">×</button>
+    </div>
+    <div id="viewer-cnt"></div>
+    <div class="viewer-hint">Левая кнопка — вращение · Колесо — масштаб · Правая — перемещение</div>
+  </div>
+</div>
+
+<script>
+// ---- CONFIG ----
+const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
+const CALCULATE_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
+const BITRIX_URL    = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
+
+// ---- REFS ----
+const TECHS = [
+  {v:'cnc_mill',l:'ЧПУ-фрезерование'},{v:'cnc_turn',l:'ЧПУ-токарная'},
+  {v:'fdm',l:'3D-печать FDM'},{v:'sla',l:'3D-печать SLA'},
+  {v:'sls',l:'3D-печать SLS'},{v:'mjf',l:'3D-печать MJF'},
+  {v:'laser',l:'Лазерная резка'},{v:'other',l:'Другое (уточнить)'},
+];
+const MATS = {
+  cnc_mill:['Алюминий AL6061','Алюминий AL7075','Сталь 45','Нержавейка 304','Нержавейка 316','Латунь','Медь','Титан','Оргстекло','Другой'],
+  cnc_turn:['Сталь 45','Нержавейка 304','Алюминий','Латунь','Медь','Другой'],
+  fdm:['PLA','PETG','ABS','ASA','TPU (гибкий)','Нейлон PA','PEEK'],
+  sla:['Стандартная смола','Прочная смола','Гибкая смола','Прозрачная смола'],
+  sls:['PA12 (нейлон)','PA11','PA12 GF (стеклонаполненный)'],
+  mjf:['PA12 (HP MJF)','PA11 (HP MJF)'],
+  laser:['Сталь','Алюминий','Нержавейка','Медь','Латунь','Другой'],
+  other:['Уточнить у менеджера'],
+};
+const FINS = [
+  {v:'standard',l:'Стандарт (как после обработки)'},
+  {v:'anodize',l:'Анодирование'},{v:'paint',l:'Покраска'},
+  {v:'polish',l:'Полировка'},{v:'sandblast',l:'Пескоструй'},
+];
+const TOLS = [
+  {v:'std',l:'Стандарт (±0.5 мм)'},{v:'med',l:'Средний (±0.2 мм)'},
+  {v:'fine',l:'Точный (±0.1 мм)'},{v:'ultra',l:'Высокоточный (±0.05 мм)'},
+];
+const DENS = {'Алюминий AL6061':2.70,'Алюминий AL7075':2.81,'Сталь 45':7.85,'Нержавейка 304':7.93,'Нержавейка 316':8.00,'Латунь':8.50,'Медь':8.96,'Титан':4.51,'PLA':1.24,'PETG':1.27,'ABS':1.04,'Нейлон PA':1.15,'PA12 (нейлон)':1.01,'PA12 (HP MJF)':1.01};
+
+let parts = [], quoteNum = null;
+
+// ---- INIT ----
+function init() {
+  if (!localStorage.getItem('isLoggedIn')) { location.href = 'auth.html'; return; }
+  const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
+  const name = p.name || p.email || '—';
+  const init = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+  document.getElementById('q-avatar').textContent  = init;
+  document.getElementById('q-avatar2').textContent = init;
+  document.getElementById('q-name').textContent    = name;
+
+  const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
+  if (saved) { quoteNum = saved.number; }
+  else {
+    quoteNum = parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1;
+    localStorage.setItem('lastQuoteNum', quoteNum);
+    localStorage.setItem('currentQuote', JSON.stringify({number:quoteNum}));
+  }
+  document.getElementById('order-num').textContent = '№' + quoteNum;
+  const ql = document.getElementById('q-num-label'); if(ql) ql.textContent = '№' + quoteNum;
+}
+
+// ---- DRAG & DROP ----
+const dz = document.getElementById('dropZone');
+if (dz) {
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.background='#e8f4ff'; dz.style.borderColor='#071f2a'; });
+  dz.addEventListener('dragleave', () => { dz.style.background='#fafeff'; dz.style.borderColor='#7dc3fd'; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.style.background='#fafeff'; dz.style.borderColor='#7dc3fd';
+    const fakeInput = { files: e.dataTransfer.files };
+    handleFiles(fakeInput);
+  });
+}
+
+// ---- FILE HANDLING ----
+async function handleFiles(input) {
+  if (!input.files || !input.files.length) return;
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('parts-section').style.display  = '';
+
+  for (const file of Array.from(input.files)) {
+    const url = URL.createObjectURL(file);
+    const isManual = /\.(dwg|dwf|pdf)$/i.test(file.name);
+    const part = {
+      id: Date.now() + Math.random(), name: file.name,
+      size: (file.size/1024/1024).toFixed(2)+' МБ', localUrl: url, fileUrl: null,
+      tech: isManual?'other':'cnc_mill',
+      material: isManual?'Уточнить у менеджера':'Алюминий AL6061',
+      finish:'standard', tolerance:'std', qty:1,
+      dims:{x:'—',y:'—',z:'—'}, volume:0, weight:'—', price:0,
+      status: isManual?'manual':'analysing',
+    };
+    parts.push(part);
+    appendPartCard(part);
+    if (!isManual) {
+      parseGeometry(url).then(geo => {
+        part.dims=geo.dims; part.volume=geo.volume;
+        part.weight=calcWeight(part); part.status='ready';
+        refreshCard(part);
+        calcPrice(part).then(()=>{ refreshCard(part); updateSummary(); });
+      });
+    }
+    uploadToCloud(file).then(u=>{ if(u) part.fileUrl=u; }).catch(()=>{});
+  }
+  updateSummary();
+  if (input.id) document.getElementById(input.id).value='';
+}
+
+function parseGeometry(url) {
+  return new Promise(resolve => {
+    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+      try {
+        const geo=new THREE.STLLoader().parse(buf);
+        geo.computeBoundingBox();
+        const b=geo.boundingBox;
+        const dims={x:(b.max.x-b.min.x).toFixed(1),y:(b.max.y-b.min.y).toFixed(1),z:(b.max.z-b.min.z).toFixed(1)};
+        const pos=geo.attributes.position.array;
+        let vol=0;
+        for(let i=0;i<pos.length;i+=9){
+          const p1=new THREE.Vector3(pos[i],pos[i+1],pos[i+2]);
+          const p2=new THREE.Vector3(pos[i+3],pos[i+4],pos[i+5]);
+          const p3=new THREE.Vector3(pos[i+6],pos[i+7],pos[i+8]);
+          vol+=p1.dot(p2.clone().cross(p3))/6;
+        }
+        vol=Math.abs(vol); if(vol>1e6)vol/=1000;
+        resolve({dims,volume:vol});
+      } catch { resolve({dims:{x:'—',y:'—',z:'—'},volume:0}); }
+    }).catch(()=>resolve({dims:{x:'—',y:'—',z:'—'},volume:0}));
+  });
+}
+
+function calcWeight(p) {
+  if(!p.volume) return '—';
+  const d=DENS[p.material]||2.7;
+  return (p.volume*d*0.001*p.qty).toFixed(1)+' г';
+}
+
+async function calcPrice(p) {
+  try {
+    const r=await fetch(CALCULATE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({volume:p.volume,technology:p.tech,material:p.material,quantity:p.qty,fileName:p.name})});
+    if(!r.ok) throw new Error();
+    p.price=parseFloat((await r.json()).price)||0;
+  } catch {
+    const base=p.volume>0?Math.round(p.volume*0.012):800;
+    p.price=Math.max(500,Math.round(base*p.qty*(p.qty>1?0.85:1)));
+  }
+}
+
+async function uploadToCloud(file) {
+  const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+  const resp=await fetch(UPLOAD_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:b64,fileName:file.name,contentType:file.type})});
+  if(!resp.ok) throw new Error();
+  const d=await resp.json(); return d.fileUrl||d.Location;
+}
+
+// ---- CARD HTML ----
+function buildCardHTML(p) {
+  const techOpts = TECHS.map(t=>`<option value="${t.v}"${t.v===p.tech?' selected':''}>${t.l}</option>`).join('');
+  const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
+  const finOpts  = FINS.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
+  const tolOpts  = TOLS.map(t=>`<option value="${t.v}"${t.v===p.tolerance?' selected':''}>${t.l}</option>`).join('');
+  const isStl = /\.(stl|obj)$/i.test(p.name);
+
+  const statusHTML = p.status==='analysing'
+    ? `<span class="chip chip-loading"><span class="spin"></span>Анализируем геометрию...</span>`
+    : p.status==='manual'
+    ? `<span class="chip chip-manual">Мануальный запрос (24–48 ч)</span>`
+    : `<span class="chip chip-ready">✓ Геометрия определена</span>`;
+
+  const prevHTML = isStl
+    ? `<div class="pc-preview" id="prev-${p.id}" onclick="openViewer(${JSON.stringify(p.id)})">
+         <div class="pc-preview-placeholder"><div style="font-size:11px;color:#9ca3af;">Загрузка 3D...</div></div>
+         <div class="badge-3d">3D ↗</div>
+       </div>`
+    : `<div class="pc-preview" style="cursor:default;">
+         <div class="pc-preview-placeholder">
+           <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+           <div style="font-size:12px;margin-top:8px;">${p.size}</div>
+         </div>
+       </div>`;
+
+  const priceHTML = p.price>0
+    ? `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`
+    : p.status==='analysing'
+    ? `<span style="color:#9ca3af;font-size:13px;">Рассчитывается...</span>`
+    : `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`;
+
+  return `<div class="part-card">
+    <div class="pc-inner">
+      ${prevHTML}
+      <div class="pc-specs">
+        <div class="spec-row"><span class="spec-label">Технология</span><span class="spec-val"><select onchange="chTech(${JSON.stringify(p.id)},this.value)">${techOpts}</select></span></div>
+        <div class="spec-row"><span class="spec-label">Материал</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'material',this.value)">${matOpts}</select></span></div>
+        <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
+        <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
+        <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм</span></div>
+        <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
+        <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" onchange="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
+        <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
+      </div>
+    </div>
+    <div class="pc-footer">
+      <div>
+        <div class="pc-name">${p.name}</div>
+        <div style="margin-top:5px;">${statusHTML}</div>
+      </div>
+      <div class="pc-actions">
+        <button class="btn-dup" onclick="dupPart(${JSON.stringify(p.id)})">Дублировать</button>
+        <button class="btn-del" onclick="delPart(${JSON.stringify(p.id)})">Удалить</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function appendPartCard(p) {
+  const wrap=document.createElement('div'); wrap.id='pw-'+p.id;
+  wrap.innerHTML=buildCardHTML(p);
+  document.getElementById('parts-list').appendChild(wrap);
+  if(/\.(stl|obj)$/i.test(p.name)&&p.localUrl) render3DPreview('prev-'+p.id,p.localUrl);
+}
+
+function refreshCard(p) {
+  const w=document.getElementById('pw-'+p.id); if(!w) return;
+  w.innerHTML=buildCardHTML(p);
+  if(/\.(stl|obj)$/i.test(p.name)&&p.localUrl) render3DPreview('prev-'+p.id,p.localUrl);
+}
+
+// ---- PARAM CHANGES ----
+function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material')p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function dupPart(id){const p=parts.find(x=>x.id===id);if(!p)return;const n={...p,id:Date.now()+Math.random(),name:'Копия: '+p.name};parts.push(n);appendPartCard(n);updateSummary();}
+function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=>x.id===id);if(p?.localUrl)URL.revokeObjectURL(p.localUrl);parts=parts.filter(x=>x.id!==id);document.getElementById('pw-'+id)?.remove();if(!parts.length){document.getElementById('upload-section').style.display='';document.getElementById('parts-section').style.display='none';}updateSummary();}
+
+// ---- SUMMARY ----
+function updateSummary(){
+  const total=parts.reduce((s,p)=>s+p.price,0);
+  const qty=parts.reduce((s,p)=>s+p.qty,0);
+  const w=parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0);
+  document.getElementById('s-parts').textContent=parts.length;
+  document.getElementById('s-qty').textContent=qty+' шт.';
+  document.getElementById('s-weight').textContent=w>0?w.toFixed(1)+' г':'—';
+  document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
+  document.getElementById('s-lead').textContent=parts.length?'3–7 дней':'—';
+}
+
+// ---- 3D ----
+function render3DPreview(cid,url){
+  const c=document.getElementById(cid);if(!c)return;
+  fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
+    const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
+    const scene=new THREE.Scene();
+    const w=c.clientWidth||300,h=c.clientHeight||280;
+    const cam=new THREE.PerspectiveCamera(45,w/h,0.1,1e6);
+    const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    ren.setSize(w,h);ren.setClearColor(0xf9fafb);
+    c.innerHTML='';c.appendChild(ren.domElement);
+    const mesh=new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true,shininess:40}));
+    scene.add(mesh);
+    const dl=new THREE.DirectionalLight(0x7dc3fd,1);dl.position.set(1,2,3);scene.add(dl);
+    scene.add(new THREE.AmbientLight(0xffffff,0.6));
+    const b=geo.boundingBox;
+    const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
+    const cx=(b.max.x+b.min.x)/2,cy=(b.max.y+b.min.y)/2,cz=(b.max.z+b.min.z)/2;
+    cam.position.set(cx,cy+mx*0.5,cz+mx*2.5);cam.lookAt(cx,cy,cz);
+    let alive=true;c._stop=()=>{alive=false;};
+    (function a(){if(!alive||!document.getElementById(cid))return;requestAnimationFrame(a);mesh.rotation.y+=0.004;ren.render(scene,cam);})();
+    const bd=document.createElement('div');bd.className='badge-3d';bd.textContent='3D ↗';c.style.position='relative';c.appendChild(bd);
+  }).catch(()=>{});
+}
+
+function openViewer(id){
+  const p=parts.find(x=>x.id===id);if(!p?.localUrl)return;
+  document.getElementById('viewer-name').textContent=p.name;
+  document.getElementById('viewerModal').classList.add('show');
+  document.body.style.overflow='hidden';
+  const c=document.getElementById('viewer-cnt');c.innerHTML='';
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xf9fafb);
+  const cam=new THREE.PerspectiveCamera(45,c.clientWidth/520,0.1,1e6);
+  const ren=new THREE.WebGLRenderer({antialias:true});ren.setSize(c.clientWidth,520);c.appendChild(ren.domElement);
+  const ctrl=new THREE.OrbitControls(cam,ren.domElement);ctrl.enableDamping=true;
+  fetch(p.localUrl).then(r=>r.arrayBuffer()).then(buf=>{
+    const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
+    scene.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true})));
+    const dl=new THREE.DirectionalLight(0x7dc3fd,1.2);dl.position.set(5,5,5);scene.add(dl);
+    scene.add(new THREE.AmbientLight(0xffffff,0.7));
+    const b=geo.boundingBox;const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
+    cam.position.set(0,mx,mx*3);ctrl.target.set(0,0,0);
+    let alive=true;window._vstop=()=>{alive=false;};
+    (function a(){if(!alive)return;requestAnimationFrame(a);ctrl.update();ren.render(scene,cam);})();
+  });
+}
+function closeViewer(){if(window._vstop){window._vstop();window._vstop=null;}document.getElementById('viewerModal').classList.remove('show');document.body.style.overflow='';document.getElementById('viewer-cnt').innerHTML='';}
+document.getElementById('viewerModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeViewer();});
+
+// ---- ACTIONS ----
+async function checkout(){
+  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
+  const pr=JSON.parse(localStorage.getItem('userProfile')||'{}');
+  const note=document.getElementById('order-note')?.value||'';
+  try{
+    let list='';parts.forEach((p,i)=>{const t=TECHS.find(x=>x.v===p.tech)?.l||p.tech;list+=`${i+1}. ${p.name} | ${t} | ${p.material} | ${p.qty}шт | ${p.price.toLocaleString()}₽\n`;});
+    await fetch(BITRIX_URL+'crm.deal.add.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{TITLE:`Заказ №${quoteNum}`,OPPORTUNITY:parts.reduce((s,p)=>s+p.price,0),CURRENCY_ID:'RUB',STAGE_ID:'NEW',COMMENTS:`${list}\n${note}\nEmail:${pr.email}`}})});
+  }catch(e){}
+  const orders=JSON.parse(localStorage.getItem('orders')||'[]');
+  orders.push({id:Date.now(),quoteNumber:quoteNum,parts:JSON.parse(JSON.stringify(parts)),totalPrice:parts.reduce((s,p)=>s+p.price,0).toLocaleString('ru-RU')+' ₽',leadTime:'3–7 дней',status:'Новый',orderDate:new Date().toLocaleString('ru-RU'),note});
+  localStorage.setItem('orders',JSON.stringify(orders));localStorage.removeItem('currentQuote');
+  alert('✅ Заказ №'+quoteNum+' оформлен! Мы свяжемся с вами в течение 1 часа.');
+  location.href='orders.html';
+}
+
+function saveProject(){
+  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
+  const prj=JSON.parse(localStorage.getItem('projects')||'[]');
+  prj.push({id:Date.now(),quoteNumber:quoteNum,date:new Date().toLocaleString('ru-RU'),parts:JSON.parse(JSON.stringify(parts)),totalPrice:parts.reduce((s,p)=>s+p.price,0).toLocaleString('ru-RU')+' ₽',leadTime:'3–7 дней',status:'Черновик'});
+  localStorage.setItem('projects',JSON.stringify(prj));localStorage.removeItem('currentQuote');
+  alert('Проект сохранён!');location.href='projects.html';
+}
+
+function downloadPDF(){
+  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
+  let rows='';parts.forEach((p,i)=>{const t=TECHS.find(x=>x.v===p.tech)?.l||p.tech;rows+=`<tr><td style="padding:7px;border:1px solid #e5e7eb;">${i+1}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.name}</td><td style="padding:7px;border:1px solid #e5e7eb;">${t}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.material}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.dims.x}×${p.dims.y}×${p.dims.z}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.qty}</td><td style="padding:7px;border:1px solid #e5e7eb;font-weight:700;">${p.price.toLocaleString('ru-RU')} ₽</td></tr>`;});
+  const total=parts.reduce((s,p)=>s+p.price,0);
+  const tpl=document.createElement('div');
+  tpl.innerHTML=`<div style="font-family:Arial,sans-serif;padding:18mm;"><div style="display:flex;justify-content:space-between;border-bottom:2px solid #071f2a;padding-bottom:12px;margin-bottom:18px;"><div><b style="font-size:20px;color:#071f2a;">DetalHub</b><div style="font-size:11px;color:#6b7280;">detalhub.com</div></div><div style="text-align:right;"><b style="font-size:14px;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</b><div style="font-size:12px;color:#6b7280;">№${quoteNum} · ${new Date().toLocaleDateString('ru-RU')}</div></div></div><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;"><thead><tr style="background:#071f2a;color:#7dc3fd;"><th style="padding:8px;">№</th><th>Наименование</th><th>Технология</th><th>Материал</th><th>Размер</th><th>Кол-во</th><th>Сумма</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="6" style="padding:8px;border:1px solid #e5e7eb;text-align:right;font-weight:700;">Итого:</td><td style="padding:8px;border:1px solid #e5e7eb;font-weight:700;color:#071f2a;">${total.toLocaleString('ru-RU')} ₽</td></tr></tfoot></table><div style="font-size:11px;color:#6b7280;">Срок изготовления: 3–7 дней · КП действует 14 дней</div></div>`;
+  html2pdf().from(tpl).set({filename:`KP_DetalHub_${quoteNum}.pdf`,jsPDF:{unit:'mm',format:'a4'},html2canvas:{scale:2,backgroundColor:'#fff'}}).save();
+}
+
+init();
+</script>
+</body>
+</html>

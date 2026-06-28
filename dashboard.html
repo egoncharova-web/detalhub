@@ -3,737 +3,592 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Панель управления — DetalHub</title>
+  <title>Dashboard — DetalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="cabinet.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/STLLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* === TOPBAR === */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      height: 56px; display: flex; align-items: center;
+      padding: 0 28px; gap: 32px;
+    }
+    .topbar-nav { display: flex; flex: 1; }
+    .topbar-nav a {
+      height: 56px; display: flex; align-items: center;
+      padding: 0 14px; font-size: 13px; font-weight: 500;
+      color: #6b7280; text-decoration: none;
+      border-bottom: 2px solid transparent; transition: all .15s;
+      white-space: nowrap;
+    }
+    .topbar-nav a:hover { color: #111; }
+    .topbar-nav a.active { color: #071f2a; border-bottom-color: #071f2a; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .topbar-user {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; padding: 6px 10px; border-radius: 8px;
+      transition: background .15s;
+    }
+    .topbar-user:hover { background: #f3f4f6; }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #071f2a 0%, #0c2d40 100%); color: #7dc3fd;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-info { line-height: 1.3; }
+    .user-name { font-size: 12px; font-weight: 600; color: #111; }
+    .user-ws   { font-size: 11px; color: #9ca3af; }
+    .points-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; font-weight: 500; color: #6b7280;
+    }
+    .points-coin { width: 18px; height: 18px; background: linear-gradient(135deg,#7dc3fd,#071f2a); border-radius: 50%; }
+
+    /* === MAIN CONTENT === */
+    .page { padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+
+    /* Greeting */
+    .greeting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .greeting-title { font-size: 20px; font-weight: 700; color: #111; }
+    .toggle-tips {
+      font-size: 12px; color: #6b7280; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; font-family: inherit;
+    }
+
+    /* Order type cards */
+    .order-cards {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 14px; margin-bottom: 24px;
+    }
+    .oc {
+      border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 22px; background: #fff;
+      transition: box-shadow .2s, border-color .2s;
+      position: relative;
+    }
+    .oc:hover { border-color: #7dc3fd; box-shadow: 0 4px 20px rgba(125,195,253,0.2); }
+    .oc.featured { background: linear-gradient(135deg, #f8fbff 0%, #fff 60%); }
+    .oc-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: rgba(7,31,42,.06); display: flex;
+      align-items: center; justify-content: center;
+      color: #071f2a; margin-bottom: 12px;
+    }
+    .oc-title { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 2px; }
+    .oc-sub   { font-size: 12px; color: #9ca3af; margin-bottom: 12px; }
+    .oc-best  {
+      font-size: 11px; font-weight: 600; color: #065f46;
+      background: #d1fae5; border-radius: 20px;
+      padding: 2px 10px; display: inline-block; margin-bottom: 12px;
+    }
+    .oc-list  { margin: 0 0 16px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .oc-list li { font-size: 12px; color: #374151; display: flex; gap: 7px; align-items: flex-start; line-height: 1.5; }
+    .oc-list li::before { content: '•'; color: #7dc3fd; font-size: 14px; line-height: 1.3; flex-shrink: 0; }
+    .oc-lock { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9ca3af; margin-top: 8px; }
+    .btn-instant {
+      display: block; text-align: center;
+      padding: 11px 20px;
+      background: linear-gradient(135deg, #071f2a 0%, #0c2d40 100%); color: #7dc3fd;
+      border: none; border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      text-decoration: none; transition: background .15s;
+    }
+    .btn-instant:hover { background: #0c2d40; }
+
+    /* Bottom grid */
+    .bottom-grid {
+      display: grid; grid-template-columns: 1fr 320px;
+      gap: 16px; align-items: start;
+    }
+
+    /* Projects + Messages cards */
+    .panel {
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 10px; overflow: hidden;
+      margin-bottom: 14px; transition: border-color .2s, box-shadow .2s;
+    }
+    .panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
+    .panel:last-child { margin-bottom: 0; }
+    .panel-header {
+      padding: 13px 18px; display: flex;
+      align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .panel-header-left { display: flex; align-items: center; gap: 8px; }
+    .panel-title { font-size: 14px; font-weight: 600; color: #111; }
+    .collapse-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 12px; }
+    .panel-link { font-size: 12px; font-weight: 600; color: #071f2a; text-decoration: none; }
+    .panel-link:hover { text-decoration: underline; }
+
+    /* Projects table */
+    .proj-table { width: 100%; }
+    .proj-th {
+      display: grid; grid-template-columns: 56px 1fr 160px 80px 90px;
+      padding: 9px 18px; background: #f9fafb;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .05em; color: #9ca3af;
+    }
+    .proj-row {
+      display: grid; grid-template-columns: 56px 1fr 160px 80px 90px;
+      padding: 12px 18px; border-bottom: 1px solid #f3f4f6;
+      align-items: center; font-size: 13px;
+      cursor: pointer; transition: background .1s;
+    }
+    .proj-row:last-child { border-bottom: none; }
+    .proj-row:hover { background: #f9fafb; }
+    .proj-thumb {
+      width: 44px; height: 44px; border-radius: 6px;
+      background: #f3f4f6; border: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .proj-num { font-weight: 600; color: #071f2a; font-size: 13px; }
+    .proj-tech { font-size: 11px; color: #9ca3af; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-auto   { color: #065f46; font-weight: 600; font-size: 12px; }
+    .s-manual { color: #92400e; font-weight: 600; font-size: 12px; }
+    .s-new    { color: #1e40af; font-weight: 600; font-size: 12px; }
+    .s-done   { color: #065f46; font-weight: 600; font-size: 12px; }
+    .proj-val { font-weight: 600; font-size: 13px; text-align: right; }
+
+    /* Empty states */
+    .empty-panel { padding: 36px 20px; text-align: center; color: #9ca3af; }
+    .empty-panel svg { display: block; margin: 0 auto 12px; }
+    .empty-panel p { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
+    .empty-panel small { font-size: 12px; }
+
+    /* Right column */
+    .right-col { display: flex; flex-direction: column; gap: 14px; }
+
+    /* Teamspace panel */
+    .team-panel {
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 20px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .team-panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
+    .team-icon-wrap { text-align: center; margin-bottom: 12px; }
+    .team-title { font-size: 14px; font-weight: 700; color: #111; text-align: center; margin-bottom: 4px; }
+    .team-sub   { font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 16px; }
+    .team-feature {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid #f3f4f6;
+      font-size: 13px; color: #374151;
+    }
+    .team-feature:last-of-type { border-bottom: none; margin-bottom: 12px; }
+    .team-feature svg { color: #7dc3fd; flex-shrink: 0; }
+    .btn-team {
+      display: block; width: 100%; padding: 9px;
+      background: #071f2a; color: #7dc3fd;
+      border: none; border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      text-align: center; text-decoration: none;
+      margin-bottom: 8px; transition: background .15s;
+    }
+    .btn-team:hover { background: #0c2d40; }
+    .btn-team-ghost {
+      display: block; text-align: center;
+      font-size: 12px; color: #6b7280; text-decoration: none;
+    }
+    .btn-team-ghost:hover { color: #111; }
+
+    /* Features panel */
+    .features-panel {
+      background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 10px; overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .features-panel:hover { border-color: #7dc3fd; box-shadow: 0 4px 16px rgba(125,195,253,0.15); }
+    .features-header { padding: 13px 18px; font-size: 13px; font-weight: 600; color: #111; border-bottom: 1px solid #f3f4f6; }
+    .feature-item { padding: 14px 18px; border-bottom: 1px solid #f3f4f6; }
+    .feature-item:last-child { border-bottom: none; }
+    .feature-item p { font-size: 12px; color: #6b7280; line-height: 1.5; margin: 6px 0 8px; }
+    .feature-link { font-size: 12px; font-weight: 600; color: #071f2a; text-decoration: none; }
+    .feature-link:hover { text-decoration: underline; }
+    .email-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .toggle-sw {
+      width: 36px; height: 20px; background: #e5e7eb;
+      border-radius: 20px; position: relative; cursor: pointer;
+      transition: background .2s; border: none;
+    }
+    .toggle-sw::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: left .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-sw.on { background: #7dc3fd; }
+    .toggle-sw.on::after { left: 18px; }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid #e5e7eb; margin-top: 32px;
+      padding: 20px 32px; font-size: 11px; color: #9ca3af;
+    }
+    .footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+    .footer-col-title { font-weight: 600; color: #6b7280; margin-bottom: 6px; }
+    .footer-col a { display: block; color: #9ca3af; text-decoration: none; margin-bottom: 3px; }
+    .footer-col a:hover { color: #111; }
+    .footer-bottom { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+
+    /* Messages */
+    .msg-empty { padding: 28px 18px; text-align: center; }
+    .msg-empty svg { display: block; margin: 0 auto 10px; }
+  </style>
 </head>
-<body>
-<div class="layout">
+<body style="background:#f9fafb;font-family:'Inter',sans-serif;color:#111;">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <img src="logo.svg" alt="DetalHub">
+<!-- TOPBAR -->
+<div class="topbar">
+  <!-- Logo -->
+  <a href="dashboard.html" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;">
+    <svg width="44" height="44" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="500" y2="500"><stop offset="0%" stop-color="#7dc3fd"/><stop offset="100%" stop-color="#071f2a"/></linearGradient></defs>
+      <g transform="translate(250,173) scale(2.18) translate(-50,-50)"><path fill="url(#lg)" fill-rule="evenodd" d="m 57.332 45.02 c -4.1367 -4.1367 -10.621 -4.7773 -15.488 -1.5234 c -4.8633 3.25 -6.7578 9.4844 -4.5195 14.891 c 2.2422 5.4062 7.9883 8.4766 13.727 7.3359 s 9.8711 -6.1758 9.8711 -12.027 c 0.003906 -3.2539 -1.2891 -6.375 -3.5898 -8.6758 z m 33.395 -27.484 h -9.1914 v 9.1914 h 9.1914 z m -8.8516 25.488 c 0.10547 0.31641 0.20312 0.64453 0.29297 0.96094 c 0.16016 0.55859 0.31641 1.1641 0.46875 1.8086 v 0.003906 c 0.10547 0.46094 0.48047 0.8125 0.94922 0.88672 l 8.7461 1.4727 v 11.07 l -8.7539 1.4727 v 0.003906 c -0.47656 0.078125 -0.85156 0.44141 -0.94922 0.91016 c -0.42969 1.8516 -1.0117 3.6641 -1.7422 5.418 c -0.73438 1.7695 -1.6133 3.4766 -2.6289 5.1016 c -0.26172 0.41406 -0.23047 0.94922 0.074219 1.3359 l 5.1172 7.1914 l -7.8281 7.8281 l -7.2383 -5.1523 h -0.003906 c -0.38281 -0.26953 -0.88672 -0.28516 -1.2852 -0.039063 c -3.25 2.0312 -6.8125 3.5078 -10.543 4.375 c -0.46094 0.10547 -0.81641 0.48047 -0.89062 0.94531 l -1.4727 8.7461 h -11.062 l -1.4727 -8.7539 c -0.082032 -0.47266 -0.44531 -0.85156 -0.91406 -0.94922 c -3.7227 -0.86328 -7.2773 -2.3398 -10.52 -4.3672 c -0.41406 -0.26172 -0.94922 -0.23047 -1.3359 0.078125 l -7.1914 5.1172 l -7.8281 -7.8281 l 5.1523 -7.2383 v -0.003906 c 0.27344 -0.38281 0.28906 -0.89062 0.039063 -1.2891 c -1.0156 -1.625 -1.8945 -3.3281 -2.6328 -5.0977 c -0.73047 -1.7656 -1.3125 -3.5859 -1.7422 -5.4414 c -0.10547 -0.46484 -0.48047 -0.81641 -0.94922 -0.89062 l -8.7461 -1.4727 v -11.07 l 8.7539 -1.4727 c 0.47656 -0.078125 0.85156 -0.44141 0.94922 -0.91406 c 0.86328 -3.7227 2.3398 -7.2773 4.3633 -10.516 c 0.26172 -0.41797 0.23438 -0.95312 -0.074219 -1.3398 l -5.1172 -7.1914 l 7.8281 -7.8281 l 7.2383 5.1523 h 0.003907 c 0.38281 0.27344 0.89062 0.28906 1.2891 0.039063 c 1.625 -1.0156 3.3281 -1.8945 5.0977 -2.6289 c 1.7656 -0.73047 3.5859 -1.3164 5.4453 -1.7461 c 0.46094 -0.10547 0.8125 -0.48047 0.88672 -0.94922 l 1.4727 -8.7461 h 9.7422 l -0.26953 18.953 c -0.41406 -0.066406 -0.83203 -0.12109 -1.2539 -0.16406 c -0.89062 -0.09375 -1.7852 -0.14453 -2.6836 -0.14453 c -6.6367 0 -13.004 2.6367 -17.699 7.332 c -4.6953 4.6953 -7.332 11.062 -7.332 17.699 c -0.003906 6.6406 2.6367 13.008 7.3281 17.703 c 4.6953 4.6953 11.062 7.332 17.703 7.332 c 6.6367 0 13.004 -2.6367 17.699 -7.332 c 4.6953 -4.6953 7.332 -11.062 7.332 -17.699 c 0 -1.1172 -0.074219 -2.2305 -0.22266 -3.332 c -0.082032 -0.60938 -0.18359 -1.2109 -0.30469 -1.7969 h 3.1836 c 0.64062 0 1.1641 -0.52344 1.1641 -1.1641 c 0 -0.050782 -0.003906 -0.097656 -0.007812 -0.14844 l -0.21094 -4.2539 l 4.582 0.023438 z m -13.113 -10.809 h -6.75 v 6.7539 h 6.75 z m 19.137 2.1602 l -3.3633 0.003906 v 3.3672 h 3.3633 z m 7.1172 -28.227 h -3.3672 v 3.3672 h 3.3672 z m -11.984 1.3906 h -3.3633 v 3.3672 h 3.3633 z m -12.926 6.4805 h -9.1875 v 9.1914 h 9.1875 z m 0.8125 -11.387 h -3.3633 v 3.3672 h 3.3633 z m 6.6992 29.949 h -3.3672 v 3.3672 h 3.3633 z"/></g>
+    </svg>
+    <span style="font-size:18px;font-weight:700;background:linear-gradient(90deg,#7dc3fd,#071f2a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px;">DetalHub</span>
+  </a>
+
+  <!-- User pill -->
+  <div class="topbar-user" onclick="location.href='profile.html'">
+    <div class="user-avatar" id="t-avatar">E</div>
+    <div class="user-info">
+      <div class="user-name" id="t-ws">Личный кабинет</div>
+      <div class="user-ws" id="t-name">—</div>
     </div>
-    <div class="sidebar-lang">
-      <button class="lang-btn" data-lang="ru">RU</button>
-      <button class="lang-btn" data-lang="en">EN</button>
+    <svg width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+
+  <!-- Nav links -->
+  <nav class="topbar-nav">
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="projects.html">Мои проекты</a>
+    <a href="orders.html">Мои заказы</a>
+    <a href="profile.html">Профиль</a>
+    <a href="#" style="display:flex;align-items:center;gap:4px;">Помощь</a>
+  </nav>
+
+  <!-- Points + avatar -->
+  <div class="topbar-right">
+    <div class="points-badge">
+      <div class="points-coin"></div>
+      <span id="t-points">0 бонусов</span>
     </div>
-    <nav class="sidebar-nav">
-      <div class="sidebar-section">Кабинет</div>
-      <a href="dashboard.html" class="nav-link active">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span data-i18n="nav_dashboard">Панель управления</span>
-      </a>
-      <a href="projects.html" class="nav-link">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-        <span data-i18n="nav_projects">Мои проекты</span>
-      </a>
-      <a href="orders.html" class="nav-link">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span data-i18n="nav_orders">Мои заказы</span>
-      </a>
-      <div class="sidebar-section">Аккаунт</div>
-      <a href="profile.html" class="nav-link">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span data-i18n="nav_profile">Профиль</span>
-      </a>
-      <a href="#" class="nav-link" onclick="logout();return false;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
-        <span data-i18n="nav_logout">Выйти</span>
-      </a>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="avatar-sm js-avatar" onclick="window.location.href='profile.html'">?</div>
-      <div style="min-width:0">
-        <div class="sidebar-user-name js-user-name">—</div>
-        <div class="sidebar-user-role" data-i18n="role_client">Клиент</div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <span class="topbar-title">Панель управления</span>
-      <div class="topbar-right">
-        <a href="dashboard.html" class="btn btn-primary">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          <span data-i18n="new_order">Новый заказ</span>
-        </a>
-      </div>
-    </div>
-
-    <div class="page-content">
-
-      <!-- Quote info bar -->
-      <div style="background:#e8f4ff;border:1px solid #b3d9f7;border-radius:var(--radius-lg);padding:12px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
-        <svg width="16" height="16" fill="none" stroke="#185fa5" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
-        <span style="font-size:13px;color:#185fa5;font-weight:500">Запрос на КП №<span id="quoteNumber" style="font-weight:600">—</span></span>
-        <span style="font-size:12px;color:#5a7fa8;margin-left:auto">Создан: <span id="quoteDate">—</span></span>
-      </div>
-
-      <!-- Upload -->
-      <label for="fileInput" style="display:block;margin-bottom:24px;border:2px dashed #dde3eb;border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;background:#fff;transition:all .2s;" onmouseover="this.style.borderColor='#5aaae8';this.style.background='#f0f8ff'" onmouseout="this.style.borderColor='#dde3eb';this.style.background='#fff'">
-        <input type="file" id="fileInput" accept=".stl,.obj,.step,.stp" multiple onchange="handleFileUpload(this)" style="display:none">
-        <div style="font-size:32px;color:#9aa3ae;margin-bottom:12px;">
-          <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
-        </div>
-        <div style="font-size:15px;font-weight:600;color:#111927;margin-bottom:6px;">Загрузить файлы деталей</div>
-        <div style="font-size:13px;color:#9aa3ae;">Перетащите сюда или нажмите · STL, OBJ, STEP, STP — до 50 МБ</div>
-      </label>
-
-      <!-- Content grid -->
-      <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
-
-        <!-- Parts -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Детали <span id="partsCount" style="color:var(--gray-400);font-weight:400">(0)</span></span>
-          </div>
-          <div id="partsList">
-            <div class="empty-state">
-              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--gray-200)"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-              <h3>Нет загруженных деталей</h3>
-              <p>Загрузите первый файл выше</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Summary sidebar -->
-        <div class="card" style="position:sticky;top:80px;">
-          <div class="card-header"><span class="card-title">Итого запроса</span></div>
-          <div class="card-body">
-            <div style="display:flex;flex-direction:column;gap:0;">
-              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
-                <span class="text-muted">Деталей</span><span id="totalParts" style="font-weight:500">0</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
-                <span class="text-muted">Количество</span><span id="totalQty" style="font-weight:500">0 шт.</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
-                <span class="text-muted">Вес</span><span id="totalWeight" style="font-weight:500">0 г</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100);font-size:13px;">
-                <span class="text-muted">Срок</span><span id="leadTime" style="font-weight:500">—</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:600;">
-                <span>Стоимость</span><span id="totalPrice" style="color:var(--navy)">0 ₽</span>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:4px;">
-              <button class="btn btn-ghost btn-sm" onclick="downloadPDF()" style="flex:1">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15V3M6 9l6 6 6-6M3 19h18v2H3z"/></svg>
-                КП
-              </button>
-              <button class="btn btn-ghost btn-sm" onclick="saveToProjects()" style="flex:2">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                В проекты
-              </button>
-            </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:10px;justify-content:center;padding:11px;" onclick="checkout()">
-              Оформить заказ →
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div><!-- /page-content -->
-  </div><!-- /main -->
-</div><!-- /layout -->
-
-<!-- Params Modal -->
-<div id="paramsModal" class="modal-backdrop">
-  <div class="modal-box">
-    <div class="modal-header">
-      <span class="modal-title">Параметры детали</span>
-      <button class="modal-close" onclick="closeModal()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <form id="paramsForm">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Технология</label>
-          <select class="form-control" id="technology" onchange="updateMaterials()">
-            <option value="fdm">FDM (послойное наплавление)</option>
-            <option value="sla">SLA (фотополимерная)</option>
-            <option value="sls">SLS (лазерное спекание)</option>
-            <option value="mjf">MJF (Multi Jet Fusion)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Материал</label>
-          <select class="form-control" id="material"></select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Толщина слоя</label>
-          <select class="form-control" id="layerHeight">
-            <option value="0.1">0.1 мм (высокое качество)</option>
-            <option value="0.2" selected>0.2 мм (стандарт)</option>
-            <option value="0.3">0.3 мм (быстро)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Заполнение</label>
-          <select class="form-control" id="infill">
-            <option value="20">20% (стандарт)</option>
-            <option value="40">40% (повышенное)</option>
-            <option value="80">80% (высокое)</option>
-            <option value="100">100% (сплошное)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Количество, шт</label>
-        <input type="number" class="form-control" id="quantity" min="1" value="1" style="max-width:120px;">
-      </div>
-      <div class="form-group">
-        <label class="form-label" style="margin-bottom:10px;">Постобработка</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="supportRemoval"> Удаление поддержек</label>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="sanding"> Шлифовка</label>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="priming"> Грунтовка</label>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="painting"> Покраска</label>
-        </div>
-      </div>
-      <button type="button" class="btn btn-primary" onclick="saveParams()" style="width:100%;justify-content:center;padding:11px;">
-        Сохранить параметры
-      </button>
-    </form>
+    <div class="user-avatar" id="t-avatar2" onclick="location.href='profile.html'" style="cursor:pointer;">E</div>
+    <button onclick="logout()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:12px;padding:6px 10px;border-radius:6px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">Выйти</button>
   </div>
 </div>
 
-<!-- Viewer Modal -->
-<div id="viewerModal" class="modal-backdrop">
-  <div class="modal-box" style="max-width:860px;">
-    <div class="modal-header">
-      <span class="modal-title">3D просмотр</span>
-      <button class="modal-close" onclick="closeViewerModal()">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+<!-- PAGE CONTENT -->
+<div class="page">
+
+  <!-- Greeting -->
+  <div class="greeting-row">
+    <div>
+      <div class="greeting-title" id="greeting">Привет! Добро пожаловать в DetalHub</div>
     </div>
-    <div id="viewerContainer" style="width:100%;height:480px;background:var(--gray-50);border-radius:var(--radius);overflow:hidden;"></div>
-    <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;">Левая кнопка — вращение · Колесо — масштаб · Правая — перемещение</p>
+    <button class="toggle-tips" onclick="toggleCards()" id="tips-btn">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
+      Скрыть подсказки
+    </button>
+  </div>
+
+  <!-- Order type cards -->
+  <div class="order-cards" id="order-cards">
+
+    <!-- Мгновенный расчёт -->
+    <div class="oc featured">
+      <div class="oc-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="oc-title">Мгновенный расчёт</div>
+      <div class="oc-sub">КП автоматически за 1 час</div>
+      <div class="oc-best">Лучший выбор для прототипов и малых серий</div>
+      <ul class="oc-list">
+        <li>ЧПУ-обработка, 3D-печать, Лазерная резка</li>
+        <li>Идеально для единичных деталей и серий до 1000 шт. или 500 000 ₽</li>
+        <li>Автоматический DFM-анализ геометрии</li>
+      </ul>
+      <a href="quote.html" class="btn-instant">Запросить мгновенный расчёт</a>
+    </div>
+
+    <!-- Мануальный заказ -->
+    <div class="oc">
+      <div class="oc-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="oc-title">Запрос менеджеру</div>
+      <div class="oc-sub">Ответ инженера в течение 24–48 часов</div>
+      <br>
+      <ul class="oc-list">
+        <li>Все производственные технологии</li>
+        <li>Средние и крупные серии (от 1000 шт. или от 500 000 ₽)</li>
+        <li>Нестандартные материалы, покрытия, сборка</li>
+        <li>Рамочное производство с плановыми поставками</li>
+      </ul>
+      <div class="oc-lock">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Доступно для корпоративных клиентов
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom grid -->
+  <div class="bottom-grid">
+
+    <!-- Left: projects + messages -->
+    <div>
+
+      <!-- Последние проекты -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <button class="collapse-btn" onclick="toggleSection('proj')">▼</button>
+            <span class="panel-title">Последние проекты</span>
+          </div>
+          <a href="projects.html" class="panel-link">Все проекты →</a>
+        </div>
+        <div id="proj-body">
+          <div class="proj-table">
+            <div class="proj-th">
+              <span></span>
+              <span>Название</span>
+              <span>Статус</span>
+              <span>Кол-во</span>
+              <span style="text-align:right;">Сумма</span>
+            </div>
+            <div id="proj-rows">
+              <!-- Заполняется JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Сообщения -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <button class="collapse-btn" onclick="toggleSection('msg')">▼</button>
+            <span class="panel-title">Актуальные сообщения</span>
+          </div>
+          <a href="#" class="panel-link">К сообщениям →</a>
+        </div>
+        <div id="msg-body">
+          <div class="msg-empty">
+            <svg width="36" height="36" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24">
+              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+            </svg>
+            <p>Сообщений пока нет</p>
+            <small style="color:#9ca3af;">После оформления заказа менеджер свяжется с вами здесь</small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="right-col">
+
+      <!-- Teamspace -->
+      <div class="team-panel">
+        <div class="team-icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="16" r="6" fill="#7dc3fd" opacity=".3"/>
+            <circle cx="26" cy="16" r="6" fill="#071f2a" opacity=".3"/>
+            <circle cx="20" cy="10" r="6" fill="#7dc3fd" opacity=".5"/>
+            <path d="M8 32c0-5 5-8 12-8s12 3 12 8" stroke="#071f2a" stroke-width="1.5" fill="none"/>
+          </svg>
+        </div>
+        <div class="team-title">Работайте эффективнее</div>
+        <div class="team-sub">Все проекты вашей команды в одном месте</div>
+        <div class="team-feature">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+          Общее пространство для команды
+        </div>
+        <div class="team-feature">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Безопасная совместная работа
+        </div>
+        <div class="team-feature">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Простое согласование и утверждение
+        </div>
+        <div class="team-feature">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Быстрые командные решения
+        </div>
+        <a href="profile.html" class="btn-team">Попробовать</a>
+        <a href="#" class="btn-team-ghost">Узнать больше</a>
+      </div>
+
+      <!-- Features & Tools -->
+      <div class="features-panel">
+        <div class="features-header">Возможности и инструменты</div>
+
+        <div class="feature-item">
+          <div style="font-size:13px;font-weight:600;color:#111;">📐 Библиотека деталей</div>
+          <p>Сохраняйте часто заказываемые детали и повторяйте заказы в один клик.</p>
+          <a href="projects.html" class="feature-link">Открыть библиотеку</a>
+        </div>
+
+        <div class="feature-item">
+          <div class="email-toggle">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#111;">📧 Email-рассылка</div>
+              <p style="margin:4px 0 0;">Подпишитесь и получите скидку 7% на первый заказ.</p>
+            </div>
+            <button class="toggle-sw" id="email-toggle" onclick="toggleEmail(this)"></button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <div class="footer-col-title">DetalHub</div>
+      <div>© 2026, DetalHub</div>
+      <div style="margin-top:4px;" id="f-account">Аккаунт: #—</div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Правовое</div>
+      <a href="#">Условия использования</a>
+      <a href="#">Политика конфиденциальности</a>
+      <a href="#">Контакты</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Поддержка</div>
+      <a href="mailto:info@detalhub.com">info@detalhub.com</a>
+      <a href="#">Чат с менеджером</a>
+      <a href="#">Тикеты поддержки</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Адрес</div>
+      <div>detalhub.com</div>
+    </div>
   </div>
 </div>
 
-<script src="cabinet.js"></script>
 <script>
-  // ---- CONFIG (без паролей!) ----
-  const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
-  const CALCULATE_URL = 'https://functions.yandexcloud.net/d4el8d756avajcdflme5';
-  const BITRIX_URL    = 'https://b24-nfabk1.bitrix24.ru/rest/1/gfnefnkq0xdgdccu/';
+// ---- USER ----
+function initUser() {
+  const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  if (!localStorage.getItem('isLoggedIn')) { location.href = 'auth.html'; return; }
+  const name  = p.name  || p.email || 'Клиент';
+  const first = name.split(' ')[0];
+  const init  = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('greeting').textContent = `Привет, ${first}! Добро пожаловать в DetalHub`;
+  document.getElementById('t-name').textContent  = name;
+  document.getElementById('t-ws').textContent    = 'Личный кабинет';
+  document.getElementById('t-avatar').textContent  = init;
+  document.getElementById('t-avatar2').textContent = init;
+  document.getElementById('f-account').textContent = `Аккаунт: ${p.email || '—'}`;
+}
 
-  // ---- MATERIALS ----
-  const materials = {
-    fdm: [
-      { value:'pla',   name:'PLA',          density:1.24, price:15 },
-      { value:'abs',   name:'ABS',          density:1.04, price:18 },
-      { value:'petg',  name:'PETG',         density:1.27, price:20 },
-      { value:'nylon', name:'Nylon (PA)',   density:1.15, price:25 },
-      { value:'tpu',   name:'TPU (гибкий)',density:1.25, price:30 },
-    ],
-    sla: [
-      { value:'standard-resin', name:'Стандартная смола', density:1.1,  price:35 },
-      { value:'tough-resin',    name:'Прочная смола',     density:1.15, price:45 },
-      { value:'flexible-resin', name:'Гибкая смола',      density:1.1,  price:50 },
-    ],
-    sls: [
-      { value:'pa12',  name:'PA12 (нейлон)',             density:1.01, price:60 },
-      { value:'pa11',  name:'PA11 (нейлон)',             density:1.03, price:65 },
-      { value:'pa-gf', name:'PA12 GF (стеклонаполненный)',density:1.25,price:75 },
-    ],
-    mjf: [
-      { value:'pa12-mjf', name:'PA12 (HP MJF)', density:1.01, price:70 },
-      { value:'pa11-mjf', name:'PA11 (HP MJF)', density:1.03, price:80 },
-    ]
+function logout() {
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('userId');
+  location.href = 'auth.html';
+}
+
+// ---- TOGGLE CARDS ----
+let cardsVisible = true;
+function toggleCards() {
+  cardsVisible = !cardsVisible;
+  document.getElementById('order-cards').style.display = cardsVisible ? '' : 'none';
+  const btn = document.getElementById('tips-btn');
+  btn.innerHTML = cardsVisible
+    ? '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg> Скрыть подсказки'
+    : '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg> Показать подсказки';
+}
+
+// ---- TOGGLE SECTIONS ----
+const collapsed = {};
+function toggleSection(id) {
+  collapsed[id] = !collapsed[id];
+  const body = document.getElementById(id + '-body');
+  if (body) body.style.display = collapsed[id] ? 'none' : '';
+}
+
+// ---- EMAIL TOGGLE ----
+function toggleEmail(btn) { btn.classList.toggle('on'); }
+
+// ---- PROJECTS ----
+function renderProjects() {
+  const rows = document.getElementById('proj-rows');
+  const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+  const orders   = JSON.parse(localStorage.getItem('orders')   || '[]');
+
+  const all = [
+    ...projects.map(p => ({ ...p, _src: 'project', status: p.status || 'Черновик' })),
+    ...orders.map(o   => ({ ...o, _src: 'order',   status: o.status || 'Новый' })),
+  ].sort((a,b) => b.id - a.id).slice(0, 5);
+
+  if (!all.length) {
+    rows.innerHTML = `
+      <div style="padding:36px 20px;text-align:center;">
+        <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;">
+          <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        </svg>
+        <p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p>
+        <p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж, чтобы начать</p>
+        <a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">
+          Новый заказ →
+        </a>
+      </div>`;
+    return;
+  }
+
+  const ICONS = { cnc_mill:'⚙️', cnc_turn:'🔩', fdm:'🖨️', sla:'🖨️', sls:'🖨️', mjf:'🖨️', laser:'✂️', other:'📋' };
+  const STATUS = {
+    'Черновик':  { cls:'s-manual', text:'Черновик' },
+    'Новый':     { cls:'s-new',    text:'Новый заказ' },
+    'В работе':  { cls:'s-auto',   text:'В работе' },
+    'Выполнен':  { cls:'s-done',   text:'Выполнен' },
   };
 
-  let parts = [];
-  let currentPartId = null;
-  let quoteNumber = null;
-  let quoteDate = null;
-
-  // ---- QUOTE NUMBER ----
-  function initQuote() {
-    const saved = localStorage.getItem('currentQuote');
-    if (saved) {
-      const q = JSON.parse(saved);
-      quoteNumber = q.number; quoteDate = q.date;
-    } else {
-      const last = localStorage.getItem('lastQuoteNumber');
-      quoteNumber = last ? parseInt(last) + 1 : 1000;
-      quoteDate = new Date().toLocaleString('ru-RU');
-      localStorage.setItem('lastQuoteNumber', quoteNumber);
-      localStorage.setItem('currentQuote', JSON.stringify({ number: quoteNumber, date: quoteDate }));
-    }
-    document.getElementById('quoteNumber').textContent = quoteNumber;
-    document.getElementById('quoteDate').textContent = quoteDate;
-  }
-
-  // ---- FILE UPLOAD ----
-  async function handleFileUpload(input) {
-    if (!input.files.length) return;
-    showLoading(input.files[0].name);
-    for (const file of input.files) {
-      try {
-        const fileData = await readBase64(file);
-        const localUrl = URL.createObjectURL(file);
-        const uploadResult = await uploadToStorage(file.name, fileData, file.type);
-        const part = {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: (file.size/1024/1024).toFixed(2) + ' MB',
-          uploadDate: new Date().toLocaleDateString('ru-RU'),
-          qty: 1,
-          fileUrl: uploadResult.fileUrl || uploadResult.Location,
-          localUrl,
-          params: { technology:'fdm', material:'pla', layerHeight:'0.2', infill:'20', postprocess:[], quantity:1 },
-          dimensions: { x:0, y:0, z:0 },
-          volume: 0, weight: 0, price: 0
-        };
-        if (file.name.toLowerCase().match(/\.(stl|obj)$/)) {
-          const stlData = await analyzeSTL(localUrl);
-          part.dimensions = stlData.dimensions;
-          part.volume = stlData.volume;
-        }
-        await calcPrice(part);
-        parts.push(part);
-        renderPart(part);
-      } catch(e) {
-        console.error(e);
-        alert('Ошибка: ' + e.message);
-      }
-    }
-    hideLoading();
-    updateSummary();
-    input.value = '';
-  }
-
-  function readBase64(file) {
-    return new Promise((res,rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = rej;
-      r.readAsDataURL(file);
-    });
-  }
-
-  async function uploadToStorage(name, data, type) {
-    const resp = await fetch(UPLOAD_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ body:data, fileName:name, contentType:type })
-    });
-    if (!resp.ok) throw new Error('Ошибка загрузки файла');
-    return resp.json();
-  }
-
-  async function analyzeSTL(url) {
-    return new Promise(resolve => {
-      fetch(url).then(r=>r.arrayBuffer()).then(buf => {
-        try {
-          const loader = new THREE.STLLoader();
-          const geo = loader.parse(buf);
-          geo.computeBoundingBox();
-          const b = geo.boundingBox;
-          const dims = {
-            x: (b.max.x-b.min.x).toFixed(1),
-            y: (b.max.y-b.min.y).toFixed(1),
-            z: (b.max.z-b.min.z).toFixed(1)
-          };
-          let vol = 0;
-          const pos = geo.attributes.position.array;
-          for (let i=0;i<pos.length;i+=9) {
-            const p1=new THREE.Vector3(pos[i],pos[i+1],pos[i+2]);
-            const p2=new THREE.Vector3(pos[i+3],pos[i+4],pos[i+5]);
-            const p3=new THREE.Vector3(pos[i+6],pos[i+7],pos[i+8]);
-            vol += p1.dot(p2.cross(p3))/6;
-          }
-          vol = Math.abs(vol);
-          if (vol > 100000) vol /= 1000;
-          resolve({ dimensions:dims, volume:vol });
-        } catch(e) {
-          resolve({ dimensions:{x:'—',y:'—',z:'—'}, volume:0 });
-        }
-      }).catch(() => resolve({ dimensions:{x:'—',y:'—',z:'—'}, volume:0 }));
-    });
-  }
-
-  async function calcPrice(part) {
-    try {
-      const resp = await fetch(CALCULATE_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          volume: part.volume,
-          technology: part.params.technology,
-          material: part.params.material,
-          quantity: part.qty,
-          fileName: part.name,
-          userId: localStorage.getItem('userId')
-        })
-      });
-      if (!resp.ok) throw new Error();
-      const result = await resp.json();
-      part.price = parseFloat(result.price) || 0;
-    } catch {
-      // Локальный расчёт
-      const mats = materials[part.params.technology];
-      const mat = mats.find(m => m.value === part.params.material);
-      if (mat) {
-        const infill = parseInt(part.params.infill)/100;
-        part.weight = (part.volume * mat.density * infill).toFixed(1);
-        part.price = Math.max(500, Math.round(part.volume * mat.price * infill * part.qty));
-      } else { part.price = 1000; }
-    }
-  }
-
-  // ---- RENDER PART ----
-  function renderPart(part) {
-    const list = document.getElementById('partsList');
-    const empty = list.querySelector('.empty-state');
-    if (empty) empty.remove();
-
-    const tech = {fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[part.params.technology];
-    const matName = (materials[part.params.technology].find(m=>m.value===part.params.material)||{}).name||'';
-
-    const div = document.createElement('div');
-    div.id = `part-${part.id}`;
-    div.style.cssText = 'padding:16px 20px;border-bottom:1px solid var(--gray-100);display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:start;';
-    div.innerHTML = `
-      <div id="preview-${part.id}" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);height:140px;cursor:pointer;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;" onclick="openViewer(${JSON.stringify(part.id)})">
-        <span style="font-size:11px;color:var(--gray-400)">Загрузка 3D...</span>
-        <div style="position:absolute;bottom:6px;right:6px;background:rgba(7,31,42,.7);color:#7dc3fd;font-size:10px;padding:2px 7px;border-radius:4px;">3D</div>
-      </div>
+  rows.innerHTML = all.map(p => {
+    const tech = (p.parts||[])[0]?.tech || 'other';
+    const icon = ICONS[tech] || '📋';
+    const qty  = (p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
+    const s    = STATUS[p.status] || { cls:'s-new', text: p.status };
+    const href = p._src==='order' ? 'orders.html' : 'projects.html';
+    const techLabel = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',sla:'3D-печать SLA',laser:'Лазерная резка',other:'Прочее'}[tech] || tech;
+    return `
+    <div class="proj-row" onclick="location.href='${href}'">
+      <div class="proj-thumb">${icon}</div>
       <div>
-        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--gray-900);">${part.name}</div>
-        <div style="font-size:12px;color:var(--gray-400);line-height:2;">
-          <span style="margin-right:14px;">Файл: <b style="color:var(--gray-600)">${part.size}</b></span>
-          <span style="margin-right:14px;">Габариты: <b style="color:var(--gray-600)">${part.dimensions.x}×${part.dimensions.y}×${part.dimensions.z} мм</b></span><br>
-          <span style="margin-right:14px;">Технология: <b style="color:var(--gray-600)">${tech}</b></span>
-          <span style="margin-right:14px;">Материал: <b style="color:var(--gray-600)">${matName}</b></span>
-          <span>Вес: <b style="color:var(--gray-600)">${part.weight||'—'} г</b></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
-          <span style="font-size:12px;color:var(--gray-400)">Кол-во:</span>
-          <input type="number" value="${part.qty}" min="1" style="width:64px;padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;" onchange="updateQty(${JSON.stringify(part.id)},this.value)">
-          <span style="font-size:15px;font-weight:600;color:var(--navy);margin-left:auto;" id="price-${part.id}">${part.price>0?part.price.toLocaleString()+' ₽':'—'}</span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost btn-sm" onclick="openParams(${JSON.stringify(part.id)})">Параметры</button>
-          <button class="btn btn-ghost btn-sm" onclick="duplicatePart(${JSON.stringify(part.id)})">Дублировать</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePart(${JSON.stringify(part.id)})">Удалить</button>
-        </div>
+        <div class="proj-num">КП №${p.quoteNumber}</div>
+        <div class="proj-tech">${techLabel}</div>
       </div>
-    `;
-    list.appendChild(div);
-    document.getElementById('partsCount').textContent = `(${parts.length})`;
-    // 3D preview
-    const previewUrl = part.localUrl || part.fileUrl;
-    if (previewUrl && part.name.toLowerCase().match(/\.(stl|obj)$/)) {
-      renderMiniPreview(part.id, previewUrl);
-    }
-  }
-
-  function renderMiniPreview(partId, url) {
-    const cont = document.getElementById(`preview-${partId}`);
-    if (!cont) return;
-    cont.innerHTML = '<div style="position:absolute;bottom:6px;right:6px;background:rgba(7,31,42,.7);color:#7dc3fd;font-size:10px;padding:2px 7px;border-radius:4px;">3D</div>';
-    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
-      const loader = new THREE.STLLoader();
-      const geo = loader.parse(buf);
-      geo.computeBoundingBox();
-      const scene = new THREE.Scene();
-      const cam = new THREE.PerspectiveCamera(50,180/140,0.1,1000);
-      const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
-      renderer.setSize(180,140);
-      cont.appendChild(renderer.domElement);
-      const mat = new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true});
-      scene.add(new THREE.Mesh(geo,mat));
-      scene.add(new THREE.DirectionalLight(0xffffff,1).position.set(1,1,1)||new THREE.DirectionalLight(0xffffff,1));
-      scene.add(new THREE.AmbientLight(0x7dc3fd,0.4));
-      const b = geo.boundingBox;
-      const mx = Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
-      cam.position.z = mx*2.5;
-      (function anim(){
-        if (!document.getElementById(`preview-${partId}`)) return;
-        requestAnimationFrame(anim);
-        renderer.render(scene,cam);
-      })();
-    }).catch(()=>{});
-  }
-
-  // ---- VIEWER ----
-  function openViewer(partId) {
-    const part = parts.find(p=>p.id===partId);
-    if (!part) return;
-    const url = part.localUrl||part.fileUrl;
-    if (!url) return;
-    document.getElementById('viewerModal').classList.add('show');
-    const cont = document.getElementById('viewerContainer');
-    cont.innerHTML = '';
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf6f8fb);
-    const cam = new THREE.PerspectiveCamera(50,cont.clientWidth/cont.clientHeight,0.1,1000);
-    const renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(cont.clientWidth,cont.clientHeight);
-    cont.appendChild(renderer.domElement);
-    const controls = new THREE.OrbitControls(cam,renderer.domElement);
-    controls.enableDamping = true;
-    fetch(url).then(r=>r.arrayBuffer()).then(buf=>{
-      const geo = new THREE.STLLoader().parse(buf);
-      geo.computeBoundingBox();
-      const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true}));
-      scene.add(mesh);
-      const light = new THREE.DirectionalLight(0x7dc3fd,1);
-      light.position.set(5,5,5);
-      scene.add(light);
-      scene.add(new THREE.AmbientLight(0xffffff,0.6));
-      const b = geo.boundingBox;
-      const mx = Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
-      cam.position.set(0,mx,mx*3);
-      controls.target.set(0,0,0);
-      (function anim(){
-        if (!document.getElementById('viewerModal').classList.contains('show')) return;
-        requestAnimationFrame(anim);
-        controls.update();
-        renderer.render(scene,cam);
-      })();
-    });
-  }
-
-  function closeViewerModal() {
-    document.getElementById('viewerModal').classList.remove('show');
-  }
-
-  // ---- PARAMS ----
-  function updateMaterials() {
-    const tech = document.getElementById('technology').value;
-    const sel = document.getElementById('material');
-    sel.innerHTML = materials[tech].map(m=>`<option value="${m.value}">${m.name} — ${m.price} ₽/см³</option>`).join('');
-  }
-
-  function openParams(partId) {
-    currentPartId = partId;
-    const part = parts.find(p=>p.id===partId);
-    if (!part) return;
-    document.getElementById('technology').value = part.params.technology;
-    updateMaterials();
-    document.getElementById('material').value = part.params.material;
-    document.getElementById('layerHeight').value = part.params.layerHeight||'0.2';
-    document.getElementById('infill').value = part.params.infill||'20';
-    document.getElementById('quantity').value = part.qty;
-    document.getElementById('paramsModal').classList.add('show');
-  }
-
-  function closeModal() {
-    document.getElementById('paramsModal').classList.remove('show');
-    currentPartId = null;
-  }
-
-  async function saveParams() {
-    if (!currentPartId) return;
-    const part = parts.find(p=>p.id===currentPartId);
-    if (!part) return;
-    const pp = [];
-    ['supportRemoval','sanding','priming','painting'].forEach(id=>{
-      if (document.getElementById(id).checked) pp.push(id);
-    });
-    part.params = {
-      technology: document.getElementById('technology').value,
-      material: document.getElementById('material').value,
-      layerHeight: document.getElementById('layerHeight').value,
-      infill: document.getElementById('infill').value,
-      postprocess: pp,
-      quantity: parseInt(document.getElementById('quantity').value)||1
-    };
-    part.qty = part.params.quantity;
-    await calcPrice(part);
-    const old = document.getElementById(`part-${part.id}`);
-    if (old) old.remove();
-    renderPart(part);
-    updateSummary();
-    closeModal();
-  }
-
-  function updateQty(partId, qty) {
-    const part = parts.find(p=>p.id===partId);
-    if (!part) return;
-    part.qty = parseInt(qty)||1;
-    calcPrice(part).then(()=>{
-      updateSummary();
-      const el = document.getElementById(`price-${partId}`);
-      if (el) el.textContent = part.price.toLocaleString()+' ₽';
-    });
-  }
-
-  function deletePart(partId) {
-    if (!confirm('Удалить деталь?')) return;
-    const part = parts.find(p=>p.id===partId);
-    if (part?.localUrl) URL.revokeObjectURL(part.localUrl);
-    parts = parts.filter(p=>p.id!==partId);
-    document.getElementById(`part-${partId}`)?.remove();
-    document.getElementById('partsCount').textContent = `(${parts.length})`;
-    if (!parts.length) document.getElementById('partsList').innerHTML = '<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
-    updateSummary();
-  }
-
-  function duplicatePart(partId) {
-    const part = parts.find(p=>p.id===partId);
-    if (!part) return;
-    const np = { ...part, id: Date.now()+Math.random(), name:'Копия: '+part.name, qty:1 };
-    parts.push(np);
-    renderPart(np);
-    updateSummary();
-  }
-
-  function updateSummary() {
-    document.getElementById('totalParts').textContent = parts.length;
-    document.getElementById('totalQty').textContent = parts.reduce((s,p)=>s+p.qty,0)+' шт.';
-    document.getElementById('totalWeight').textContent = parts.reduce((s,p)=>s+parseFloat(p.weight||0),0).toFixed(1)+' г';
-    document.getElementById('totalPrice').textContent = parts.reduce((s,p)=>s+p.price,0).toLocaleString()+' ₽';
-    document.getElementById('leadTime').textContent = parts.length ? '3–7 дней' : '—';
-  }
-
-  function showLoading(name) {
-    document.getElementById('loading-ind')?.remove();
-    const d = document.createElement('div');
-    d.id='loading-ind';
-    d.style.cssText='padding:24px 20px;text-align:center;color:var(--gray-400);font-size:13px;border-bottom:1px solid var(--gray-100);';
-    d.innerHTML=`<div style="margin-bottom:6px;">⏳</div>Загрузка: <b>${name}</b>...`;
-    const list = document.getElementById('partsList');
-    const empty = list.querySelector('.empty-state');
-    if (empty) empty.remove();
-    list.appendChild(d);
-  }
-  function hideLoading() { document.getElementById('loading-ind')?.remove(); }
-
-  // ---- SAVE & CHECKOUT ----
-  function saveToProjects() {
-    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
-    const p = { id:Date.now(), quoteNumber, date:quoteDate, parts:JSON.parse(JSON.stringify(parts)),
-      totalWeight: document.getElementById('totalWeight').textContent,
-      totalPrice: document.getElementById('totalPrice').textContent,
-      leadTime: document.getElementById('leadTime').textContent, status:'Черновик' };
-    const projects = JSON.parse(localStorage.getItem('projects')||'[]');
-    projects.push(p);
-    localStorage.setItem('projects', JSON.stringify(projects));
-    localStorage.removeItem('currentQuote');
-    parts=[]; document.getElementById('partsList').innerHTML='<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
-    document.getElementById('partsCount').textContent='(0)';
-    updateSummary(); initQuote();
-    alert('Сохранено в «Мои проекты»');
-    window.location.href='projects.html';
-  }
-
-  async function checkout() {
-    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
-    const profile = JSON.parse(localStorage.getItem('userProfile')||'{}');
-    try {
-      await sendToBitrix(profile);
-      const order = { id:Date.now(), quoteNumber, date:quoteDate, parts:JSON.parse(JSON.stringify(parts)),
-        totalWeight: document.getElementById('totalWeight').textContent,
-        totalPrice: document.getElementById('totalPrice').textContent,
-        leadTime: document.getElementById('leadTime').textContent,
-        status:'Новый', orderDate:new Date().toLocaleString('ru-RU') };
-      const orders = JSON.parse(localStorage.getItem('orders')||'[]');
-      orders.push(order);
-      localStorage.setItem('orders', JSON.stringify(orders));
-      localStorage.removeItem('currentQuote');
-      parts=[]; updateSummary(); initQuote();
-      document.getElementById('partsList').innerHTML='<div class="empty-state"><h3>Нет загруженных деталей</h3><p>Загрузите первый файл выше</p></div>';
-      document.getElementById('partsCount').textContent='(0)';
-      alert('✅ Заказ оформлен! Данные отправлены в CRM.');
-      window.location.href='orders.html';
-    } catch(e) {
-      alert('Ошибка при оформлении: '+e.message);
-    }
-  }
-
-  async function sendToBitrix(profile) {
-    const totalPrice = document.getElementById('totalPrice').textContent;
-    let partsList='';
-    parts.forEach((p,i)=>{
-      const t={fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[p.params.technology];
-      const m=(materials[p.params.technology].find(x=>x.value===p.params.material)||{}).name||'';
-      partsList+=`${i+1}. ${p.name} | ${t} | ${m} | ${p.dimensions.x}×${p.dimensions.y}×${p.dimensions.z}мм | ${p.qty}шт | ${p.price.toLocaleString()}₽\n`;
-    });
-    const contact = await fetch(`${BITRIX_URL}crm.contact.add.json`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ fields:{
-        NAME:(profile.name||'Клиент').split(' ')[0],
-        LAST_NAME:(profile.name||'').split(' ').slice(1).join(' ')||'DetalHub',
-        EMAIL:[{VALUE:profile.email,TYPE:'WORK'}],
-        PHONE:[{VALUE:profile.phone,TYPE:'WORK'}]
-      }})
-    }).then(r=>r.json());
-    const deal = await fetch(`${BITRIX_URL}crm.deal.add.json`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ fields:{
-        TITLE:`Заказ №${quoteNumber} — 3D печать`,
-        OPPORTUNITY: totalPrice.replace(/\s/g,'').replace('₽',''),
-        CURRENCY_ID:'RUB', STAGE_ID:'NEW',
-        CONTACT_ID: contact.result,
-        COMMENTS:`Детали:\n${partsList}\nEmail:${profile.email}\nТел:${profile.phone}`
-      }})
-    }).then(r=>r.json());
-    if (!deal.result) throw new Error('Не удалось создать сделку в Bitrix24');
-  }
-
-  function downloadPDF() {
-    if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
-    const profile = JSON.parse(localStorage.getItem('userProfile')||'{}');
-    const totalPrice = parts.reduce((s,p)=>s+p.price,0);
-    const totalQty   = parts.reduce((s,p)=>s+p.qty,0);
-    const totalWeight= parts.reduce((s,p)=>s+parseFloat(p.weight||0),0);
-    let rows='';
-    parts.forEach((p,i)=>{
-      const t={fdm:'FDM',sla:'SLA',sls:'SLS',mjf:'MJF'}[p.params.technology];
-      const m=(materials[p.params.technology].find(x=>x.value===p.params.material)||{}).name||'';
-      rows+=`<tr><td>${i+1}</td><td>${p.name}</td><td>${t}</td><td>${m}</td><td>${p.dimensions.x}×${p.dimensions.y}×${p.dimensions.z}</td><td>${p.weight}г</td><td>${p.qty}шт</td><td><b>${p.price.toLocaleString()}₽</b></td></tr>`;
-    });
-    const tpl=document.createElement('div');
-    tpl.innerHTML=`<div style="font-family:Arial,sans-serif;padding:20mm;color:#000;">
-      <div style="display:flex;justify-content:space-between;border-bottom:3px solid #071f2a;padding-bottom:14px;margin-bottom:20px;">
-        <div><b style="font-size:22px;color:#071f2a;">DetalHub</b><br><span style="font-size:11px;color:#666;">detalhub.com</span></div>
-        <div style="text-align:right;"><b style="font-size:16px;">КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ</b><br>№ ${quoteNumber} от ${quoteDate}</div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px;">
-        <thead><tr style="background:#071f2a;color:#7dc3fd;">
-          <th style="padding:8px;border:1px solid #ccc;">№</th><th style="padding:8px;border:1px solid #ccc;">Наименование</th>
-          <th style="padding:8px;border:1px solid #ccc;">Технология</th><th style="padding:8px;border:1px solid #ccc;">Материал</th>
-          <th style="padding:8px;border:1px solid #ccc;">Габариты</th><th style="padding:8px;border:1px solid #ccc;">Вес</th>
-          <th style="padding:8px;border:1px solid #ccc;">Кол-во</th><th style="padding:8px;border:1px solid #ccc;">Сумма</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-        <tfoot><tr style="background:#f5f8ff;font-weight:bold;">
-          <td colspan="5" style="padding:8px;border:1px solid #ccc;text-align:right;">ИТОГО:</td>
-          <td style="padding:8px;border:1px solid #ccc;">${totalWeight.toFixed(1)}г</td>
-          <td style="padding:8px;border:1px solid #ccc;">${totalQty}шт</td>
-          <td style="padding:8px;border:1px solid #ccc;color:#071f2a;">${totalPrice.toLocaleString()}₽</td>
-        </tr></tfoot>
-      </table>
-      <p style="font-size:11px;color:#666;">Срок изготовления: ${document.getElementById('leadTime').textContent} · Срок действия КП: 14 дней</p>
+      <div class="${s.cls}">${s.text}</div>
+      <div style="color:#6b7280;">${qty} шт.</div>
+      <div class="proj-val">${p.totalPrice || '—'}</div>
     </div>`;
-    html2pdf().from(tpl).set({
-      filename:`KP_${quoteNumber}.pdf`,
-      jsPDF:{unit:'mm',format:'a4'},
-      html2canvas:{scale:2,backgroundColor:'#fff'}
-    }).save();
-  }
+  }).join('');
+}
 
-  document.getElementById('paramsModal').addEventListener('click', e=>{if(e.target===e.currentTarget)closeModal();});
-  document.getElementById('viewerModal').addEventListener('click', e=>{if(e.target===e.currentTarget)closeViewerModal();});
-
-  initQuote();
-  updateMaterials();
+initUser();
+renderProjects();
 </script>
 </body>
 </html>
