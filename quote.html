@@ -267,6 +267,64 @@
     #viewer-cnt { width:100%; height:520px; background:#f9fafb; }
     .viewer-hint { padding:8px 20px; text-align:center; font-size:12px; color:#9ca3af; border-top:1px solid #f3f4f6; }
 
+    /* FILES SECTION (step 2) */
+    .files-section-box {
+      background:#fff; border-radius:10px;
+      border:1px solid #e5e7eb; padding:24px;
+      margin-bottom:20px;
+    }
+    .files-section-header {
+      display:flex; align-items:center; gap:8px;
+      font-size:14px; font-weight:700; color:#111; margin-bottom:4px;
+    }
+    .files-section-sub {
+      font-size:12px; color:#9ca3af; margin-bottom:20px;
+    }
+    .files-group-label {
+      font-size:12px; font-weight:600; color:#6b7280;
+      margin-bottom:8px;
+    }
+    .file-list-item {
+      display:flex; align-items:center; gap:10px;
+      padding:9px 12px; border:1px solid #e5e7eb;
+      border-radius:7px; margin-bottom:6px; background:#fafafa;
+    }
+    .file-list-item-icon {
+      width:28px; height:28px; border-radius:5px;
+      background:#e8f4ff; display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .file-list-item-name {
+      flex:1; font-size:13px; font-weight:500; color:#111;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .file-list-item-remove {
+      background:none; border:none; cursor:pointer;
+      color:#9ca3af; font-size:18px; line-height:1; padding:2px 4px;
+      border-radius:4px; transition:color .15s;
+    }
+    .file-list-item-remove:hover { color:#dc2626; }
+    .files-actions {
+      display:flex; gap:10px; margin-top:20px; align-items:center;
+    }
+    .btn-add-more {
+      padding:10px 20px; border:1px solid #e5e7eb; border-radius:8px;
+      background:#fff; font-size:13px; font-weight:600; color:#374151;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .btn-add-more:hover { background:#f3f4f6; border-color:#d1d5db; }
+    .btn-start-calc {
+      padding:10px 24px; border:none; border-radius:8px;
+      background:#071f2a; color:#7dc3fd;
+      font-size:13px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:background .15s;
+    }
+    .btn-start-calc:hover { background:#0c2d40; }
+    .files-secure {
+      display:flex; align-items:center; gap:5px;
+      font-size:12px; color:#9ca3af; margin-top:14px;
+    }
+
     /* Content grid */
     .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; align-items:start; }
 
@@ -416,6 +474,39 @@
     </a>
   </div>
 
+  <!-- FILES SECTION (step 2) -->
+  <div id="files-section" style="display:none;">
+    <div class="q-title">Создать новое предложение <span style="font-size:13px;font-weight:400;color:#9ca3af;margin-left:8px;" id="q-num-label2"></span></div>
+    <div class="files-section-box">
+      <div class="files-section-header">
+        <svg width="16" height="16" fill="none" stroke="#071f2a" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
+        Файлы предложения
+      </div>
+      <div class="files-section-sub">Файлы с похожими именами будут объединены в одну деталь</div>
+
+      <div class="files-group-label" id="files-group-label">Мгновенный расчёт — <span id="files-instant-count">0</span> файл(а)</div>
+      <div id="files-list"></div>
+
+      <input type="file" id="addMoreInput" accept=".stl,.obj,.step,.stp,.dxf,.dwg,.pdf" multiple onchange="addMoreFiles(this)" style="display:none">
+
+      <div class="files-actions">
+        <button class="btn-add-more" onclick="document.getElementById('addMoreInput').click()">Добавить файлы</button>
+        <button class="btn-start-calc" onclick="startCalculation()">Начать создание предложения →</button>
+      </div>
+      <div class="files-secure">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Все загрузки защищены и конфиденциальны
+      </div>
+    </div>
+
+    <a href="#" class="video-link" onclick="return false;">
+      <div class="play-btn">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="#7dc3fd"><polygon points="2,1 9,5 2,9"/></svg>
+      </div>
+      Посмотреть видео — как работает система мгновенного расчёта
+    </a>
+  </div>
+
   <!-- PARTS SECTION -->
   <div id="parts-section">
     <div class="order-title-row">
@@ -499,7 +590,7 @@ const TOLS = [
 ];
 const DENS = {'Алюминий AL6061':2.70,'Алюминий AL7075':2.81,'Сталь 45':7.85,'Нержавейка 304':7.93,'Нержавейка 316':8.00,'Латунь':8.50,'Медь':8.96,'Титан':4.51,'PLA':1.24,'PETG':1.27,'ABS':1.04,'Нейлон PA':1.15,'PA12 (нейлон)':1.01,'PA12 (HP MJF)':1.01};
 
-let parts = [], quoteNum = null;
+let parts = [], quoteNum = null, pendingFiles = [];
 
 // ---- INIT ----
 function doLogout() { localStorage.removeItem('isLoggedIn'); location.href='auth.html'; }
@@ -523,6 +614,7 @@ function init() {
   }
   document.getElementById('order-num').textContent = '№' + quoteNum;
   const ql = document.getElementById('q-num-label'); if(ql) ql.textContent = '№' + quoteNum;
+  const ql2 = document.getElementById('q-num-label2'); if(ql2) ql2.textContent = '№' + quoteNum;
 }
 
 // ---- DRAG & DROP ----
@@ -539,12 +631,60 @@ if (dz) {
 }
 
 // ---- FILE HANDLING ----
-async function handleFiles(input) {
+function handleFiles(input) {
   if (!input.files || !input.files.length) return;
+  for (const file of Array.from(input.files)) pendingFiles.push(file);
   document.getElementById('upload-section').style.display = 'none';
-  document.getElementById('parts-section').style.display  = '';
+  document.getElementById('files-section').style.display  = '';
+  renderFilesList();
+  if (input.id) document.getElementById(input.id).value = '';
+}
 
-  for (const file of Array.from(input.files)) {
+function addMoreFiles(input) {
+  if (!input.files || !input.files.length) return;
+  for (const file of Array.from(input.files)) pendingFiles.push(file);
+  renderFilesList();
+  input.value = '';
+}
+
+function renderFilesList() {
+  const list = document.getElementById('files-list');
+  const lbl  = document.getElementById('files-instant-count');
+  const instant = pendingFiles.filter(f => !/\.(dwg|dwf|pdf)$/i.test(f.name));
+  if (lbl) lbl.textContent = instant.length;
+  list.innerHTML = '';
+  pendingFiles.forEach((file, idx) => {
+    const isManual = /\.(dwg|dwf|pdf)$/i.test(file.name);
+    const item = document.createElement('div');
+    item.className = 'file-list-item';
+    item.innerHTML = `
+      <div class="file-list-item-icon">
+        <svg width="14" height="14" fill="none" stroke="#071f2a" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      </div>
+      <span class="file-list-item-name">${idx + 1}. ${file.name}</span>
+      ${isManual ? '<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:2px 7px;border-radius:10px;flex-shrink:0;">Ручной расчёт</span>' : ''}
+      <button class="file-list-item-remove" onclick="removePendingFile(${idx})" title="Удалить">×</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function removePendingFile(idx) {
+  pendingFiles.splice(idx, 1);
+  if (!pendingFiles.length) {
+    document.getElementById('files-section').style.display = 'none';
+    document.getElementById('upload-section').style.display = '';
+  } else {
+    renderFilesList();
+  }
+}
+
+async function startCalculation() {
+  if (!pendingFiles.length) return;
+  document.getElementById('files-section').style.display = 'none';
+  document.getElementById('parts-section').style.display = '';
+
+  for (const file of pendingFiles) {
     const url = URL.createObjectURL(file);
     const isManual = /\.(dwg|dwf|pdf)$/i.test(file.name);
     const part = {
@@ -568,8 +708,8 @@ async function handleFiles(input) {
     }
     uploadToCloud(file).then(u=>{ if(u) part.fileUrl=u; }).catch(()=>{});
   }
+  pendingFiles = [];
   updateSummary();
-  if (input.id) document.getElementById(input.id).value='';
 }
 
 function parseGeometry(url) {
