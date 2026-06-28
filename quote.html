@@ -1034,7 +1034,8 @@ function openSpecEditor(id) {
   currentSpecId = id;
   const techOpts = TECHS.map(t=>`<option value="${t.v}"${t.v===p.tech?' selected':''}>${t.l}</option>`).join('');
   const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
-  const finOpts  = FINS.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
+  const fins     = getFinishes(p.tech, p.material);
+  const finOpts  = fins.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
   const tolOpts  = TOLS.map(t=>`<option value="${t.v}"${t.v===p.tolerance?' selected':''}>${t.l}</option>`).join('');
   const isStlObj = /\.(stl|obj)$/i.test(p.name);
 
@@ -1223,7 +1224,8 @@ function rotatePreview(pid, axis, dir) {
 function buildCardHTML(p) {
   const techOpts = TECHS.map(t=>`<option value="${t.v}"${t.v===p.tech?' selected':''}>${t.l}</option>`).join('');
   const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
-  const finOpts  = FINS.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
+  const fins     = getFinishes(p.tech, p.material);
+  const finOpts  = fins.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
   const tolOpts  = TOLS.map(t=>`<option value="${t.v}"${t.v===p.tolerance?' selected':''}>${t.l}</option>`).join('');
   const isStl = /\.(stl|obj)$/i.test(p.name);
 
