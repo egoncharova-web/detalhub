@@ -935,7 +935,7 @@ function openViewer(id){
   const ctrl=new THREE.OrbitControls(cam,ren.domElement);ctrl.enableDamping=true;
   fetch(p.localUrl).then(r=>r.arrayBuffer()).then(buf=>{
     const geo=new THREE.STLLoader().parse(buf);geo.computeBoundingBox();
-    scene.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true})));
+    scene.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0xa0adb5,specular:0xffffff,shininess:60,flatShading:false})));
     const dl=new THREE.DirectionalLight(0x7dc3fd,1.2);dl.position.set(5,5,5);scene.add(dl);
     scene.add(new THREE.AmbientLight(0xffffff,0.7));
     const b=geo.boundingBox;const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
