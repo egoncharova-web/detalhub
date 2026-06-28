@@ -830,7 +830,7 @@ const previewStates = {}; // хранит {object, cam, ren, scene} для ка�
 
 // ---- INIT ----
 function doLogout() { localStorage.removeItem('isLoggedIn'); location.href='auth.html'; }
-function init() {
+async function init() {
   if (!localStorage.getItem('isLoggedIn')) { location.href = 'auth.html'; return; }
   const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
   const name = p.name || p.email || '—';
@@ -842,15 +842,31 @@ function init() {
   document.querySelectorAll('.js-user-name').forEach(el=>el.textContent=name);
 
   const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
-  if (saved) { quoteNum = saved.number; }
-  else {
-    quoteNum = parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1;
+  if (saved) {
+    quoteNum = saved.number;
+    setQuoteNum(quoteNum);
+  } else {
+    // Получаем уникальный номер из YDB
+    try {
+      const r = await fetch(AUTH_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'getNextQuoteNumber' })
+      });
+      const data = await r.json();
+      quoteNum = data.quoteNumber || (parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1);
+    } catch {
+      quoteNum = parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1;
+    }
     localStorage.setItem('lastQuoteNum', quoteNum);
     localStorage.setItem('currentQuote', JSON.stringify({number:quoteNum}));
+    setQuoteNum(quoteNum);
   }
-  document.getElementById('order-num').textContent = '№' + quoteNum;
-  const ql = document.getElementById('q-num-label'); if(ql) ql.textContent = '№' + quoteNum;
-  const ql2 = document.getElementById('q-num-label2'); if(ql2) ql2.textContent = '№' + quoteNum;
+}
+
+function setQuoteNum(n) {
+  document.getElementById('order-num').textContent = '№' + n;
+  const ql = document.getElementById('q-num-label'); if(ql) ql.textContent = '№' + n;
+  const ql2 = document.getElementById('q-num-label2'); if(ql2) ql2.textContent = '№' + n;
 }
 
 // ---- DRAG & DROP ----
