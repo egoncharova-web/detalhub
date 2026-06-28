@@ -835,9 +835,9 @@ async function init() {
   const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
   const name = p.name || p.email || '—';
   const init2 = name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
-  document.getElementById('q-avatar').textContent  = init2;
-  document.getElementById('q-avatar2').textContent = init2;
-  document.getElementById('q-name').textContent    = name;
+  const av1 = document.getElementById('q-avatar'); if(av1) av1.textContent = init2;
+  const av2 = document.getElementById('q-avatar2'); if(av2) av2.textContent = init2;
+  const qn = document.getElementById('q-name'); if(qn) qn.textContent = name;
   document.querySelectorAll('.js-avatar').forEach(el=>el.textContent=init2);
   document.querySelectorAll('.js-user-name').forEach(el=>el.textContent=name);
 
