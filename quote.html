@@ -561,6 +561,18 @@
     </div>
   </div>
 </div>
+
+<!-- 3D VIEWER MODAL -->
+<div class="viewer-overlay" id="viewerModal">
+  <div class="viewer-box">
+    <div class="viewer-hdr">
+      <span id="viewer-name">—</span>
+      <button class="viewer-close" onclick="closeViewer()">×</button>
+    </div>
+    <div id="viewer-cnt"></div>
+    <div class="viewer-hint">Зажмите и тяните для поворота · Колёсико для масштаба</div>
+  </div>
+</div>
 <script>
 // ---- CONFIG ----
 const UPLOAD_URL    = 'https://functions.yandexcloud.net/d4ei9igin3bk3imvdepo';
