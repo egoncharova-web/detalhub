@@ -688,25 +688,38 @@ function toggleCards() {
 const collapsed={};
 function toggleSection(id) { collapsed[id]=!collapsed[id]; const b=document.getElementById(id+'-body'); if(b) b.style.display=collapsed[id]?'none':''; }
 
-function renderProjects() {
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
+async function renderProjects() {
   const rows=document.getElementById('proj-rows');
-  const projects=JSON.parse(localStorage.getItem('projects')||'[]');
-  const orders=JSON.parse(localStorage.getItem('orders')||'[]');
-  const all=[...projects.map(p=>({...p,_src:'project',status:p.status||'Черновик'})),...orders.map(o=>({...o,_src:'order',status:o.status||'Новый'}))].sort((a,b)=>b.id-a.id).slice(0,5);
-  if(!all.length) {
-    rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
-    return;
+  const userId = localStorage.getItem('userId');
+  if (!userId) { rows.innerHTML=''; return; }
+
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getProjects', userId })
+    });
+    const data = await r.json();
+    const projects = (data.projects||[]).map(p=>({...p, _src:'project', quoteNumber: p.quote_number, totalPrice: p.total_price, status: p.status||'Черновик'}));
+    const all = projects.sort((a,b)=>b.id-a.id).slice(0,5);
+
+    if(!all.length) {
+      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
+      return;
+    }
+    const ICONS={cnc_mill:'⚙️',cnc_turn:'🔩',fdm:'🖨️',sla:'🖨️',sls:'🖨️',mjf:'🖨️',laser:'✂️',other:'📋'};
+    const STATUS={'Черновик':{cls:'s-manual',text:'Черновик'},'Новый':{cls:'s-new',text:'Новый'},'В работе':{cls:'s-auto',text:'В работе'},'Выполнен':{cls:'s-done',text:'Выполнен'}};
+    rows.innerHTML=all.map(p=>{
+      const tech=(p.parts||[])[0]?.tech||'other';
+      const qty=(p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
+      const s=STATUS[p.status]||{cls:'s-new',text:p.status};
+      const tl={cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',laser:'Лазерная резка',other:'Прочее'}[tech]||tech;
+      return `<div class="proj-row" onclick="location.href='projects.html'"><div class="proj-thumb">${ICONS[tech]||'📋'}</div><div><div class="proj-num">КП №${p.quoteNumber||'—'}</div><div class="proj-tech">${tl}</div></div><div class="${s.cls}">${s.text}</div><div style="color:#6b7280;">${qty} шт.</div><div class="proj-val">${p.totalPrice||'—'}</div></div>`;
+    }).join('');
+  } catch(e) {
+    rows.innerHTML='';
   }
-  const ICONS={cnc_mill:'⚙️',cnc_turn:'🔩',fdm:'🖨️',sla:'🖨️',sls:'🖨️',mjf:'🖨️',laser:'✂️',other:'📋'};
-  const STATUS={'Черновик':{cls:'s-manual',text:'Черновик'},'Новый':{cls:'s-new',text:'Новый'},'В работе':{cls:'s-auto',text:'В работе'},'Выполнен':{cls:'s-done',text:'Выполнен'}};
-  rows.innerHTML=all.map(p=>{
-    const tech=(p.parts||[])[0]?.tech||'other';
-    const qty=(p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
-    const s=STATUS[p.status]||{cls:'s-new',text:p.status};
-    const href=p._src==='order'?'orders.html':'projects.html';
-    const tl={cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',laser:'Лазерная резка',other:'Прочее'}[tech]||tech;
-    return `<div class="proj-row" onclick="location.href='${href}'"><div class="proj-thumb">${ICONS[tech]||'📋'}</div><div><div class="proj-num">КП №${p.quoteNumber}</div><div class="proj-tech">${tl}</div></div><div class="${s.cls}">${s.text}</div><div style="color:#6b7280;">${qty} шт.</div><div class="proj-val">${p.totalPrice||'—'}</div></div>`;
-  }).join('');
 }
 
 initUser();
