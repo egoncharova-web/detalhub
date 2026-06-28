@@ -137,11 +137,11 @@
       background:#fff; border:1px solid #e5e7eb;
       border-radius:10px; overflow:hidden; margin-bottom:12px;
     }
-    .pc-inner { display:grid; grid-template-columns:300px 1fr; }
+    .pc-inner { display:grid; grid-template-columns:180px 1fr; }
     .pc-preview {
-      background:#f9fafb; border-right:1px solid #f3f4f6;
-      min-height:280px; display:flex; align-items:center;
-      justify-content:center; cursor:pointer; position:relative; overflow:hidden;
+      background:#eef4f8; border-right:1px solid #e0eaf2;
+      height:200px; display:flex; align-items:center;
+      justify-content:center; cursor:default; position:relative; overflow:hidden;
     }
     .pc-preview-placeholder { text-align:center; color:#9ca3af; }
     .pc-preview-placeholder svg { display:block; margin:0 auto 8px; }
@@ -805,9 +805,9 @@ function buildCardHTML(p) {
   const prevHTML = p.status === 'analysing'
     ? analysingPrev
     : isStl
-    ? `<div class="pc-preview" id="prev-${p.id}" onclick="openViewer(${JSON.stringify(p.id)})">
+    ? `<div class="pc-preview" id="prev-${p.id}" style="cursor:default;background:#edf4fa;">
          <div class="pc-preview-placeholder"><div style="font-size:11px;color:#9ca3af;">Загрузка 3D...</div></div>
-         <div class="badge-3d">3D ↗</div>
+         <div class="badge-3d" onclick="openViewer(${JSON.stringify(p.id)})" style="cursor:pointer;">3D ↗</div>
        </div>`
     : `<div class="pc-preview" style="cursor:default;">
          <div class="pc-preview-placeholder">
@@ -890,19 +890,24 @@ function render3DPreview(cid,url){
     const w=c.clientWidth||300,h=c.clientHeight||280;
     const cam=new THREE.PerspectiveCamera(45,w/h,0.1,1e6);
     const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
-    ren.setSize(w,h);ren.setClearColor(0xf9fafb);
+    ren.setSize(w,h);ren.setClearColor(0xeef4f8);
     c.innerHTML='';c.appendChild(ren.domElement);
-    const mesh=new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0x071f2a,flatShading:true,shininess:40}));
+    const mat=new THREE.MeshPhongMaterial({color:0x6b9ab8,specular:0xadd4ee,shininess:80,flatShading:false});
+    const mesh=new THREE.Mesh(geo,mat);
     scene.add(mesh);
-    const dl=new THREE.DirectionalLight(0x7dc3fd,1);dl.position.set(1,2,3);scene.add(dl);
-    scene.add(new THREE.AmbientLight(0xffffff,0.6));
+    const dl=new THREE.DirectionalLight(0xffffff,1.0);dl.position.set(2,3,4);scene.add(dl);
+    const dl2=new THREE.DirectionalLight(0xadd4ee,0.3);dl2.position.set(-2,-1,1);scene.add(dl2);
+    scene.add(new THREE.AmbientLight(0xe8f2f8,0.9));
     const b=geo.boundingBox;
     const mx=Math.max(b.max.x-b.min.x,b.max.y-b.min.y,b.max.z-b.min.z);
     const cx=(b.max.x+b.min.x)/2,cy=(b.max.y+b.min.y)/2,cz=(b.max.z+b.min.z)/2;
-    cam.position.set(cx,cy+mx*0.5,cz+mx*2.5);cam.lookAt(cx,cy,cz);
-    let alive=true;c._stop=()=>{alive=false;};
-    (function a(){if(!alive||!document.getElementById(cid))return;requestAnimationFrame(a);mesh.rotation.y+=0.004;ren.render(scene,cam);})();
-    const bd=document.createElement('div');bd.className='badge-3d';bd.textContent='3D ↗';c.style.position='relative';c.appendChild(bd);
+    cam.position.set(cx+mx*0.3,cy+mx*0.4,cz+mx*2.0);cam.lookAt(cx,cy,cz);
+    ren.render(scene,cam);
+    const badge=document.createElement('div');
+    badge.className='badge-3d';badge.textContent='3D ↗';
+    badge.style.cursor='pointer';
+    badge.onclick=()=>openViewer(cid.replace('prev-',''));
+    c.appendChild(badge);
   }).catch(()=>{});
 }
 
