@@ -801,7 +801,28 @@ const TOLS = [
   {v:'std',l:'Стандарт (±0.5 мм)'},{v:'med',l:'Средний (±0.2 мм)'},
   {v:'fine',l:'Точный (±0.1 мм)'},{v:'ultra',l:'Высокоточный (±0.05 мм)'},
 ];
-const DENS = {'Алюминий AL6061':2.70,'Алюминий AL7075':2.81,'Сталь 45':7.85,'Нержавейка 304':7.93,'Нержавейка 316':8.00,'Латунь':8.50,'Медь':8.96,'Титан':4.51,'PLA':1.24,'PETG':1.27,'ABS':1.04,'Нейлон PA':1.15,'PA12 (нейлон)':1.01,'PA12 (HP MJF)':1.01};
+// Плотность по группе материала (г/см³) — ключи совпадают с MAT_GROUP()
+const DENS_BY_GROUP = {aluminum:2.72,steel:7.85,stainless:7.95,brass:8.50,copper:8.94,titanium:4.43,plastic:1.15};
+function calcDens(material) {
+  const g = MAT_GROUP(material);
+  if (g !== 'plastic') return DENS_BY_GROUP[g];
+  // точные плотности для пластиков
+  if (/PLA/i.test(material))  return 1.24;
+  if (/PETG/i.test(material)) return 1.27;
+  if (/ABS|ASA/i.test(material)) return 1.05;
+  if (/TPU/i.test(material))  return 1.20;
+  if (/PA6\b|ПА6|PA12|ПА12|нейлон/i.test(material)) return 1.13;
+  if (/PEEK/i.test(material)) return 1.32;
+  if (/PC\b|поликарбонат/i.test(material)) return 1.20;
+  if (/PEI|Ultem/i.test(material)) return 1.27;
+  if (/смол/i.test(material)) return 1.18;
+  if (/ПОМ|ацеталь/i.test(material)) return 1.41;
+  if (/фторопласт|Ф-4/i.test(material)) return 2.20;
+  if (/полиэтилен|ПЭ/i.test(material)) return 0.95;
+  if (/оргстекло|ПММА/i.test(material)) return 1.19;
+  if (/текстолит/i.test(material)) return 1.45;
+  return 1.15;
+}
 
 let parts = [], quoteNum = null, pendingFiles = [];
 const previewStates = {}; // хранит {object, cam, ren, scene} для каждой карточки
@@ -1004,8 +1025,9 @@ function parseGeometry(url, isObj) {
 
 function calcWeight(p) {
   if(!p.volume) return '—';
-  const d=DENS[p.material]||2.7;
-  return (p.volume*d*0.001*p.qty).toFixed(1)+' г';
+  const d = calcDens(p.material);
+  const g = p.volume * d * 0.001 * p.qty;
+  return g >= 1000 ? (g/1000).toFixed(2)+' кг' : g.toFixed(1)+' г';
 }
 
 async function calcPrice(p) {
@@ -1350,11 +1372,12 @@ function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=
 function updateSummary(){
   const total=parts.reduce((s,p)=>s+p.price,0);
   const qty=parts.reduce((s,p)=>s+p.qty,0);
-  const w=parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0);
+  const wArr=parts.map(p=>parseFloat(p.weight)).filter(v=>!isNaN(v));
+  const w=wArr.reduce((s,v)=>s+v,0);
   const hasManual=parts.some(p=>p.status==='manual'||p.status==='step');
   document.getElementById('s-parts').textContent=parts.length;
   document.getElementById('s-qty').textContent=qty+' шт.';
-  document.getElementById('s-weight').textContent=w>0?w.toFixed(1)+' г':'—';
+  document.getElementById('s-weight').textContent=wArr.length?(w>=1000?(w/1000).toFixed(2)+' кг':w.toFixed(1)+' г'):'—';
   document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
   document.getElementById('s-lead').textContent=parts.length?'3–7 дней':'—';
 
