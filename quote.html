@@ -968,6 +968,7 @@ async function startCalculation() {
   if (!pendingFiles.length) return;
   document.getElementById('files-section').style.display = 'none';
   document.getElementById('parts-section').style.display = 'block';
+  if (quoteNum) setQuoteNum(quoteNum);
 
   for (const file of pendingFiles) {
     const url = URL.createObjectURL(file);
