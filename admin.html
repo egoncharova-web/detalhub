@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Админ-панель — DetalHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --navy:#071f2a; --navy-2:#0c2d40; --blue:#7dc3fd;
+      --white:#fff; --gray-50:#f6f8fb; --gray-100:#eef1f5;
+      --gray-200:#dde3eb; --gray-400:#9aa3ae; --gray-700:#374151;
+    }
+    body { font-family:'Inter',sans-serif; background:var(--gray-50); color:var(--gray-700); min-height:100vh; }
+
+    /* TOPBAR */
+    .topbar { background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 24px; height:56px; position:sticky; top:0; z-index:100; }
+    .topbar-logo { font-size:16px; font-weight:700; background:linear-gradient(90deg,#7dc3fd,#cce8ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .topbar-role { font-size:12px; color:var(--blue); font-weight:600; background:rgba(125,195,253,0.12); padding:4px 12px; border-radius:20px; }
+    .topbar-logout { font-size:13px; color:var(--gray-400); cursor:pointer; text-decoration:none; }
+    .topbar-logout:hover { color:#fff; }
+
+    /* LAYOUT */
+    .layout { display:flex; min-height:calc(100vh - 56px); }
+    .sidebar { width:220px; background:var(--navy-2); padding:20px 0; flex-shrink:0; }
+    .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 20px; color:var(--gray-400); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; border-left:3px solid transparent; }
+    .sidebar-item:hover { color:#fff; background:rgba(125,195,253,0.08); }
+    .sidebar-item.active { color:var(--blue); border-left-color:var(--blue); background:rgba(125,195,253,0.1); }
+    .sidebar-section { font-size:10px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:1px; padding:16px 20px 6px; }
+
+    /* MAIN */
+    .main { flex:1; padding:28px; overflow-x:auto; }
+    .page-title { font-size:20px; font-weight:700; color:var(--navy); margin-bottom:20px; }
+
+    /* STATS */
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+    .stat-card { background:#fff; border-radius:10px; padding:16px 20px; border:1px solid var(--gray-200); }
+    .stat-val { font-size:28px; font-weight:700; color:var(--navy); }
+    .stat-label { font-size:12px; color:var(--gray-400); margin-top:2px; }
+
+    /* FILTERS */
+    .filters { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid var(--gray-200); background:#fff; font-size:12px; font-weight:500; cursor:pointer; color:var(--gray-700); transition:all 0.15s; }
+    .filter-btn.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+
+    /* TABLE */
+    .table-wrap { background:#fff; border-radius:12px; border:1px solid var(--gray-200); overflow:hidden; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead { background:var(--gray-50); }
+    th { padding:10px 14px; text-align:left; font-size:11px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--gray-200); }
+    td { padding:12px 14px; border-bottom:1px solid var(--gray-100); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--gray-50); }
+    .btn-open { padding:5px 12px; background:var(--navy); color:var(--blue); border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+    .btn-open:hover { background:var(--navy-2); }
+
+    /* BADGES */
+    .badge { display:inline-block; padding:3px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+    .badge-new { background:#eff6ff; color:#1d4ed8; }
+    .badge-work { background:#fef3c7; color:#b45309; }
+    .badge-done { background:#dcfce7; color:#166534; }
+    .badge-draft { background:#f3f4f6; color:#6b7280; }
+    .badge-manual { background:#fff8ed; color:#b45309; }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:14px; width:700px; max-width:95vw; max-height:90vh; overflow-y:auto; padding:28px; }
+    .modal-title { font-size:17px; font-weight:700; color:var(--navy); margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+    .modal-close { cursor:pointer; color:var(--gray-400); font-size:20px; line-height:1; }
+    .modal-close:hover { color:var(--navy); }
+    .modal-section { margin-bottom:20px; }
+    .modal-section-title { font-size:12px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .info-item { background:var(--gray-50); border-radius:8px; padding:10px 14px; }
+    .info-label { font-size:11px; color:var(--gray-400); margin-bottom:2px; }
+    .info-val { font-size:13px; font-weight:600; color:var(--navy); }
+    .parts-list { display:flex; flex-direction:column; gap:8px; }
+    .part-row { background:var(--gray-50); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
+    .part-name { font-size:13px; font-weight:600; color:var(--navy); }
+    .part-meta { font-size:11px; color:var(--gray-400); margin-top:2px; }
+    .part-price { font-size:14px; font-weight:700; color:var(--navy); }
+    .admin-form { display:grid; gap:12px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-group label { font-size:12px; font-weight:600; color:var(--gray-700); display:block; margin-bottom:4px; }
+    .form-group input, .form-group select, .form-group textarea { width:100%; padding:8px 12px; border:1px solid var(--gray-200); border-radius:8px; font-size:13px; font-family:inherit; }
+    .form-group textarea { resize:vertical; min-height:70px; }
+    .btn-save { padding:10px 24px; background:var(--navy); color:var(--blue); border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; width:100%; margin-top:4px; }
+    .btn-save:hover { background:var(--navy-2); }
+    .empty { padding:40px; text-align:center; color:var(--gray-400); font-size:14px; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">DetalHub Admin</div>
+  <div class="topbar-role">Панель менеджера</div>
+  <a href="#" class="topbar-logout" onclick="doLogout()">Выйти →</a>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">Управление</div>
+    <div class="sidebar-item active" onclick="showTab('orders')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Все заказы
+    </div>
+    <div class="sidebar-item" onclick="showTab('projects')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+      Все проекты
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Всего заказов</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-new">—</div><div class="stat-label">Новых</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-work">—</div><div class="stat-label">В работе</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-done">—</div><div class="stat-label">Выполнено</div></div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders">
+      <div class="page-title">Все заказы</div>
+      <div class="filters">
+        <button class="filter-btn active" onclick="filterOrders('all',this)">Все</button>
+        <button class="filter-btn" onclick="filterOrders('Новый',this)">Новые</button>
+        <button class="filter-btn" onclick="filterOrders('В работе',this)">В работе</button>
+        <button class="filter-btn" onclick="filterOrders('Готов',this)">Готовы</button>
+        <button class="filter-btn" onclick="filterOrders('Выполнен',this)">Выполнены</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>№ КП</th><th>Дата</th><th>Клиент ID</th><th>Деталей</th><th>Сумма</th><th>Статус</th><th></th>
+          </tr></thead>
+          <tbody id="orders-body"><tr><td colspan="7" class="empty">Загружаем...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROJECTS TAB -->
+    <div id="tab-projects" style="display:none">
+      <div class="page-title">Все проекты</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>№ КП</th><th>Дата</th><th>Клиент ID</th><th>Деталей</th><th>Сумма</th><th>Статус</th><th></th>
+          </tr></thead>
+          <tbody id="projects-body"><tr><td colspan="7" class="empty">Загружаем...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Заказ</span>
+      <span class="modal-close" onclick="closeModal()">✕</span>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
+let allOrders = [];
+let allProjects = [];
+let currentFilter = 'all';
+
+function doLogout() {
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('userRole');
+  location.href = 'auth.html';
+}
+
+function init() {
+  if (localStorage.getItem('userRole') !== 'admin') {
+    location.href = 'auth.html';
+    return;
+  }
+  loadOrders();
+  loadProjects();
+}
+
+function showTab(tab) {
+  document.getElementById('tab-orders').style.display = tab === 'orders' ? '' : 'none';
+  document.getElementById('tab-projects').style.display = tab === 'projects' ? '' : 'none';
+  document.querySelectorAll('.sidebar-item').forEach((el, i) => {
+    el.classList.toggle('active', (i === 0 && tab === 'orders') || (i === 1 && tab === 'projects'));
+  });
+}
+
+function badgeHtml(status) {
+  const map = {
+    'Новый':'badge-new','В работе':'badge-work','Готов':'badge-done',
+    'Выполнен':'badge-done','Черновик':'badge-draft','Ручной расчёт':'badge-manual'
+  };
+  return `<span class="badge ${map[status]||'badge-draft'}">${status||'—'}</span>`;
+}
+
+async function loadOrders() {
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getAllOrders' })
+    });
+    const data = await r.json();
+    allOrders = data.orders || [];
+    updateStats();
+    renderOrders(allOrders);
+  } catch(e) {
+    document.getElementById('orders-body').innerHTML = `<tr><td colspan="7" class="empty">Ошибка загрузки</td></tr>`;
+  }
+}
+
+async function loadProjects() {
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getAllProjects' })
+    });
+    const data = await r.json();
+    allProjects = data.projects || [];
+    renderProjects(allProjects);
+  } catch(e) {}
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allOrders.length;
+  document.getElementById('stat-new').textContent = allOrders.filter(o=>o.status==='Новый').length;
+  document.getElementById('stat-work').textContent = allOrders.filter(o=>o.status==='В работе').length;
+  document.getElementById('stat-done').textContent = allOrders.filter(o=>o.status==='Выполнен'||o.status==='Готов').length;
+}
+
+function filterOrders(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = status === 'all' ? allOrders : allOrders.filter(o=>o.status===status);
+  renderOrders(filtered);
+}
+
+function renderOrders(orders) {
+  const tbody = document.getElementById('orders-body');
+  if (!orders.length) { tbody.innerHTML=`<tr><td colspan="7" class="empty">Нет заказов</td></tr>`; return; }
+  tbody.innerHTML = orders.map(o => `<tr>
+    <td style="font-weight:600;font-family:monospace">#${o.quote_number||'—'}</td>
+    <td style="color:#6b7280">${o.created_at ? new Date(o.created_at).toLocaleDateString('ru-RU') : '—'}</td>
+    <td style="font-size:11px;color:#9ca3af">${o.user_id||'—'}</td>
+    <td>${(o.parts||[]).length} дет.</td>
+    <td style="font-weight:600">${o.total_price||'—'}</td>
+    <td>${badgeHtml(o.status)}</td>
+    <td><button class="btn-open" onclick="openOrder('${o.id}')">Открыть</button></td>
+  </tr>`).join('');
+}
+
+function renderProjects(projects) {
+  const tbody = document.getElementById('projects-body');
+  if (!projects.length) { tbody.innerHTML=`<tr><td colspan="7" class="empty">Нет проектов</td></tr>`; return; }
+  tbody.innerHTML = projects.map(p => `<tr>
+    <td style="font-weight:600;font-family:monospace">#${p.quote_number||'—'}</td>
+    <td style="color:#6b7280">${p.created_at ? new Date(p.created_at).toLocaleDateString('ru-RU') : '—'}</td>
+    <td style="font-size:11px;color:#9ca3af">${p.user_id||'—'}</td>
+    <td>${(p.parts||[]).length} дет.</td>
+    <td style="font-weight:600">${p.total_price||'—'}</td>
+    <td>${badgeHtml(p.status)}</td>
+    <td><button class="btn-open" onclick="openProject('${p.id}')">Открыть</button></td>
+  </tr>`).join('');
+}
+
+function openOrder(id) {
+  const o = allOrders.find(x=>x.id===id);
+  if (!o) return;
+  document.getElementById('modal-title-text').textContent = `Заказ #${o.quote_number||'—'}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Информация о заказе</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">№ КП</div><div class="info-val">#${o.quote_number||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Дата</div><div class="info-val">${o.created_at ? new Date(o.created_at).toLocaleString('ru-RU') : '—'}</div></div>
+        <div class="info-item"><div class="info-label">Статус</div><div class="info-val">${o.status||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Сумма клиента</div><div class="info-val">${o.total_price||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Срок</div><div class="info-val">${o.lead_time||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Вес</div><div class="info-val">${o.total_weight||'—'}</div></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Детали (${(o.parts||[]).length} шт.)</div>
+      <div class="parts-list">
+        ${(o.parts||[]).map(p=>`
+          <div class="part-row">
+            <div>
+              <div class="part-name">${p.name||'—'}</div>
+              <div class="part-meta">${p.tech||''} · ${p.material||''} · ${p.qty||1} шт. · ${p.dims ? p.dims.x+'×'+p.dims.y+'×'+p.dims.z+' мм' : ''}</div>
+            </div>
+            <div class="part-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Действия менеджера / инженера</div>
+      <div class="admin-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Статус заказа</label>
+            <select id="admin-status">
+              <option ${o.status==='Новый'?'selected':''}>Новый</option>
+              <option ${o.status==='В работе'?'selected':''}>В работе</option>
+              <option ${o.status==='Ручной расчёт'?'selected':''}>Ручной расчёт</option>
+              <option ${o.status==='Готов'?'selected':''}>Готов</option>
+              <option ${o.status==='Выполнен'?'selected':''}>Выполнен</option>
+              <option ${o.status==='Отменён'?'selected':''}>Отменён</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Цена (инженер)</label>
+            <input type="text" id="admin-price" value="${o.admin_price||o.total_price||''}" placeholder="например: 15 000 ₽">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Срок изготовления</label>
+          <input type="text" id="admin-lead" value="${o.lead_time||''}" placeholder="например: 5-7 рабочих дней">
+        </div>
+        <div class="form-group">
+          <label>Комментарий инженера</label>
+          <textarea id="admin-comment" placeholder="Технические замечания, уточнения...">${o.admin_comment||''}</textarea>
+        </div>
+        <button class="btn-save" onclick="saveOrder('${o.id}')">Сохранить изменения</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function openProject(id) {
+  const p = allProjects.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('modal-title-text').textContent = `Проект #${p.quote_number||'—'}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Информация о проекте</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">№ КП</div><div class="info-val">#${p.quote_number||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Дата</div><div class="info-val">${p.created_at ? new Date(p.created_at).toLocaleString('ru-RU') : '—'}</div></div>
+        <div class="info-item"><div class="info-label">Статус</div><div class="info-val">${p.status||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Сумма</div><div class="info-val">${p.total_price||'—'}</div></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Детали (${(p.parts||[]).length} шт.)</div>
+      <div class="parts-list">
+        ${(p.parts||[]).map(pt=>`
+          <div class="part-row">
+            <div>
+              <div class="part-name">${pt.name||'—'}</div>
+              <div class="part-meta">${pt.tech||''} · ${pt.material||''} · ${pt.qty||1} шт.</div>
+            </div>
+            <div class="part-price">${pt.price ? pt.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+async function saveOrder(id) {
+  const status = document.getElementById('admin-status').value;
+  const price = document.getElementById('admin-price').value;
+  const lead = document.getElementById('admin-lead').value;
+  const comment = document.getElementById('admin-comment').value;
+
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'updateOrderStatus', orderId:id, status, adminPrice:price, leadTime:lead, adminComment:comment })
+    });
+    const data = await r.json();
+    if (data.success) {
+      const o = allOrders.find(x=>x.id===id);
+      if (o) { o.status=status; o.total_price=price; o.lead_time=lead; }
+      updateStats();
+      renderOrders(currentFilter==='all' ? allOrders : allOrders.filter(x=>x.status===currentFilter));
+      closeModal();
+      alert('Заказ обновлён!');
+    } else {
+      alert('Ошибка: ' + data.error);
+    }
+  } catch(e) {
+    alert('Ошибка: ' + e.message);
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>

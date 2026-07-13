@@ -573,9 +573,11 @@
         if (result.success) {
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('userId', result.userId);
+          localStorage.setItem('userRole', result.role || 'user');
           localStorage.setItem('userProfile', JSON.stringify(result.profile));
           showAlert('success', '✓ Добро пожаловать! Загружаем кабинет...');
-          setTimeout(() => window.location.href = 'dashboard.html', 900);
+          const redirect = result.role === 'admin' ? 'admin.html' : 'dashboard.html';
+          setTimeout(() => window.location.href = redirect, 900);
         } else {
           showAlert('error', result.error || 'Неверный email или пароль');
           btn.disabled = false; btn.textContent = 'Войти';
