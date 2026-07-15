@@ -841,6 +841,42 @@ async function init() {
   document.querySelectorAll('.js-avatar').forEach(el=>el.textContent=init2);
   document.querySelectorAll('.js-user-name').forEach(el=>el.textContent=name);
 
+  // Если открыли конкретный проект — загружаем его
+  const urlParams = new URLSearchParams(location.search);
+  const projectId = urlParams.get('projectId');
+  if (projectId) {
+    try {
+      const r = await fetch(AUTH_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'getProjects', userId: localStorage.getItem('userId') })
+      });
+      const data = await r.json();
+      const proj = (data.projects||[]).find(p => p.id === projectId);
+      if (proj) {
+        quoteNum = proj.quote_number;
+        setQuoteNum(quoteNum);
+        // Загружаем детали проекта
+        (proj.parts||[]).forEach(p => {
+          parts.push({
+            id: Date.now() + Math.random(),
+            name: p.name, tech: p.tech, material: p.material,
+            finish: p.finish||'none', qty: p.qty||1, price: p.price||0,
+            dims: p.dims||{x:'—',y:'—',z:'—'}, weight: p.weight||0,
+            notes: p.notes||'', fileUrl: null
+          });
+        });
+        if (parts.length) {
+          document.getElementById('upload-section').style.display='none';
+          document.getElementById('parts-section').style.display='';
+          renderParts();
+          updateTotal();
+          setQuoteNum(quoteNum);
+        }
+        return;
+      }
+    } catch(e) {}
+  }
+
   const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
   if (saved) {
     quoteNum = saved.number;
