@@ -109,6 +109,20 @@ const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
 let allOrders = [];
 let currentTab = 'active';
 
+function loadLogoPng() {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 200; c.height = 200;
+      c.getContext('2d').drawImage(img, 0, 0, 200, 200);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'logo.svg';
+  });
+}
+
 const DONE_STATUSES = ['Выполнен', 'Отменён'];
 
 const statusMap = {
@@ -241,35 +255,98 @@ function reorder(id) {
   location.href = 'quote.html?reorder=1';
 }
 
-function downloadPDF(id) {
+async function downloadPDF(id) {
   const o = allOrders.find(x => x.id === id);
   if (!o) return;
+  const logoPng = await loadLogoPng();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.setFontSize(18); doc.setTextColor(7,31,42);
-  doc.text('DetalHub', 14, 20);
-  doc.setFontSize(11); doc.setTextColor(100);
-  doc.text(`Заказ #${o.quote_number}`, 14, 28);
-  doc.text(`Дата: ${new Date(o.created_at).toLocaleDateString('ru-RU')}`, 14, 34);
-  doc.text(`Статус: ${o.status||'—'}`, 14, 40);
-  doc.text(`Срок: ${o.lead_time||'—'}`, 14, 46);
-  doc.text(`Сумма: ${o.admin_price||o.total_price||'—'}`, 14, 52);
-  doc.autoTable({
-    startY: 60,
-    head:[['Деталь','Технология','Материал','Кол-во','Цена']],
-    body:(o.parts||[]).map(p=>[p.name||'—',p.tech||'—',p.material||'—',`${p.qty||1} шт.`,p.price?p.price.toLocaleString('ru-RU')+' ₽':'—']),
-    headStyles:{fillColor:[7,31,42],textColor:[125,195,253]},
-    alternateRowStyles:{fillColor:[246,248,251]},
-    styles:{fontSize:10}
-  });
-  if (o.admin_comment) {
-    const y = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(10); doc.setTextColor(24,95,165);
-    doc.text('Комментарий менеджера:', 14, y);
-    doc.setTextColor(100);
-    doc.text(o.admin_comment, 14, y+6, {maxWidth:180});
+  const W = 210, M = 14;
+  const dateStr = new Date(o.created_at).toLocaleDateString('ru-RU');
+  const totalPrice = o.admin_price || o.total_price || '—';
+
+  // Логотип справа
+  if (logoPng) {
+    doc.addImage(logoPng, 'PNG', W-M-28, 8, 28, 28);
+  } else {
+    doc.setFontSize(20); doc.setTextColor(7,31,42); doc.setFont(undefined,'bold');
+    doc.text('DetalHub', W-M, 22, {align:'right'});
+    doc.setFont(undefined,'normal');
   }
-  doc.save(`DetalHub_Заказ_${o.quote_number}.pdf`);
+  doc.setFontSize(8); doc.setTextColor(120);
+  doc.text('detalhub.com', W-M, 38, {align:'right'});
+
+  // Шапка — поставщик
+  doc.setFontSize(9); doc.setTextColor(80);
+  doc.text('Поставщик:', M, 14);
+  doc.setFontSize(10); doc.setTextColor(7,31,42); doc.setFont(undefined,'bold');
+  doc.text('ИП Гончарова Екатерина Николаевна', M, 19);
+  doc.setFont(undefined,'normal'); doc.setFontSize(8); doc.setTextColor(80);
+  doc.text('ИНН: 526013657707', M, 24);
+  doc.text('АО «ТБанк»  БИК: 044525974', M, 28);
+  doc.text('Р/с: 40802810300001603387', M, 32);
+  doc.text('Корр. счёт: 30101810145250000974', M, 36);
+
+  // Линия
+  doc.setDrawColor(200); doc.line(M, 42, W-M, 42);
+
+  // Заголовок счёта
+  doc.setFontSize(15); doc.setFont(undefined,'bold'); doc.setTextColor(7,31,42);
+  doc.text(`Счёт на оплату №${o.quote_number}`, M, 52);
+  doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.setTextColor(100);
+  doc.text(`от ${dateStr}`, M, 58);
+
+  // Мета-строка
+  doc.setFontSize(9); doc.setTextColor(60);
+  doc.text(`Статус: ${o.status||'Новый'}`, M, 66);
+  doc.text(`Срок изготовления: ${o.lead_time||'уточняется'}`, 80, 66);
+
+  // Таблица позиций
+  const TECH = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D FDM',sla:'3D SLA',sls:'3D SLS',mjf:'3D MJF',laser:'Лазерная резка',other:'Прочее'};
+  doc.autoTable({
+    startY: 72,
+    head:[['№','Наименование','Технология','Материал','Кол-во','Цена, ₽']],
+    body:(o.parts||[]).map((p,i)=>[
+      i+1,
+      p.name||'—',
+      TECH[p.tech]||p.tech||'—',
+      p.material||'—',
+      `${p.qty||1} шт.`,
+      p.price ? p.price.toLocaleString('ru-RU') : '—'
+    ]),
+    headStyles:{fillColor:[7,31,42],textColor:[125,195,253],fontSize:9},
+    alternateRowStyles:{fillColor:[246,248,251]},
+    styles:{fontSize:9},
+    columnStyles:{0:{cellWidth:8},4:{cellWidth:18},5:{cellWidth:24,halign:'right'}}
+  });
+
+  let y = doc.lastAutoTable.finalY + 6;
+
+  // Итог
+  doc.setDrawColor(200); doc.line(M, y, W-M, y); y+=6;
+  doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(7,31,42);
+  doc.text('Итого к оплате:', M, y);
+  doc.text(totalPrice, W-M, y, {align:'right'});
+  doc.setFont(undefined,'normal');
+
+  // Комментарий менеджера
+  if (o.admin_comment) {
+    y += 10;
+    doc.setFontSize(9); doc.setTextColor(24,95,165);
+    doc.text('Комментарий менеджера:', M, y);
+    y += 5; doc.setTextColor(80);
+    const lines = doc.splitTextToSize(o.admin_comment, W-M*2);
+    doc.text(lines, M, y);
+    y += lines.length * 4;
+  }
+
+  // Подпись
+  y += 10;
+  doc.setFontSize(8); doc.setTextColor(140);
+  doc.text('Счёт сформирован автоматически на платформе DetalHub (detalhub.com)', M, y);
+  doc.text(`ИП Гончарова Е.Н.  ИНН 526013657707  АО «ТБанк»  р/с 40802810300001603387`, M, y+4);
+
+  doc.save(`DetalHub_Счёт_${o.quote_number}.pdf`);
 }
 
 async function renderOrders() {
