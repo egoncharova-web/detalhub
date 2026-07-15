@@ -1611,6 +1611,17 @@ async function checkout(){
     return;
   }
 
+  // Обновляем статус проекта если заказ создан из проекта
+  const srcProjectId = new URLSearchParams(location.search).get('projectId');
+  if (srcProjectId) {
+    try {
+      await fetch(AUTH_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'updateProjectStatus', projectId: srcProjectId, status:'Заказан' })
+      });
+    } catch(e) {}
+  }
+
   localStorage.removeItem('currentQuote');
   alert('✅ Заказ №'+quoteNum+' оформлен! Мы свяжемся с вами в течение 1 часа.');
   location.href='orders.html';
