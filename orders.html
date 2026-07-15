@@ -261,6 +261,8 @@ function downloadPDF(id) {
       <b>Комментарий менеджера:</b> ${o.admin_comment}
     </div>` : '';
   const tpl = document.createElement('div');
+  tpl.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm';
+  document.body.appendChild(tpl);
   tpl.innerHTML = `
     <div style="font-family:Arial,sans-serif;padding:16mm;color:#111">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #071f2a;padding-bottom:12px;margin-bottom:16px">
@@ -310,7 +312,7 @@ function downloadPDF(id) {
     filename: `DetalHub_Счёт_${o.quote_number}.pdf`,
     jsPDF: { unit:'mm', format:'a4' },
     html2canvas: { scale:2, backgroundColor:'#fff' }
-  }).save();
+  }).save().then(() => document.body.removeChild(tpl));
 }
 
 async function renderOrders() {
