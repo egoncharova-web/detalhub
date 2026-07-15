@@ -120,6 +120,9 @@
 
     /* ======= PARTS SECTION ======= */
     #parts-section { display:none; }
+    /* Скрываем upload если открываем существующий проект */
+    body.loading-project #upload-section,
+    html.loading-project #upload-section { display:none !important; }
 
     .order-title-row {
       display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;
@@ -412,6 +415,12 @@
     .topbar { background:#fff; border-bottom:1px solid #e5e7eb; height:56px; display:flex; align-items:center; padding:0 28px; position:sticky; top:0; z-index:50; justify-content:space-between; }
 </style>
 <body>
+<script>
+  if (new URLSearchParams(location.search).get('projectId')) {
+    document.documentElement.classList.add('loading-project');
+    document.addEventListener('DOMContentLoaded', () => document.body.classList.add('loading-project'));
+  }
+</script>
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-logo">
