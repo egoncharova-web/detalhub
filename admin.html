@@ -150,7 +150,7 @@
 
 <script>
 const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
-let allOrders = [], allProjects = [], currentFilter = 'all';
+let allOrders = [], allProjects = [], allUsers = {}, currentFilter = 'all';
 
 function doLogout() {
   localStorage.removeItem('isLoggedIn');
@@ -181,11 +181,27 @@ function badgeHtml(status) {
   return `<span class="badge ${map[status]||'badge-draft'}">${status||'—'}</span>`;
 }
 
+async function loadUsers(ids) {
+  try {
+    const r = await fetch(AUTH_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'getUsersByIds', userIds: ids}) });
+    const data = await r.json();
+    (data.users || []).forEach(u => { allUsers[u.id] = u; });
+  } catch(e) {}
+}
+
+function clientLabel(userId) {
+  const u = allUsers[userId];
+  if (!u) return `<span style="font-size:11px;color:var(--gray-400)">${userId}</span>`;
+  return `<div style="font-size:13px;font-weight:500">${u.name||'—'}</div><div style="font-size:11px;color:var(--gray-400)">${u.email||''}</div>`;
+}
+
 async function loadOrders() {
   try {
     const r = await fetch(AUTH_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'getAllOrders'}) });
     const data = await r.json();
     allOrders = data.orders || [];
+    const ids = [...new Set(allOrders.map(o => o.user_id).filter(Boolean))];
+    await loadUsers(ids);
     updateStats();
     renderOrders(allOrders);
   } catch(e) {
@@ -198,6 +214,8 @@ async function loadProjects() {
     const r = await fetch(AUTH_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'getAllProjects'}) });
     const data = await r.json();
     allProjects = data.projects || [];
+    const ids = [...new Set(allProjects.map(p => p.user_id).filter(Boolean))];
+    await loadUsers(ids);
     renderProjects(allProjects);
   } catch(e) {}
 }
@@ -222,7 +240,7 @@ function renderOrders(orders) {
   tbody.innerHTML = orders.map(o=>`<tr>
     <td class="text-mono">#${o.quote_number||'—'}</td>
     <td class="text-muted">${o.created_at ? new Date(o.created_at).toLocaleDateString('ru-RU') : '—'}</td>
-    <td class="text-muted" style="font-size:11px">${o.user_id||'—'}</td>
+    <td>${clientLabel(o.user_id)}</td>
     <td><b>${(o.parts||[]).length}</b> дет.</td>
     <td style="font-weight:600">${o.total_price||'—'}</td>
     <td>${badgeHtml(o.status)}</td>
@@ -236,7 +254,7 @@ function renderProjects(projects) {
   tbody.innerHTML = projects.map(p=>`<tr>
     <td class="text-mono">#${p.quote_number||'—'}</td>
     <td class="text-muted">${p.created_at ? new Date(p.created_at).toLocaleDateString('ru-RU') : '—'}</td>
-    <td class="text-muted" style="font-size:11px">${p.user_id||'—'}</td>
+    <td>${clientLabel(p.user_id)}</td>
     <td><b>${(p.parts||[]).length}</b> дет.</td>
     <td style="font-weight:600">${p.total_price||'—'}</td>
     <td>${badgeHtml(p.status)}</td>
