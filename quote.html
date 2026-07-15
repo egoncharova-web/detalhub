@@ -654,10 +654,9 @@ const AUTH_URL      = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
 
 // ---- REFS ----
 const TECHS = [
-  {v:'cnc_mill',l:'ЧПУ-фрезерование'},{v:'cnc_turn',l:'ЧПУ-токарная'},
-  {v:'fdm',l:'3D-печать FDM'},{v:'sla',l:'3D-печать SLA'},
-  {v:'sls',l:'3D-печать SLS'},{v:'mjf',l:'3D-печать MJF'},
-  {v:'laser',l:'Лазерная резка'},{v:'other',l:'Другое (уточнить)'},
+  {v:'fdm', l:'3D-печать FDM'},
+  {v:'sla', l:'3D-печать SLA'},
+  {v:'sls', l:'3D-печать SLS'},
 ];
 // Группы материалов для определения совместимых отделок
 const MAT_GROUP = m => {
@@ -671,140 +670,31 @@ const MAT_GROUP = m => {
 };
 
 const MATS = {
-  cnc_mill: [
-    'Алюминий АМг2 (ГОСТ 4784)','Алюминий АМг3 (ГОСТ 4784)',
-    'Алюминий АМг5 (ГОСТ 4784)','Алюминий АМг6 (ГОСТ 4784)',
-    'Алюминий АМц (ГОСТ 4784)','Алюминий АД0 (ГОСТ 4784)',
-    'Алюминий Д16 / Д16Т (ГОСТ 4784)','Алюминий В95 (ГОСТ 4784)',
-    'Алюминий АК4-1 (ГОСТ 4784)',
-    'Сталь 20 (ГОСТ 1050)','Сталь 45 (ГОСТ 1050)',
-    'Сталь 40Х (ГОСТ 4543)','Сталь 30ХГСА (ГОСТ 4543)',
-    'Сталь 65Г (ГОСТ 14959)',
-    'Нержавейка 12Х18Н10Т (ГОСТ 5632)','Нержавейка 08Х18Н10 (ГОСТ 5632)',
-    'Нержавейка 10Х17Н13М2Т (ГОСТ 5632)','Нержавейка 03Х17Н14М3 (ГОСТ 5632)',
-    'Латунь Л63 (ГОСТ 15527)','Латунь ЛС59-1 (ГОСТ 15527)',
-    'Медь М1 (ГОСТ 859)','Медь М2 (ГОСТ 859)',
-    'Бронза БрАЖ9-4 (ГОСТ 18175)','Бронза БрОФ6,5-0,15 (ГОСТ 5017)',
-    'Титан ВТ1-0 (ГОСТ 19807)','Титан ВТ6 (ГОСТ 19807)',
-    'Титан ВТ14 (ГОСТ 19807)','Титан ВТ20 (ГОСТ 19807)',
-    'Оргстекло ПММА (ГОСТ 17622)',
-    'Полиамид ПА6 (ГОСТ 25889)','Полиамид ПА66',
-    'Полиацеталь ПОМ-С (ГОСТ 24888)','Полиацеталь ПОМ-Н',
-    'Фторопласт Ф-4 (ГОСТ 10007)',
-    'Полиэтилен ПЭ-500 (ГОСТ 16337)',
-    'Текстолит ПТ (ГОСТ 5-78)',
-    'Другой материал — уточнить',
-  ],
-  cnc_turn: [
-    'Алюминий АМг2 (ГОСТ 4784)','Алюминий Д16 / Д16Т (ГОСТ 4784)',
-    'Алюминий В95 (ГОСТ 4784)',
-    'Сталь 20 (ГОСТ 1050)','Сталь 45 (ГОСТ 1050)',
-    'Сталь 40Х (ГОСТ 4543)','Сталь 30ХГСА (ГОСТ 4543)',
-    'Нержавейка 12Х18Н10Т (ГОСТ 5632)','Нержавейка 08Х18Н10 (ГОСТ 5632)',
-    'Нержавейка 10Х17Н13М2Т (ГОСТ 5632)',
-    'Латунь Л63 (ГОСТ 15527)','Латунь ЛС59-1 (ГОСТ 15527)',
-    'Медь М1 (ГОСТ 859)','Медь М2 (ГОСТ 859)',
-    'Бронза БрАЖ9-4 (ГОСТ 18175)',
-    'Титан ВТ1-0 (ГОСТ 19807)','Титан ВТ6 (ГОСТ 19807)',
-    'Полиамид ПА6 (ГОСТ 25889)',
-    'Полиацеталь ПОМ-С (ГОСТ 24888)',
-    'Фторопласт Ф-4 (ГОСТ 10007)',
-    'Другой материал — уточнить',
-  ],
-  fdm: [
-    'PLA (полилактид)','PETG (сополиэстер)',
-    'ABS (акрилонитрил)','ASA (атмосферостойкий)',
-    'TPU — гибкий 95A','TPU — гибкий 85A',
-    'Нейлон PA6 (ПА6)','Нейлон PA12 (ПА12)',
-    'Нейлон PA6-CF (с углеволокном)','PETG-CF (с углеволокном)',
-    'PEEK (полиэфирэфиркетон)',
-    'PC (поликарбонат)',
-    'PEI / Ultem 1010','PEI / Ultem 9085',
-    'Другой материал — уточнить',
-  ],
-  sla: [
-    'Стандартная смола','Прочная смола (ABS-like)',
-    'Гибкая смола (резиноподобная)','Прозрачная смола',
-    'Теплостойкая смола','Кастабельная смола (для литья)',
-    'Другой материал — уточнить',
-  ],
-  sls: [
-    'PA12 — нейлон ПА12','PA11 — нейлон ПА11',
-    'PA12-GF — стеклонаполненный','PA12-CF — с углеволокном',
-    'TPU (эластичный)',
-    'Другой материал — уточнить',
-  ],
-  mjf: [
-    'PA12 (HP MJF)','PA11 (HP MJF)',
-    'PA12-GF (HP MJF — стеклонаполненный)',
-    'Другой материал — уточнить',
-  ],
-  laser: [
-    'Сталь 08кп (ГОСТ 1050)','Сталь 10 (ГОСТ 1050)',
-    'Сталь 20 (ГОСТ 1050)','Сталь 45 (ГОСТ 1050)',
-    'Сталь 09Г2С (ГОСТ 19281)','Сталь 10ХСНД (ГОСТ 19281)',
-    'Нержавейка 12Х18Н10Т (ГОСТ 5632)','Нержавейка 08Х18Н10 (ГОСТ 5632)',
-    'Алюминий АМг2 (ГОСТ 4784)','Алюминий АМг3 (ГОСТ 4784)',
-    'Алюминий Д16 (ГОСТ 4784)',
-    'Медь М1 (ГОСТ 859)',
-    'Латунь Л63 (ГОСТ 15527)',
-    'Другой материал — уточнить',
-  ],
-  other: ['Уточнить у менеджера'],
+  fdm: ['PLA', 'PETG', 'ABS'],
+  sla: ['Стандартная смола', 'Прочная смола (ABS-like)', 'Гибкая смола'],
+  sls: ['PA12 — нейлон', 'PA11 — нейлон', 'TPU (эластичный)'],
 };
+
+// Себестоимость FDM материалов (руб/кг)
+const FDM_MAT_COST = { 'PLA': 1000, 'PETG': 1200, 'ABS': 1100 };
+// Плотность FDM материалов (г/см³)
+const FDM_DENSITY  = { 'PLA': 1.24, 'PETG': 1.27, 'ABS': 1.05 };
+const PRINTER_COST = 100000; // руб
+const PRINTER_LIFE_H = 5000; // часов ресурса
+const POWER_KW = 0.25;       // кВт (Bambu Lab средн.)
+const ELEC_RATE = 6;         // руб/кВт·ч
+const MARKUP = 1.28;         // наценка 28%
+const PRINT_SPEED_CM3_H = 30; // см³/ч материала
 
 // Отделки: зависят от группы материала и технологии
 function getFinishes(tech, material) {
-  const g = MAT_GROUP(material);
-  const is3d = /^(fdm|sla|sls|mjf)$/.test(tech);
-  const isMetal = /^(aluminum|steel|stainless|brass|copper|titanium)$/.test(g);
-
-  const base = [{v:'standard',l:'Стандарт (как после обработки)'}];
-
-  if (is3d) {
-    base.push({v:'sand',l:'Шлифовка поверхности'});
-    base.push({v:'paint',l:'Грунтовка + покраска'});
-    if (tech==='fdm' && /ABS/i.test(material))
-      base.push({v:'acetone',l:'Полировка парами ацетона (только ABS)'});
-    if (/^(sls|mjf)$/.test(tech))
-      base.push({v:'dye',l:'Окраска в массе'});
-    return base;
-  }
-
-  if (isMetal) {
-    base.push({v:'sand',l:'Пескоструйная обработка'});
-    base.push({v:'polish',l:'Полировка'});
-    base.push({v:'paint_powder',l:'Порошковая покраска'});
-    base.push({v:'paint_liquid',l:'Жидкостная покраска'});
-  }
-
-  if (g==='aluminum') {
-    base.push({v:'anodize',l:'Анодирование (ГОСТ 9.305)'});
-    base.push({v:'hard_anodize',l:'Твёрдое анодирование'});
-    base.push({v:'alodine',l:'Химическое оксидирование (Алодин)'});
-  }
-  if (g==='steel') {
-    base.push({v:'oxidize',l:'Чёрное оксидирование'});
-    base.push({v:'zinc',l:'Цинкование (ГОСТ 9.073)'});
-    base.push({v:'phosphate',l:'Фосфатирование (ГОСТ 9.402)'});
-    base.push({v:'chrome',l:'Хромирование (ГОСТ 9.305)'});
-    base.push({v:'nickel',l:'Никелирование (ГОСТ 9.305)'});
-  }
-  if (g==='stainless') {
-    base.push({v:'passivate',l:'Пассивирование'});
-    base.push({v:'electropolish',l:'Электрополировка'});
-  }
-  if (g==='brass' || g==='copper') {
-    base.push({v:'nickel',l:'Никелирование (ГОСТ 9.305)'});
-    base.push({v:'chrome',l:'Хромирование (ГОСТ 9.305)'});
-    base.push({v:'silver',l:'Серебрение (ГОСТ 9.305)'});
-    base.push({v:'gold',l:'Золочение (ГОСТ 9.305)'});
-  }
-  if (g==='titanium') {
-    base.push({v:'anodize_ti',l:'Анодирование титана'});
-    base.push({v:'pvd',l:'PVD-покрытие'});
-  }
-
+  const base = [{v:'standard',l:'Стандарт (как после печати)'}];
+  base.push({v:'sand',l:'Шлифовка поверхности'});
+  base.push({v:'paint',l:'Грунтовка + покраска'});
+  if (tech==='fdm' && /ABS/i.test(material))
+    base.push({v:'acetone',l:'Полировка парами ацетона (только ABS)'});
+  if (tech==='sls')
+    base.push({v:'dye',l:'Окраска в массе'});
   return base;
 }
 const TOLS = [
@@ -870,6 +760,7 @@ async function init() {
           const part = {
             id: Date.now() + Math.random(),
             name: p.name, tech: p.tech, material: p.material,
+            infill: p.infill||20,
             finish: p.finish||'none', qty: p.qty||1, price: p.price||0,
             dims: p.dims||{x:'—',y:'—',z:'—'}, weight: p.weight||0,
             notes: p.notes||'', fileUrl: null, localUrl: null
@@ -989,9 +880,9 @@ async function addToQuote(input) {
     const part = {
       id: Date.now() + Math.random(), name: file.name,
       size: (file.size/1024/1024).toFixed(2)+' МБ', localUrl: url, fileUrl: null,
-      tech: isManual?'other':'cnc_mill',
-      material: isManual?'Уточнить у менеджера':'Алюминий AL6061',
-      finish:'standard', tolerance:'std', qty:1,
+      tech: 'fdm',
+      material: 'PLA',
+      finish:'standard', tolerance:'std', qty:1, infill:20,
       dims:{x:'—',y:'—',z:'—'}, volume:0, weight:'—', price:0,
       status: isManual?'manual': isStep?'step':'analysing',
     };
@@ -1026,9 +917,9 @@ async function startCalculation() {
     const part = {
       id: Date.now() + Math.random(), name: file.name,
       size: (file.size/1024/1024).toFixed(2)+' МБ', localUrl: url, fileUrl: null,
-      tech: isManual?'other':'cnc_mill',
-      material: isManual?'Уточнить у менеджера':'Алюминий AL6061',
-      finish:'standard', tolerance:'std', qty:1,
+      tech: 'fdm',
+      material: 'PLA',
+      finish:'standard', tolerance:'std', qty:1, infill:20,
       dims:{x:'—',y:'—',z:'—'}, volume:0, weight:'—', price:0,
       status: isManual?'manual': isStep?'step': 'analysing',
     };
@@ -1096,14 +987,28 @@ function calcWeight(p) {
 }
 
 async function calcPrice(p) {
-  try {
-    const r=await fetch(CALCULATE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({volume:p.volume,technology:p.tech,material:p.material,quantity:p.qty,fileName:p.name})});
-    if(!r.ok) throw new Error();
-    p.price=parseFloat((await r.json()).price)||0;
-  } catch {
-    const base=p.volume>0?Math.round(p.volume*0.012):800;
-    p.price=Math.max(500,Math.round(base*p.qty*(p.qty>1?0.85:1)));
+  if (p.tech !== 'fdm') {
+    p.price = 0;
+    p.status = 'manual';
+    return;
   }
+  const volume_cm3 = (p.volume || 0) / 1000; // mm³ → cm³
+  if (volume_cm3 <= 0) { p.price = 0; return; }
+
+  const infill = p.infill || 20;
+  const density = FDM_DENSITY[p.material] || 1.24;
+  const matCostPerKg = FDM_MAT_COST[p.material] || 1000;
+
+  const solid_weight_g = volume_cm3 * density;
+  const actual_weight_g = solid_weight_g * (0.25 + 0.75 * infill / 100);
+  const print_time_h = actual_weight_g / density / PRINT_SPEED_CM3_H;
+
+  const material_cost = actual_weight_g * (matCostPerKg / 1000);
+  const electricity   = print_time_h * POWER_KW * ELEC_RATE;
+  const depreciation  = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
+
+  const unit_price = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
+  p.price = unit_price * p.qty;
 }
 
 async function uploadToCloud(file) {
@@ -1147,6 +1052,15 @@ function openSpecEditor(id) {
         <div class="spec-field">
           <div class="spec-field-label">Материал <span id="se-mat-count" style="color:#9ca3af;font-weight:400;font-size:11px;"></span></div>
           <select class="spec-select" id="se-mat" onchange="seUpdateFins()">${matOpts}</select>
+        </div>
+        <div class="spec-field" id="se-infill-row" style="${p.tech==='fdm'?'':'display:none'}">
+          <div class="spec-field-label">Заполнение (infill)</div>
+          <select class="spec-select" id="se-infill">
+            <option value="20" ${(p.infill||20)===20?'selected':''}>20% — минимальное (лёгкое)</option>
+            <option value="50" ${(p.infill||20)===50?'selected':''}>50% — среднее</option>
+            <option value="80" ${(p.infill||20)===80?'selected':''}>80% — прочное</option>
+            <option value="100" ${(p.infill||20)===100?'selected':''}>100% — монолит</option>
+          </select>
         </div>
       </div>
 
@@ -1243,6 +1157,8 @@ function seUpdateMats() {
   sel.innerHTML = mats.map(m=>`<option>${m}</option>`).join('');
   const cnt = document.getElementById('se-mat-count');
   if(cnt) cnt.textContent = `${mats.length} вариантов`;
+  const infillRow = document.getElementById('se-infill-row');
+  if(infillRow) infillRow.style.display = tech==='fdm' ? '' : 'none';
   seUpdateFins();
 }
 
@@ -1287,6 +1203,7 @@ function saveSpecEditor() {
   p.qty       = Math.max(1, parseInt(document.getElementById('se-qty').value)||1);
   p.tech      = document.getElementById('se-tech').value;
   p.material  = document.getElementById('se-mat').value;
+  p.infill    = parseInt(document.getElementById('se-infill')?.value||'20')||20;
   p.finish    = document.getElementById('se-fin').value;
   p.tolerance = document.getElementById('se-tol').value;
   p.threads   = parseInt(document.getElementById('se-threads').value)||0;
@@ -1329,11 +1246,11 @@ function buildCardHTML(p) {
 
   const statusHTML = p.status==='analysing'
     ? `<span class="chip chip-loading"><span class="spin"></span>Анализируем геометрию...</span>`
-    : p.status==='manual'
-    ? `<span class="chip chip-manual">Ручной расчёт (24–48 ч)</span>`
+    : (p.status==='manual' || p.tech==='sla' || p.tech==='sls')
+    ? `<span class="chip chip-manual">Ручной расчёт — уточним цену в течение 24 ч</span>`
     : p.status==='step'
     ? `<span class="chip chip-manual">STEP/STP — габариты уточнит менеджер</span>`
-    : `<span class="chip chip-ready">✓ Геометрия определена</span>`;
+    : `<span class="chip chip-ready">✓ Стоимость рассчитана</span>`;
 
   const analysingPrev = `
     <div class="pc-preview" style="cursor:default;flex-direction:column;gap:0;">
@@ -1386,6 +1303,7 @@ function buildCardHTML(p) {
       <div class="pc-specs">
         <div class="spec-row"><span class="spec-label">Технология</span><span class="spec-val"><select onchange="chTech(${JSON.stringify(p.id)},this.value)">${techOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Материал</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'material',this.value)">${matOpts}</select></span></div>
+        ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Заполнение</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'infill',parseInt(this.value))"><option value="20" ${(p.infill||20)===20?'selected':''}>20%</option><option value="50" ${(p.infill||20)===50?'selected':''}>50%</option><option value="80" ${(p.infill||20)===80?'selected':''}>80%</option><option value="100" ${(p.infill||20)===100?'selected':''}>100%</option></select></span></div>`:''}
         <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм<br><span style="font-size:11px;color:#f59e0b;">⚠ Убедитесь, что файл экспортирован в мм</span></span></div>
@@ -1427,7 +1345,7 @@ function refreshCard(p) {
 }
 
 // ---- PARAM CHANGES ----
-function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];if(v==='fdm')p.infill=p.infill||20;const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function dupPart(id){const p=parts.find(x=>x.id===id);if(!p)return;const n={...p,id:Date.now()+Math.random(),name:'Копия: '+p.name};parts.push(n);appendPartCard(n);updateSummary();}
@@ -1597,7 +1515,7 @@ async function checkout(){
         totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
         leadTime: '3–7 дней',
         status: 'Новый',
-        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,notes:p.notes||''})),
+        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,infill:p.infill||null,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,notes:p.notes||''})),
         note
       })
     });
@@ -1642,7 +1560,7 @@ async function saveProject(){
     leadTime: '3–7 дней',
     status: 'Черновик',
     parts: parts.map(p=>({
-      name:p.name, tech:p.tech, material:p.material,
+      name:p.name, tech:p.tech, material:p.material, infill:p.infill||null,
       finish:p.finish, qty:p.qty, price:p.price,
       dims:p.dims, weight:p.weight
     }))
