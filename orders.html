@@ -148,14 +148,30 @@ function renderList() {
     const lead = o.lead_time || '—';
     const qty = (o.parts||[]).reduce((s,p) => s+(p.qty||1), 0);
 
-    const partsHtml = (o.parts||[]).map(p => `
-      <div class="part-card">
-        <div>
-          <div class="part-card-name">${p.name||'—'}</div>
-          <div class="part-card-meta">${p.tech||''} · ${p.material||''} · ${p.qty||1} шт.${p.dims&&p.dims.x!=='—' ? ' · '+p.dims.x+'×'+p.dims.y+'×'+p.dims.z+' мм' : ''}</div>
+    const TECH_LABELS = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',sla:'3D-печать SLA',sls:'3D-печать SLS',mjf:'3D-печать MJF',laser:'Лазерная резка',other:'Прочее'};
+    const partsHtml = (o.parts||[]).map((p,i) => {
+      const dims = p.dims && p.dims.x && p.dims.x!=='—' ? `${p.dims.x}×${p.dims.y}×${p.dims.z} мм` : null;
+      const rows = [
+        ['Технология', TECH_LABELS[p.tech]||p.tech||'—'],
+        ['Материал', p.material||'—'],
+        ['Количество', `${p.qty||1} шт.`],
+        dims ? ['Габариты', dims] : null,
+        p.weight ? ['Вес', p.weight+' г'] : null,
+        p.finish ? ['Отделка', p.finish] : null,
+        p.tolerance ? ['Допуск', p.tolerance] : null,
+        p.color ? ['Цвет', p.color] : null,
+        p.notes ? ['Примечания', p.notes] : null,
+      ].filter(Boolean);
+      return `<div class="part-card" style="flex-direction:column;align-items:stretch;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="part-card-name">${i+1}. ${p.name||'—'}</div>
+          <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
         </div>
-        <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
-      </div>`).join('');
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px 16px">
+          ${rows.map(([k,v])=>`<div class="part-card-meta"><span style="color:var(--gray-400)">${k}:</span> <span style="color:var(--gray-700);font-weight:500">${v}</span></div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
 
     const commentHtml = o.admin_comment ? `
       <div class="manager-comment">
