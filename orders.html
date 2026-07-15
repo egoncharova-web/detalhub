@@ -261,7 +261,7 @@ function downloadPDF(id) {
       <b>Комментарий менеджера:</b> ${o.admin_comment}
     </div>` : '';
   const tpl = document.createElement('div');
-  tpl.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm';
+  tpl.style.cssText = 'position:absolute;top:0;left:0;width:794px;visibility:hidden;z-index:-1';
   document.body.appendChild(tpl);
   tpl.innerHTML = `
     <div style="font-family:Arial,sans-serif;padding:16mm;color:#111">
