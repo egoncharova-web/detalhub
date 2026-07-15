@@ -137,32 +137,82 @@
 
 <script src="cabinet.js"></script>
 <script>
-function loadProfile() {
-  const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
-  ['name','phone','email','company','inn','kpp','address'].forEach(id => {
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
+function applyProfile(p) {
+  ['name','phone','email','company'].forEach(id => {
     const el = document.getElementById(id);
     if (el && p[id]) el.value = p[id];
   });
+  // inn/kpp/address — только localStorage
+  const local = JSON.parse(localStorage.getItem('userProfile')||'{}');
+  ['inn','kpp','address'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && local[id]) el.value = local[id];
+  });
   const initials = (p.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  document.getElementById('avatarBig').textContent = initials;
+  document.getElementById('avatarBig').textContent = initials || '?';
   document.getElementById('displayName').textContent = p.name || '—';
   document.getElementById('displayEmail').textContent = p.email || '—';
 }
 
-function saveProfile() {
-  const p = {};
-  ['name','phone','email','company','inn','kpp','address'].forEach(id => {
-    p[id] = document.getElementById(id).value.trim();
-  });
-  localStorage.setItem('userProfile', JSON.stringify(p));
+async function loadProfile() {
+  const userId = localStorage.getItem('userId');
+  // Сначала показываем из localStorage
+  const cached = JSON.parse(localStorage.getItem('userProfile')||'{}');
+  if (cached.name) applyProfile(cached);
 
-  // Обновляем аватар и имя везде
-  const initials = (p.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  document.getElementById('avatarBig').textContent = initials;
-  document.getElementById('displayName').textContent = p.name || '—';
-  document.getElementById('displayEmail').textContent = p.email || '—';
-  document.querySelectorAll('.js-avatar').forEach(el => el.textContent = initials);
-  document.querySelectorAll('.js-user-name').forEach(el => el.textContent = p.name || '—');
+  if (!userId) return;
+  try {
+    const r = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getProfile', userId })
+    });
+    const data = await r.json();
+    if (data.success && data.profile) {
+      applyProfile(data.profile);
+      // Обновляем кэш
+      const local = JSON.parse(localStorage.getItem('userProfile')||'{}');
+      localStorage.setItem('userProfile', JSON.stringify({ ...local, ...data.profile }));
+    }
+  } catch(e) {}
+}
+
+async function saveProfile() {
+  const userId = localStorage.getItem('userId');
+  const name    = document.getElementById('name').value.trim();
+  const phone   = document.getElementById('phone').value.trim();
+  const email   = document.getElementById('email').value.trim();
+  const company = document.getElementById('company').value.trim();
+  const inn     = document.getElementById('inn').value.trim();
+  const kpp     = document.getElementById('kpp').value.trim();
+  const address = document.getElementById('address').value.trim();
+
+  // Сохраняем всё в localStorage
+  localStorage.setItem('userProfile', JSON.stringify({ name, phone, email, company, inn, kpp, address }));
+
+  // name/phone/company — в YDB
+  if (userId) {
+    try {
+      await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'updateProfile', userId, name, phone, company })
+      });
+    } catch(e) {
+      document.getElementById('alert-error').classList.add('show');
+      setTimeout(() => document.getElementById('alert-error').classList.remove('show'), 3000);
+      return;
+    }
+  }
+
+  const initials = (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  document.getElementById('avatarBig').textContent = initials || '?';
+  document.getElementById('displayName').textContent = name || '—';
+  document.getElementById('displayEmail').textContent = email || '—';
+  document.querySelectorAll('.js-avatar').forEach(el => el.textContent = initials || '?');
+  document.querySelectorAll('.js-user-name').forEach(el => el.textContent = name || '—');
 
   const ok = document.getElementById('alert-success');
   ok.classList.add('show');

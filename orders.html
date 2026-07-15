@@ -69,42 +69,68 @@
 </div>
 <script src="cabinet.js"></script>
 <script>
+const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+
 const statusMap = {
-  'Новый':     { cls:'badge-new',      label:'Новый' },
-  'В работе':  { cls:'badge-progress', label:'В работе' },
-  'На проверке':{ cls:'badge-review',  label:'На проверке' },
-  'Выполнен':  { cls:'badge-done',     label:'Выполнен' },
+  'Новый':        { cls:'badge-new',      label:'Новый' },
+  'В работе':     { cls:'badge-progress', label:'В работе' },
+  'На проверке':  { cls:'badge-review',   label:'На проверке' },
+  'Выполнен':     { cls:'badge-done',     label:'Выполнен' },
+  'Отменён':      { cls:'badge-draft',    label:'Отменён' },
 };
 
-function renderOrders() {
-  const orders = JSON.parse(localStorage.getItem('orders')||'[]').reverse();
+async function renderOrders() {
   const cont = document.getElementById('ordersList');
-  if (!orders.length) {
+  cont.innerHTML = '<div class="empty-state"><p>Загружаем заказы...</p></div>';
+
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
     cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
     return;
   }
-  cont.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th>
-        </tr></thead>
-        <tbody>
-          ${orders.map(o => {
-            const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
-            return `<tr>
-              <td class="text-mono">#${o.quoteNumber}</td>
-              <td class="text-muted">${o.orderDate}</td>
-              <td><b>${o.parts.length}</b> дет.</td>
-              <td class="text-muted">${o.leadTime}</td>
-              <td style="font-weight:600">${o.totalPrice}</td>
-              <td><span class="badge ${s.cls}">${s.label}</span></td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>`;
+
+  try {
+    const r = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getOrders', userId })
+    });
+    const data = await r.json();
+    const orders = (data.orders || []).sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+
+    if (!orders.length) {
+      cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
+      return;
+    }
+
+    cont.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th>
+          </tr></thead>
+          <tbody>
+            ${orders.map(o => {
+              const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
+              const price = o.admin_price || o.total_price || '—';
+              const lead  = o.lead_time || '—';
+              return `<tr>
+                <td class="text-mono">#${o.quote_number}</td>
+                <td class="text-muted">${new Date(o.created_at).toLocaleDateString('ru-RU')}</td>
+                <td><b>${(o.parts||[]).length}</b> дет.</td>
+                <td class="text-muted">${lead}</td>
+                <td style="font-weight:600">${price}</td>
+                <td><span class="badge ${s.cls}">${s.label}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки заказов</h3></div>';
+  }
 }
+
 renderOrders();
 </script>
 </body>

@@ -1524,15 +1524,39 @@ document.getElementById('viewerModal').addEventListener('click',e=>{if(e.target=
 // ---- ACTIONS ----
 async function checkout(){
   if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
+  const userId = localStorage.getItem('userId');
+  if(!userId){alert('Войдите в аккаунт чтобы оформить заказ');location.href='auth.html';return;}
   const pr=JSON.parse(localStorage.getItem('userProfile')||'{}');
   const note=document.getElementById('order-note')?.value||'';
+  const totalPrice = parts.reduce((s,p)=>s+p.price,0);
+  const totalWeight = parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0).toFixed(1)+' г';
+
+  // Отправляем в Bitrix24
   try{
     let list='';parts.forEach((p,i)=>{const t=TECHS.find(x=>x.v===p.tech)?.l||p.tech;list+=`${i+1}. ${p.name} | ${t} | ${p.material} | ${p.qty}шт | ${p.price.toLocaleString()}₽\n`;});
-    await fetch(BITRIX_URL+'crm.deal.add.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{TITLE:`Заказ №${quoteNum}`,OPPORTUNITY:parts.reduce((s,p)=>s+p.price,0),CURRENCY_ID:'RUB',STAGE_ID:'NEW',COMMENTS:`${list}\n${note}\nEmail:${pr.email}`}})});
+    await fetch(BITRIX_URL+'crm.deal.add.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{TITLE:`Заказ №${quoteNum}`,OPPORTUNITY:totalPrice,CURRENCY_ID:'RUB',STAGE_ID:'NEW',COMMENTS:`${list}\nПримечание: ${note}\nEmail: ${pr.email}`}})});
   }catch(e){}
-  const orders=JSON.parse(localStorage.getItem('orders')||'[]');
-  orders.push({id:Date.now(),quoteNumber:quoteNum,parts:JSON.parse(JSON.stringify(parts)),totalPrice:parts.reduce((s,p)=>s+p.price,0).toLocaleString('ru-RU')+' ₽',leadTime:'3–7 дней',status:'Новый',orderDate:new Date().toLocaleString('ru-RU'),note});
-  localStorage.setItem('orders',JSON.stringify(orders));localStorage.removeItem('currentQuote');
+
+  // Сохраняем заказ в YDB
+  try{
+    await fetch(AUTH_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'createOrder',
+        userId,
+        quoteNumber: quoteNum,
+        totalWeight,
+        totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
+        leadTime: '3–7 дней',
+        status: 'Новый',
+        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,notes:p.notes||''})),
+        note
+      })
+    });
+  }catch(e){}
+
+  localStorage.removeItem('currentQuote');
   alert('✅ Заказ №'+quoteNum+' оформлен! Мы свяжемся с вами в течение 1 часа.');
   location.href='orders.html';
 }
