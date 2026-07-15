@@ -601,21 +601,18 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               </div>
             </div>
 
-            <!-- Сообщения -->
+            <!-- Последние заказы -->
             <div class="panel">
               <div class="panel-header">
                 <div class="panel-header-left">
-                  <button class="collapse-btn" onclick="toggleSection('msg')">▼</button>
-                  <span class="panel-title">Актуальные сообщения</span>
+                  <button class="collapse-btn" onclick="toggleSection('ord')">▼</button>
+                  <span class="panel-title">Последние заказы</span>
                 </div>
-                <a href="#" class="panel-link">К сообщениям →</a>
+                <a href="orders.html" class="panel-link">Все заказы →</a>
               </div>
-              <div id="msg-body">
-                <div class="msg-empty">
-                  <svg width="36" height="36" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                  <p style="font-size:13px;color:#374151;margin-bottom:4px;">Сообщений пока нет</p>
-                  <small style="font-size:12px;color:#9ca3af;">После оформления заказа менеджер свяжется с вами здесь</small>
-                </div>
+              <div id="ord-body">
+                <div class="proj-th"><span></span><span>№ заказа</span><span>Статус</span><span>Кол-во</span><span style="text-align:right;">Сумма</span></div>
+                <div id="ord-rows"></div>
               </div>
             </div>
           </div>
@@ -722,8 +719,49 @@ async function renderProjects() {
   }
 }
 
+async function renderOrders() {
+  const rows = document.getElementById('ord-rows');
+  const userId = localStorage.getItem('userId');
+  if (!userId) { rows.innerHTML = ''; return; }
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getOrders', userId })
+    });
+    const data = await r.json();
+    const orders = (data.orders||[]).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,5);
+
+    if (!orders.length) {
+      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><p style="font-size:13px;color:#374151;margin-bottom:4px;">Заказов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Оформите первый заказ</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
+      return;
+    }
+
+    const STATUS = {
+      'Новый':         {cls:'s-new',    text:'Новый'},
+      'В работе':      {cls:'s-auto',   text:'В работе'},
+      'Ручной расчёт': {cls:'s-manual', text:'Ручной расчёт'},
+      'Готов':         {cls:'s-done',   text:'Готов'},
+      'Выполнен':      {cls:'s-done',   text:'Выполнен'},
+      'Отменён':       {cls:'s-manual', text:'Отменён'},
+    };
+    rows.innerHTML = orders.map(o => {
+      const qty = (o.parts||[]).reduce((s,p)=>s+(p.qty||1),0);
+      const s = STATUS[o.status] || {cls:'s-new', text: o.status||'Новый'};
+      const price = o.admin_price || o.total_price || '—';
+      return `<div class="proj-row" onclick="location.href='orders.html'">
+        <div class="proj-thumb">📦</div>
+        <div><div class="proj-num">КП №${o.quote_number||'—'}</div><div class="proj-tech">${new Date(o.created_at).toLocaleDateString('ru-RU')}</div></div>
+        <div class="${s.cls}">${s.text}</div>
+        <div style="color:#6b7280;">${qty} шт.</div>
+        <div class="proj-val">${price}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { rows.innerHTML = ''; }
+}
+
 initUser();
 renderProjects();
+renderOrders();
 </script>
 </body>
 </html>
