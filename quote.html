@@ -855,26 +855,28 @@ async function init() {
       if (proj) {
         quoteNum = proj.quote_number;
         setQuoteNum(quoteNum);
+        localStorage.setItem('currentQuote', JSON.stringify({number: quoteNum}));
         // Загружаем детали проекта
         (proj.parts||[]).forEach(p => {
-          parts.push({
+          const part = {
             id: Date.now() + Math.random(),
             name: p.name, tech: p.tech, material: p.material,
             finish: p.finish||'none', qty: p.qty||1, price: p.price||0,
             dims: p.dims||{x:'—',y:'—',z:'—'}, weight: p.weight||0,
-            notes: p.notes||'', fileUrl: null
-          });
+            notes: p.notes||'', fileUrl: null, localUrl: null
+          };
+          parts.push(part);
+          appendPartCard(part);
         });
         if (parts.length) {
           document.getElementById('upload-section').style.display='none';
-          document.getElementById('parts-section').style.display='';
-          renderParts();
-          updateTotal();
+          document.getElementById('parts-section').style.display='block';
+          updateSummary();
           setQuoteNum(quoteNum);
         }
         return;
       }
-    } catch(e) {}
+    } catch(e) { console.error('Ошибка загрузки проекта:', e); }
   }
 
   const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
