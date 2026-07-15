@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Мои заказы — DetalHub</title>
   <link rel="stylesheet" href="cabinet.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    .order-row { cursor:pointer; }
+    .order-row:hover td { background:var(--gray-50); }
+    .order-detail { display:none; background:var(--gray-50); }
+    .order-detail.open { display:table-row; }
+    .order-detail-inner { padding:16px 20px; }
+    .detail-section-title { font-size:11px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+    .parts-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .part-card { background:#fff; border:1px solid var(--gray-200); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
+    .part-card-name { font-size:13px; font-weight:600; color:var(--navy); }
+    .part-card-meta { font-size:11px; color:var(--gray-400); margin-top:2px; }
+    .part-card-price { font-size:14px; font-weight:700; color:var(--navy); }
+    .manager-comment { background:#fff; border:1px solid #b3d9f7; border-radius:8px; padding:12px 16px; font-size:13px; color:#185fa5; }
+    .manager-comment-label { font-size:11px; font-weight:700; color:#185fa5; margin-bottom:4px; }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -96,7 +113,8 @@ async function renderOrders() {
       body: JSON.stringify({ action:'getOrders', userId })
     });
     const data = await r.json();
-    const orders = (data.orders || []).sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+    allOrders = (data.orders || []).sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+    const orders = allOrders;
 
     if (!orders.length) {
       cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
@@ -107,21 +125,57 @@ async function renderOrders() {
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th>
+            <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th><th></th>
           </tr></thead>
           <tbody>
             ${orders.map(o => {
               const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
               const price = o.admin_price || o.total_price || '—';
               const lead  = o.lead_time || '—';
-              return `<tr>
-                <td class="text-mono">#${o.quote_number}</td>
-                <td class="text-muted">${new Date(o.created_at).toLocaleDateString('ru-RU')}</td>
-                <td><b>${(o.parts||[]).length}</b> дет.</td>
-                <td class="text-muted">${lead}</td>
-                <td style="font-weight:600">${price}</td>
-                <td><span class="badge ${s.cls}">${s.label}</span></td>
-              </tr>`;
+              const partsHtml = (o.parts||[]).map(p => `
+                <div class="part-card">
+                  <div>
+                    <div class="part-card-name">${p.name||'—'}</div>
+                    <div class="part-card-meta">${p.tech||''} · ${p.material||''} · ${p.qty||1} шт.${p.dims ? ' · '+p.dims.x+'×'+p.dims.y+'×'+p.dims.z+' мм' : ''}</div>
+                  </div>
+                  <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
+                </div>`).join('');
+              const commentHtml = o.admin_comment ? `
+                <div class="manager-comment">
+                  <div class="manager-comment-label">Комментарий менеджера</div>
+                  ${o.admin_comment}
+                </div>` : '';
+              const actionsHtml = `
+                <div style="display:flex;gap:10px;margin-top:16px;">
+                  <button class="btn btn-primary btn-sm" onclick="reorder('${o.id}');event.stopPropagation()">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                    Заказать снова
+                  </button>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${o.id}');event.stopPropagation()">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Скачать PDF
+                  </button>
+                </div>`;
+              return `
+                <tr class="order-row" onclick="toggleDetail('${o.id}')">
+                  <td class="text-mono">#${o.quote_number}</td>
+                  <td class="text-muted">${new Date(o.created_at).toLocaleDateString('ru-RU')}</td>
+                  <td><b>${(o.parts||[]).length}</b> дет.</td>
+                  <td class="text-muted">${lead}</td>
+                  <td style="font-weight:600">${price}</td>
+                  <td><span class="badge ${s.cls}">${s.label}</span></td>
+                  <td style="color:var(--gray-400);font-size:12px" id="arrow-${o.id}">▼</td>
+                </tr>
+                <tr class="order-detail" id="detail-${o.id}">
+                  <td colspan="7">
+                    <div class="order-detail-inner">
+                      <div class="detail-section-title">Состав заказа</div>
+                      <div class="parts-grid">${partsHtml}</div>
+                      ${commentHtml}
+                      ${actionsHtml}
+                    </div>
+                  </td>
+                </tr>`;
             }).join('')}
           </tbody>
         </table>
@@ -129,6 +183,72 @@ async function renderOrders() {
   } catch(e) {
     cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки заказов</h3></div>';
   }
+}
+
+let allOrders = [];
+
+function reorder(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  // Сохраняем детали предыдущего заказа как основу нового
+  localStorage.setItem('reorderParts', JSON.stringify(o.parts || []));
+  location.href = 'quote.html?reorder=1';
+}
+
+function downloadPDF(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Заголовок
+  doc.setFontSize(18);
+  doc.setTextColor(7, 31, 42);
+  doc.text('DetalHub', 14, 20);
+
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text(`Заказ #${o.quote_number}`, 14, 28);
+  doc.text(`Дата: ${new Date(o.created_at).toLocaleDateString('ru-RU')}`, 14, 34);
+  doc.text(`Статус: ${o.status || '—'}`, 14, 40);
+  doc.text(`Срок: ${o.admin_price ? o.lead_time : (o.lead_time || '—')}`, 14, 46);
+  doc.text(`Сумма: ${o.admin_price || o.total_price || '—'}`, 14, 52);
+
+  // Таблица деталей
+  doc.autoTable({
+    startY: 60,
+    head: [['Деталь', 'Технология', 'Материал', 'Кол-во', 'Цена']],
+    body: (o.parts || []).map(p => [
+      p.name || '—',
+      p.tech || '—',
+      p.material || '—',
+      `${p.qty || 1} шт.`,
+      p.price ? p.price.toLocaleString('ru-RU') + ' ₽' : '—'
+    ]),
+    headStyles: { fillColor: [7, 31, 42], textColor: [125, 195, 253] },
+    alternateRowStyles: { fillColor: [246, 248, 251] },
+    styles: { font: 'helvetica', fontSize: 10 }
+  });
+
+  // Комментарий менеджера
+  if (o.admin_comment) {
+    const y = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(10);
+    doc.setTextColor(24, 95, 165);
+    doc.text('Комментарий менеджера:', 14, y);
+    doc.setTextColor(100);
+    doc.text(o.admin_comment, 14, y + 6, { maxWidth: 180 });
+  }
+
+  doc.save(`DetalHub_Заказ_${o.quote_number}.pdf`);
+}
+
+function toggleDetail(id) {
+  const row = document.getElementById('detail-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  const isOpen = row.classList.contains('open');
+  row.classList.toggle('open', !isOpen);
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
 }
 
 renderOrders();
