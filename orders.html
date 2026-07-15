@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Мои заказы — DetalHub</title>
   <link rel="stylesheet" href="cabinet.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     .proj-tabs { display:flex; gap:0; border-bottom:2px solid var(--gray-200); margin-bottom:24px; }
     .proj-tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--gray-400); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; }
@@ -109,24 +108,6 @@ const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
 let allOrders = [];
 let currentTab = 'active';
 
-function loadLogoPng() {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const c = document.createElement('canvas');
-        c.width = 200; c.height = 200;
-        c.getContext('2d').drawImage(img, 0, 0, 200, 200);
-        resolve(c.toDataURL('image/png'));
-      } catch(e) {
-        resolve(null);
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = 'logo.svg';
-  });
-}
 
 const DONE_STATUSES = ['Выполнен', 'Отменён'];
 
@@ -260,98 +241,76 @@ function reorder(id) {
   location.href = 'quote.html?reorder=1';
 }
 
-async function downloadPDF(id) {
+function downloadPDF(id) {
   const o = allOrders.find(x => x.id === id);
   if (!o) return;
-  const logoPng = await loadLogoPng();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const W = 210, M = 14;
+  const TECH = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',sla:'3D-печать SLA',sls:'3D-печать SLS',mjf:'3D-печать MJF',laser:'Лазерная резка',other:'Прочее'};
   const dateStr = new Date(o.created_at).toLocaleDateString('ru-RU');
   const totalPrice = o.admin_price || o.total_price || '—';
-
-  // Логотип справа
-  if (logoPng) {
-    doc.addImage(logoPng, 'PNG', W-M-28, 8, 28, 28);
-  } else {
-    doc.setFontSize(20); doc.setTextColor(7,31,42); doc.setFont(undefined,'bold');
-    doc.text('DetalHub', W-M, 22, {align:'right'});
-    doc.setFont(undefined,'normal');
-  }
-  doc.setFontSize(8); doc.setTextColor(120);
-  doc.text('detalhub.com', W-M, 38, {align:'right'});
-
-  // Шапка — поставщик
-  doc.setFontSize(9); doc.setTextColor(80);
-  doc.text('Поставщик:', M, 14);
-  doc.setFontSize(10); doc.setTextColor(7,31,42); doc.setFont(undefined,'bold');
-  doc.text('ИП Гончарова Екатерина Николаевна', M, 19);
-  doc.setFont(undefined,'normal'); doc.setFontSize(8); doc.setTextColor(80);
-  doc.text('ИНН: 526013657707', M, 24);
-  doc.text('АО «ТБанк»  БИК: 044525974', M, 28);
-  doc.text('Р/с: 40802810300001603387', M, 32);
-  doc.text('Корр. счёт: 30101810145250000974', M, 36);
-
-  // Линия
-  doc.setDrawColor(200); doc.line(M, 42, W-M, 42);
-
-  // Заголовок счёта
-  doc.setFontSize(15); doc.setFont(undefined,'bold'); doc.setTextColor(7,31,42);
-  doc.text(`Счёт на оплату №${o.quote_number}`, M, 52);
-  doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.setTextColor(100);
-  doc.text(`от ${dateStr}`, M, 58);
-
-  // Мета-строка
-  doc.setFontSize(9); doc.setTextColor(60);
-  doc.text(`Статус: ${o.status||'Новый'}`, M, 66);
-  doc.text(`Срок изготовления: ${o.lead_time||'уточняется'}`, 80, 66);
-
-  // Таблица позиций
-  const TECH = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D FDM',sla:'3D SLA',sls:'3D SLS',mjf:'3D MJF',laser:'Лазерная резка',other:'Прочее'};
-  doc.autoTable({
-    startY: 72,
-    head:[['№','Наименование','Технология','Материал','Кол-во','Цена, ₽']],
-    body:(o.parts||[]).map((p,i)=>[
-      i+1,
-      p.name||'—',
-      TECH[p.tech]||p.tech||'—',
-      p.material||'—',
-      `${p.qty||1} шт.`,
-      p.price ? p.price.toLocaleString('ru-RU') : '—'
-    ]),
-    headStyles:{fillColor:[7,31,42],textColor:[125,195,253],fontSize:9},
-    alternateRowStyles:{fillColor:[246,248,251]},
-    styles:{fontSize:9},
-    columnStyles:{0:{cellWidth:8},4:{cellWidth:18},5:{cellWidth:24,halign:'right'}}
-  });
-
-  let y = doc.lastAutoTable.finalY + 6;
-
-  // Итог
-  doc.setDrawColor(200); doc.line(M, y, W-M, y); y+=6;
-  doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(7,31,42);
-  doc.text('Итого к оплате:', M, y);
-  doc.text(totalPrice, W-M, y, {align:'right'});
-  doc.setFont(undefined,'normal');
-
-  // Комментарий менеджера
-  if (o.admin_comment) {
-    y += 10;
-    doc.setFontSize(9); doc.setTextColor(24,95,165);
-    doc.text('Комментарий менеджера:', M, y);
-    y += 5; doc.setTextColor(80);
-    const lines = doc.splitTextToSize(o.admin_comment, W-M*2);
-    doc.text(lines, M, y);
-    y += lines.length * 4;
-  }
-
-  // Подпись
-  y += 10;
-  doc.setFontSize(8); doc.setTextColor(140);
-  doc.text('Счёт сформирован автоматически на платформе DetalHub (detalhub.com)', M, y);
-  doc.text(`ИП Гончарова Е.Н.  ИНН 526013657707  АО «ТБанк»  р/с 40802810300001603387`, M, y+4);
-
-  doc.save(`DetalHub_Счёт_${o.quote_number}.pdf`);
+  const partsRows = (o.parts||[]).map((p,i) => `
+    <tr style="background:${i%2?'#f9fafb':'#fff'}">
+      <td style="padding:7px 8px;border:1px solid #e5e7eb;text-align:center">${i+1}</td>
+      <td style="padding:7px 8px;border:1px solid #e5e7eb">${p.name||'—'}</td>
+      <td style="padding:7px 8px;border:1px solid #e5e7eb">${TECH[p.tech]||p.tech||'—'}</td>
+      <td style="padding:7px 8px;border:1px solid #e5e7eb">${p.material||'—'}</td>
+      <td style="padding:7px 8px;border:1px solid #e5e7eb;text-align:center">${p.qty||1} шт.</td>
+      <td style="padding:7px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:600">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</td>
+    </tr>`).join('');
+  const commentBlock = o.admin_comment ? `
+    <div style="margin-top:16px;background:#e8f4ff;border:1px solid #b3d9f7;border-radius:6px;padding:10px 14px;font-size:11px;color:#185fa5">
+      <b>Комментарий менеджера:</b> ${o.admin_comment}
+    </div>` : '';
+  const tpl = document.createElement('div');
+  tpl.innerHTML = `
+    <div style="font-family:Arial,sans-serif;padding:16mm;color:#111">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #071f2a;padding-bottom:12px;margin-bottom:16px">
+        <div>
+          <img src="logo.svg" style="height:44px;display:block;margin-bottom:4px">
+          <div style="font-size:10px;color:#9ca3af">detalhub.com</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:15px;font-weight:700;color:#071f2a">СЧЁТ НА ОПЛАТУ №${o.quote_number}</div>
+          <div style="font-size:11px;color:#6b7280">от ${dateStr}</div>
+        </div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:11px">
+        <b style="color:#071f2a">Поставщик: ИП Гончарова Екатерина Николаевна</b><br>
+        ИНН: 526013657707 &nbsp;·&nbsp; АО «ТБанк» &nbsp;·&nbsp; БИК: 044525974<br>
+        Р/с: 40802810300001603387 &nbsp;·&nbsp; Корр. счёт: 30101810145250000974
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:12px">
+        Статус: <b style="color:#071f2a">${o.status||'Новый'}</b> &nbsp;·&nbsp;
+        Срок изготовления: <b style="color:#071f2a">${o.lead_time||'уточняется'}</b>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px">
+        <thead>
+          <tr style="background:#071f2a;color:#7dc3fd">
+            <th style="padding:8px;width:30px">№</th>
+            <th style="padding:8px;text-align:left">Наименование</th>
+            <th style="padding:8px;text-align:left">Технология</th>
+            <th style="padding:8px;text-align:left">Материал</th>
+            <th style="padding:8px;width:60px">Кол-во</th>
+            <th style="padding:8px;width:80px;text-align:right">Цена</th>
+          </tr>
+        </thead>
+        <tbody>${partsRows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="padding:9px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:700;font-size:12px">Итого к оплате:</td>
+            <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:700;font-size:13px;color:#071f2a">${totalPrice}</td>
+          </tr>
+        </tfoot>
+      </table>
+      ${commentBlock}
+      <div style="margin-top:20px;font-size:9px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:8px">
+        Счёт сформирован автоматически · DetalHub (detalhub.com) · ИП Гончарова Е.Н. · ИНН 526013657707
+      </div>
+    </div>`;
+  html2pdf().from(tpl).set({
+    filename: `DetalHub_Счёт_${o.quote_number}.pdf`,
+    jsPDF: { unit:'mm', format:'a4' },
+    html2canvas: { scale:2, backgroundColor:'#fff' }
+  }).save();
 }
 
 async function renderOrders() {
