@@ -1672,6 +1672,8 @@ function downloadPDF(){
   let rows='';parts.forEach((p,i)=>{const t=TECHS.find(x=>x.v===p.tech)?.l||p.tech;rows+=`<tr><td style="padding:7px;border:1px solid #e5e7eb;">${i+1}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.name}</td><td style="padding:7px;border:1px solid #e5e7eb;">${t}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.material}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.dims.x}×${p.dims.y}×${p.dims.z}</td><td style="padding:7px;border:1px solid #e5e7eb;">${p.qty}</td><td style="padding:7px;border:1px solid #e5e7eb;font-weight:700;">${p.price.toLocaleString('ru-RU')} ₽</td></tr>`;});
   const total=parts.reduce((s,p)=>s+p.price,0);
   const tpl=document.createElement('div');
+  tpl.style.cssText='position:absolute;top:0;left:0;width:794px;visibility:hidden;z-index:-1';
+  document.body.appendChild(tpl);
   tpl.innerHTML=`<div style="font-family:Arial,sans-serif;padding:18mm;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #071f2a;padding-bottom:12px;margin-bottom:18px;">
       <div>
@@ -1695,7 +1697,7 @@ function downloadPDF(){
     </table>
     <div style="font-size:11px;color:#6b7280;">Срок изготовления: 3–7 дней &nbsp;·&nbsp; КП действует 14 дней</div>
   </div>`;
-  html2pdf().from(tpl).set({filename:`KP_DetalHub_${quoteNum}.pdf`,jsPDF:{unit:'mm',format:'a4'},html2canvas:{scale:2,backgroundColor:'#fff'}}).save();
+  html2pdf().from(tpl).set({filename:`KP_DetalHub_${quoteNum}.pdf`,jsPDF:{unit:'mm',format:'a4'},html2canvas:{scale:2,backgroundColor:'#fff'}}).save().then(()=>document.body.removeChild(tpl));
 }
 
 init();
