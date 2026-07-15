@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Мои проекты — DetalHub</title>
   <link rel="stylesheet" href="cabinet.css">
+  <style>
+    .proj-tabs { display:flex; gap:0; border-bottom:2px solid var(--gray-200); margin-bottom:24px; }
+    .proj-tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--gray-400); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; }
+    .proj-tab.active { color:var(--navy); border-bottom-color:var(--navy); font-weight:600; }
+    .new-proj-btn { display:block; width:100%; padding:14px; text-align:center; border:2px dashed var(--gray-200); border-radius:10px; color:var(--blue); font-size:13px; font-weight:600; text-decoration:none; margin-bottom:16px; transition:all .15s; }
+    .new-proj-btn:hover { border-color:var(--blue); background:#f0f8ff; }
+    .proj-cards { display:flex; flex-direction:column; gap:12px; }
+    .proj-card { background:#fff; border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+    .proj-card-top { display:flex; align-items:stretch; }
+    .proj-card-thumb { width:120px; flex-shrink:0; background:var(--gray-50); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--gray-100); }
+    .proj-card-thumb svg { opacity:.25; }
+    .proj-card-body { flex:1; padding:14px 18px; }
+    .proj-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+    .proj-card-num { font-size:14px; font-weight:700; color:var(--navy); }
+    .proj-card-date { font-size:12px; color:var(--gray-400); }
+    .proj-card-meta { display:flex; gap:24px; margin-top:10px; }
+    .proj-card-meta-item { font-size:12px; color:var(--gray-400); }
+    .proj-card-meta-item strong { display:block; font-size:13px; color:var(--gray-700); font-weight:600; margin-top:2px; }
+    .proj-card-actions { display:flex; align-items:center; justify-content:space-between; padding:10px 18px; border-top:1px solid var(--gray-100); background:var(--gray-50); }
+    .proj-card-btns { display:flex; gap:12px; }
+    .btn-text { background:none; border:none; font-size:12px; color:var(--gray-400); cursor:pointer; display:flex; align-items:center; gap:5px; padding:0; }
+    .btn-text:hover { color:var(--navy); }
+    .btn-text-danger:hover { color:#dc2626; }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -18,31 +42,31 @@
       <div class="sidebar-section">Кабинет</div>
       <a href="dashboard.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span data-i18n="nav_dashboard">Панель управления</span>
+        <span>Панель управления</span>
       </a>
       <a href="projects.html" class="nav-link active">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-        <span data-i18n="nav_projects">Мои проекты</span>
+        <span>Мои проекты</span>
       </a>
       <a href="orders.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span data-i18n="nav_orders">Мои заказы</span>
+        <span>Мои заказы</span>
       </a>
       <div class="sidebar-section">Аккаунт</div>
       <a href="profile.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span data-i18n="nav_profile">Профиль</span>
+        <span>Профиль</span>
       </a>
       <a href="#" class="nav-link" onclick="logout();return false;">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
-        <span data-i18n="nav_logout">Выйти</span>
+        <span>Выйти</span>
       </a>
     </nav>
     <div class="sidebar-footer">
       <div class="avatar-sm js-avatar" onclick="window.location.href='profile.html'">?</div>
       <div style="min-width:0">
         <div class="sidebar-user-name js-user-name">—</div>
-        <div class="sidebar-user-role" data-i18n="role_client">Клиент</div>
+        <div class="sidebar-user-role">Клиент</div>
       </div>
     </div>
   </aside>
@@ -51,23 +75,99 @@
     <div class="topbar">
       <span class="topbar-title">Мои проекты</span>
       <div class="topbar-right">
-        <a href="dashboard.html" class="btn btn-primary">
+        <a href="quote.html" class="btn btn-primary">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          <span data-i18n="new_order">Новый заказ</span>
+          Новый запрос
         </a>
       </div>
     </div>
     <div class="page-content">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Черновики запросов</span></div>
-        <div id="projectsList"></div>
+      <div class="proj-tabs">
+        <button class="proj-tab active" onclick="switchTab('drafts', this)">Запросы</button>
+        <button class="proj-tab" onclick="switchTab('ordered', this)">Заказанные</button>
       </div>
+      <a href="quote.html" class="new-proj-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:6px"><path d="M12 5v14M5 12h14"/></svg>
+        Начать новый запрос
+      </a>
+      <div id="projectsList"></div>
     </div>
   </div>
 </div>
+
 <script src="cabinet.js"></script>
 <script>
 const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+let allProjects = [];
+let currentTab = 'drafts';
+
+const TECH_LABELS = {
+  cnc_mill:'ЧПУ-фрезерование', cnc_turn:'ЧПУ-токарная', fdm:'3D-печать FDM',
+  sla:'3D-печать SLA', sls:'3D-печать SLS', mjf:'3D-печать MJF',
+  laser:'Лазерная резка', other:'Прочее'
+};
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.proj-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  const cont = document.getElementById('projectsList');
+  const filtered = currentTab === 'drafts'
+    ? allProjects.filter(p => p.status === 'Черновик' || !p.status)
+    : allProjects.filter(p => p.status !== 'Черновик');
+
+  if (!filtered.length) {
+    cont.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+      <h3>${currentTab === 'drafts' ? 'Нет сохранённых запросов' : 'Нет заказанных проектов'}</h3>
+      <p>Загрузите детали и нажмите «Сохранить проект»</p>
+    </div>`;
+    return;
+  }
+
+  cont.innerHTML = `<div class="proj-cards">${filtered.map(p => {
+    const parts = p.parts || [];
+    const tech = parts[0]?.tech || 'other';
+    const techLabel = TECH_LABELS[tech] || tech;
+    const qty = parts.reduce((s, pt) => s + (pt.qty || 1), 0);
+    const statusCls = p.status === 'Черновик' ? 'badge-draft' : 'badge-new';
+
+    return `<div class="proj-card">
+      <div class="proj-card-top">
+        <div class="proj-card-thumb">
+          <svg width="48" height="48" fill="none" stroke="#9ca3af" stroke-width="1" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div class="proj-card-body">
+          <div class="proj-card-head">
+            <div>
+              <div class="proj-card-num">КП №${p.quote_number || '—'}</div>
+              <span class="badge ${statusCls}" style="margin-top:6px;display:inline-flex">${p.status || 'Черновик'}</span>
+            </div>
+            <div class="proj-card-date">Обновлён: ${new Date(p.created_at).toLocaleDateString('ru-RU')}</div>
+          </div>
+          <div class="proj-card-meta">
+            <div class="proj-card-meta-item">Технология<strong>${techLabel}</strong></div>
+            <div class="proj-card-meta-item">Количество<strong>${parts.length} позиц. / ${qty} шт.</strong></div>
+            <div class="proj-card-meta-item">Общая стоимость<strong>${p.total_price || '0 ₽'}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="proj-card-actions">
+        <div class="proj-card-btns">
+          <button class="btn-text btn-text-danger" onclick="deleteProject('${p.id}')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Удалить
+          </button>
+        </div>
+        <a href="quote.html" class="btn btn-primary btn-sm">Детали запроса</a>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
 
 async function renderProjects() {
   const cont = document.getElementById('projectsList');
@@ -75,7 +175,7 @@ async function renderProjects() {
 
   const userId = localStorage.getItem('userId');
   if (!userId) {
-    cont.innerHTML = '<div class="empty-state"><h3>Нет сохранённых проектов</h3><p>Загрузите детали и нажмите «Сохранить проект»</p></div>';
+    cont.innerHTML = '<div class="empty-state"><h3>Нет сохранённых проектов</h3></div>';
     return;
   }
 
@@ -86,32 +186,10 @@ async function renderProjects() {
       body: JSON.stringify({ action:'getProjects', userId })
     });
     const data = await r.json();
-    const projects = (data.projects || []).reverse();
-
-    if (!projects.length) {
-      cont.innerHTML = '<div class="empty-state"><h3>Нет сохранённых проектов</h3><p>Загрузите детали и нажмите «Сохранить проект»</p></div>';
-      return;
-    }
-
-    cont.innerHTML = `
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>№ запроса</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th><th></th></tr></thead>
-          <tbody>
-            ${projects.map(p=>`<tr>
-              <td class="text-mono">#${p.quote_number}</td>
-              <td class="text-muted">${new Date(p.created_at).toLocaleDateString('ru-RU')}</td>
-              <td><b>${(p.parts||[]).length}</b> дет.</td>
-              <td class="text-muted">${p.lead_time||'3–7 дней'}</td>
-              <td style="font-weight:600">${p.total_price||'—'}</td>
-              <td><span class="badge badge-draft">${p.status||'Черновик'}</span></td>
-              <td><button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Удалить</button></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
+    allProjects = (data.projects || []).sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+    renderList();
   } catch(e) {
-    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки проектов</h3></div>';
+    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки проектов</h3><p>' + e.message + '</p></div>';
   }
 }
 
@@ -123,7 +201,8 @@ async function deleteProject(id) {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ action:'deleteProject', projectId: id })
     });
-    renderProjects();
+    allProjects = allProjects.filter(p => p.id !== id);
+    renderList();
   } catch(e) {
     alert('Ошибка удаления: ' + e.message);
   }

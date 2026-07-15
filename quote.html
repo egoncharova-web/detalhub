@@ -1539,7 +1539,7 @@ async function checkout(){
 
   // Сохраняем заказ в YDB
   try{
-    await fetch(AUTH_URL,{
+    const orderResp = await fetch(AUTH_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -1554,7 +1554,15 @@ async function checkout(){
         note
       })
     });
-  }catch(e){}
+    const orderData = await orderResp.json();
+    if(!orderData.success) {
+      alert('Ошибка сохранения заказа: ' + orderData.error);
+      return;
+    }
+  }catch(e){
+    alert('Ошибка соединения при сохранении заказа: ' + e.message);
+    return;
+  }
 
   localStorage.removeItem('currentQuote');
   alert('✅ Заказ №'+quoteNum+' оформлен! Мы свяжемся с вами в течение 1 часа.');
