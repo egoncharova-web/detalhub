@@ -260,59 +260,130 @@ function downloadPDF(id) {
     <div style="margin-top:16px;background:#e8f4ff;border:1px solid #b3d9f7;border-radius:6px;padding:10px 14px;font-size:11px;color:#185fa5">
       <b>Комментарий менеджера:</b> ${o.admin_comment}
     </div>` : '';
-  const tpl = document.createElement('div');
-  tpl.style.cssText = 'position:absolute;top:0;left:0;width:794px;visibility:hidden;z-index:-1';
-  document.body.appendChild(tpl);
-  tpl.innerHTML = `
-    <div style="font-family:Arial,sans-serif;padding:16mm;color:#111">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #071f2a;padding-bottom:12px;margin-bottom:16px">
-        <div>
-          <img src="logo.svg" style="height:44px;display:block;margin-bottom:4px">
-          <div style="font-size:10px;color:#9ca3af">detalhub.com</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:15px;font-weight:700;color:#071f2a">СЧЁТ НА ОПЛАТУ №${o.quote_number}</div>
-          <div style="font-size:11px;color:#6b7280">от ${dateStr}</div>
-        </div>
-      </div>
-      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:11px">
-        <b style="color:#071f2a">Поставщик: ИП Гончарова Екатерина Николаевна</b><br>
-        ИНН: 526013657707 &nbsp;·&nbsp; АО «ТБанк» &nbsp;·&nbsp; БИК: 044525974<br>
-        Р/с: 40802810300001603387 &nbsp;·&nbsp; Корр. счёт: 30101810145250000974
-      </div>
-      <div style="font-size:11px;color:#6b7280;margin-bottom:12px">
-        Статус: <b style="color:#071f2a">${o.status||'Новый'}</b> &nbsp;·&nbsp;
-        Срок изготовления: <b style="color:#071f2a">${o.lead_time||'уточняется'}</b>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px">
-        <thead>
-          <tr style="background:#071f2a;color:#7dc3fd">
-            <th style="padding:8px;width:30px">№</th>
-            <th style="padding:8px;text-align:left">Наименование</th>
-            <th style="padding:8px;text-align:left">Технология</th>
-            <th style="padding:8px;text-align:left">Материал</th>
-            <th style="padding:8px;width:60px">Кол-во</th>
-            <th style="padding:8px;width:80px;text-align:right">Цена</th>
-          </tr>
-        </thead>
-        <tbody>${partsRows}</tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5" style="padding:9px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:700;font-size:12px">Итого к оплате:</td>
-            <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:700;font-size:13px;color:#071f2a">${totalPrice}</td>
-          </tr>
-        </tfoot>
-      </table>
-      ${commentBlock}
-      <div style="margin-top:20px;font-size:9px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:8px">
-        Счёт сформирован автоматически · DetalHub (detalhub.com) · ИП Гончарова Е.Н. · ИНН 526013657707
-      </div>
-    </div>`;
-  html2pdf().from(tpl).set({
-    filename: `DetalHub_Счёт_${o.quote_number}.pdf`,
-    jsPDF: { unit:'mm', format:'a4' },
-    html2canvas: { scale:2, backgroundColor:'#fff' }
-  }).save().then(() => document.body.removeChild(tpl));
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Счёт №${o.quote_number}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #111; background: #fff; padding: 20mm; }
+    @media print { body { padding: 15mm; } .no-print { display:none; } }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #071f2a; padding-bottom:12px; margin-bottom:16px; }
+    .title { font-size:16px; font-weight:700; color:#071f2a; }
+    .subtitle { font-size:11px; color:#6b7280; margin-top:4px; }
+    .bank-block { border:1px solid #d1d5db; border-radius:4px; padding:10px 12px; margin-bottom:14px; }
+    .bank-row { display:flex; border-bottom:1px solid #e5e7eb; }
+    .bank-row:last-child { border-bottom:none; }
+    .bank-label { width:200px; min-width:200px; padding:6px 8px; font-size:11px; color:#6b7280; border-right:1px solid #e5e7eb; }
+    .bank-value { padding:6px 8px; font-size:11px; font-weight:600; }
+    .parties { display:flex; gap:16px; margin-bottom:14px; }
+    .party { flex:1; border:1px solid #d1d5db; border-radius:4px; padding:10px 12px; }
+    .party-title { font-size:10px; color:#6b7280; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .party-name { font-weight:700; font-size:12px; margin-bottom:4px; }
+    .party-inn { font-size:11px; color:#6b7280; }
+    table { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:11px; }
+    th { background:#071f2a; color:#7dc3fd; padding:7px 8px; text-align:left; }
+    td { padding:6px 8px; border:1px solid #d1d5db; }
+    .total-row td { font-weight:700; background:#f9fafb; font-size:12px; }
+    .comment { background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:10px 12px; margin-bottom:14px; font-size:11px; color:#1d4ed8; }
+    .sign-block { display:flex; justify-content:space-between; margin-top:20px; font-size:11px; }
+    .sign-line { border-top:1px solid #111; width:200px; padding-top:4px; color:#6b7280; text-align:center; }
+    .footer-note { margin-top:16px; font-size:10px; color:#9ca3af; border-top:1px solid #e5e7eb; padding-top:8px; }
+    .print-btn { position:fixed; top:16px; right:16px; padding:10px 20px; background:#071f2a; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
+  </style></head><body>
+  <button class="print-btn no-print" onclick="window.print()">Сохранить PDF</button>
+
+  <div class="header">
+    <div>
+      <div class="title">Счёт на оплату № ${o.quote_number}</div>
+      <div class="subtitle">от ${dateStr}</div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:#6b7280">
+      DetalHub · detalhub.com<br>
+      Статус: ${o.status||'Новый'} · Срок: ${o.lead_time||'уточняется'}
+    </div>
+  </div>
+
+  <div class="bank-block">
+    <div class="bank-row">
+      <div class="bank-label">Получатель</div>
+      <div class="bank-value">ИП Гончарова Екатерина Николаевна</div>
+    </div>
+    <div class="bank-row">
+      <div class="bank-label">ИНН получателя</div>
+      <div class="bank-value">526013657707</div>
+    </div>
+    <div class="bank-row">
+      <div class="bank-label">Банк получателя</div>
+      <div class="bank-value">АО «ТБанк»</div>
+    </div>
+    <div class="bank-row">
+      <div class="bank-label">БИК</div>
+      <div class="bank-value">044525974</div>
+    </div>
+    <div class="bank-row">
+      <div class="bank-label">Расчётный счёт</div>
+      <div class="bank-value">40802810300001603387</div>
+    </div>
+    <div class="bank-row">
+      <div class="bank-label">Корр. счёт</div>
+      <div class="bank-value">30101810145250000974</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28px">№</th>
+        <th>Наименование товара / услуги</th>
+        <th style="width:80px">Технология</th>
+        <th style="width:80px">Материал</th>
+        <th style="width:55px;text-align:center">Кол-во</th>
+        <th style="width:55px;text-align:right">Цена, ₽</th>
+        <th style="width:70px;text-align:right">Сумма, ₽</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${(o.parts||[]).map((p,i)=>`<tr>
+        <td style="text-align:center">${i+1}</td>
+        <td>${p.name||'—'}</td>
+        <td>${TECH[p.tech]||p.tech||'—'}</td>
+        <td>${p.material||'—'}</td>
+        <td style="text-align:center">${p.qty||1} шт.</td>
+        <td style="text-align:right">${p.price ? p.price.toLocaleString('ru-RU') : '—'}</td>
+        <td style="text-align:right;font-weight:600">${p.price ? (p.price*(p.qty||1)).toLocaleString('ru-RU') : '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="6" style="text-align:right">НДС не облагается (ИП на УСН)</td>
+        <td style="text-align:right">—</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="6" style="text-align:right;font-size:13px">Итого к оплате:</td>
+        <td style="text-align:right;font-size:13px;color:#071f2a">${totalPrice}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  ${o.admin_comment ? `<div class="comment"><b>Комментарий:</b> ${o.admin_comment}</div>` : ''}
+
+  <div class="sign-block">
+    <div>
+      <div class="sign-line">Гончарова Е.Н.</div>
+      <div style="margin-top:4px;text-align:center;font-size:10px;color:#6b7280">ИП / подпись</div>
+    </div>
+    <div style="font-size:11px;color:#6b7280;text-align:right">
+      МП (при наличии)
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Счёт действителен 14 дней. Сформирован автоматически на платформе DetalHub (detalhub.com).
+    ИП Гончарова Е.Н. · ИНН 526013657707 · работает без НДС.
+  </div>
+  <script>setTimeout(()=>window.print(),500);</script>
+  </body></html>`);
+  win.document.close();
 }
 
 async function renderOrders() {
