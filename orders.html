@@ -8,19 +8,38 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    .order-row { cursor:pointer; }
-    .order-row:hover td { background:var(--gray-50); }
-    .order-detail { display:none; background:var(--gray-50); }
-    .order-detail.open { display:table-row; }
-    .order-detail-inner { padding:16px 20px; }
+    .proj-tabs { display:flex; gap:0; border-bottom:2px solid var(--gray-200); margin-bottom:24px; }
+    .proj-tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--gray-400); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; }
+    .proj-tab.active { color:var(--navy); border-bottom-color:var(--navy); font-weight:600; }
+
+    .order-cards { display:flex; flex-direction:column; gap:12px; }
+    .order-card { background:#fff; border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+    .order-card-top { display:flex; align-items:stretch; }
+    .order-card-thumb { width:120px; flex-shrink:0; background:var(--gray-50); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--gray-100); }
+    .order-card-body { flex:1; padding:14px 18px; }
+    .order-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+    .order-card-num { font-size:14px; font-weight:700; color:var(--navy); }
+    .order-card-date { font-size:12px; color:var(--gray-400); }
+    .order-card-meta { display:flex; gap:24px; margin-top:10px; flex-wrap:wrap; }
+    .order-card-meta-item { font-size:12px; color:var(--gray-400); }
+    .order-card-meta-item strong { display:block; font-size:13px; color:var(--gray-700); font-weight:600; margin-top:2px; }
+    .order-card-actions { display:flex; align-items:center; justify-content:space-between; padding:10px 18px; border-top:1px solid var(--gray-100); background:var(--gray-50); }
+    .order-card-btns { display:flex; gap:12px; }
+    .btn-text { background:none; border:none; font-size:12px; color:var(--gray-400); cursor:pointer; display:flex; align-items:center; gap:5px; padding:0; }
+    .btn-text:hover { color:var(--navy); }
+
+    /* Детали заказа (раскрывается) */
+    .order-detail { display:none; border-top:1px solid var(--gray-100); padding:16px 18px; background:#fafbfc; }
+    .order-detail.open { display:block; }
     .detail-section-title { font-size:11px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-    .parts-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+    .parts-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
     .part-card { background:#fff; border:1px solid var(--gray-200); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
     .part-card-name { font-size:13px; font-weight:600; color:var(--navy); }
     .part-card-meta { font-size:11px; color:var(--gray-400); margin-top:2px; }
-    .part-card-price { font-size:14px; font-weight:700; color:var(--navy); }
-    .manager-comment { background:#fff; border:1px solid #b3d9f7; border-radius:8px; padding:12px 16px; font-size:13px; color:#185fa5; }
+    .part-card-price { font-size:14px; font-weight:700; color:var(--navy); white-space:nowrap; }
+    .manager-comment { background:#e8f4ff; border:1px solid #b3d9f7; border-radius:8px; padding:12px 16px; font-size:13px; color:#185fa5; margin-bottom:14px; }
     .manager-comment-label { font-size:11px; font-weight:700; color:#185fa5; margin-bottom:4px; }
+    .detail-actions { display:flex; gap:10px; }
   </style>
 </head>
 <body>
@@ -35,31 +54,31 @@
       <div class="sidebar-section">Кабинет</div>
       <a href="dashboard.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span data-i18n="nav_dashboard">Панель управления</span>
+        <span>Панель управления</span>
       </a>
       <a href="projects.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-        <span data-i18n="nav_projects">Мои проекты</span>
+        <span>Мои проекты</span>
       </a>
       <a href="orders.html" class="nav-link active">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <span data-i18n="nav_orders">Мои заказы</span>
+        <span>Мои заказы</span>
       </a>
       <div class="sidebar-section">Аккаунт</div>
       <a href="profile.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span data-i18n="nav_profile">Профиль</span>
+        <span>Профиль</span>
       </a>
       <a href="#" class="nav-link" onclick="logout();return false;">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
-        <span data-i18n="nav_logout">Выйти</span>
+        <span>Выйти</span>
       </a>
     </nav>
     <div class="sidebar-footer">
       <div class="avatar-sm js-avatar" onclick="window.location.href='profile.html'">?</div>
       <div style="min-width:0">
         <div class="sidebar-user-name js-user-name">—</div>
-        <div class="sidebar-user-role" data-i18n="role_client">Клиент</div>
+        <div class="sidebar-user-role">Клиент</div>
       </div>
     </div>
   </aside>
@@ -68,129 +87,140 @@
     <div class="topbar">
       <span class="topbar-title">Мои заказы</span>
       <div class="topbar-right">
-        <a href="dashboard.html" class="btn btn-primary">
+        <a href="quote.html" class="btn btn-primary">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          <span data-i18n="new_order">Новый заказ</span>
+          Новый запрос
         </a>
       </div>
     </div>
     <div class="page-content">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">История заказов</span>
-        </div>
-        <div id="ordersList"></div>
+      <div class="proj-tabs">
+        <button class="proj-tab active" onclick="switchTab('active', this)">Активные</button>
+        <button class="proj-tab" onclick="switchTab('done', this)">Завершённые</button>
       </div>
+      <div id="ordersList"></div>
     </div>
   </div>
 </div>
+
 <script src="cabinet.js"></script>
 <script>
 const AUTH_URL = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
+let allOrders = [];
+let currentTab = 'active';
+
+const DONE_STATUSES = ['Выполнен', 'Отменён'];
 
 const statusMap = {
-  'Новый':        { cls:'badge-new',      label:'Новый' },
-  'В работе':     { cls:'badge-progress', label:'В работе' },
-  'На проверке':  { cls:'badge-review',   label:'На проверке' },
-  'Выполнен':     { cls:'badge-done',     label:'Выполнен' },
-  'Отменён':      { cls:'badge-draft',    label:'Отменён' },
+  'Новый':         { cls:'badge-new',      label:'Новый' },
+  'В работе':      { cls:'badge-progress', label:'В работе' },
+  'Ручной расчёт': { cls:'badge-review',   label:'Ручной расчёт' },
+  'Готов':         { cls:'badge-done',     label:'Готов' },
+  'Выполнен':      { cls:'badge-done',     label:'Выполнен' },
+  'Отменён':       { cls:'badge-draft',    label:'Отменён' },
 };
 
-async function renderOrders() {
-  const cont = document.getElementById('ordersList');
-  cont.innerHTML = '<div class="empty-state"><p>Загружаем заказы...</p></div>';
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.proj-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
 
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
+function renderList() {
+  const cont = document.getElementById('ordersList');
+  const filtered = currentTab === 'active'
+    ? allOrders.filter(o => !DONE_STATUSES.includes(o.status))
+    : allOrders.filter(o => DONE_STATUSES.includes(o.status));
+
+  if (!filtered.length) {
+    cont.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <h3>${currentTab === 'active' ? 'Активных заказов нет' : 'Завершённых заказов нет'}</h3>
+      <p>Оформите заказ на странице нового запроса</p>
+    </div>`;
     return;
   }
 
-  try {
-    const r = await fetch(AUTH_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'getOrders', userId })
-    });
-    const data = await r.json();
-    allOrders = (data.orders || []).sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
-    const orders = allOrders;
+  cont.innerHTML = `<div class="order-cards">${filtered.map(o => {
+    const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
+    const price = o.admin_price || o.total_price || '—';
+    const lead = o.lead_time || '—';
+    const qty = (o.parts||[]).reduce((s,p) => s+(p.qty||1), 0);
 
-    if (!orders.length) {
-      cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3><p>Загрузите детали и оформите заказ на панели управления</p></div>';
-      return;
-    }
+    const partsHtml = (o.parts||[]).map(p => `
+      <div class="part-card">
+        <div>
+          <div class="part-card-name">${p.name||'—'}</div>
+          <div class="part-card-meta">${p.tech||''} · ${p.material||''} · ${p.qty||1} шт.${p.dims&&p.dims.x!=='—' ? ' · '+p.dims.x+'×'+p.dims.y+'×'+p.dims.z+' мм' : ''}</div>
+        </div>
+        <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
+      </div>`).join('');
 
-    cont.innerHTML = `
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>№ заказа</th><th>Дата</th><th>Деталей</th><th>Срок</th><th>Сумма</th><th>Статус</th><th></th>
-          </tr></thead>
-          <tbody>
-            ${orders.map(o => {
-              const s = statusMap[o.status] || { cls:'badge-new', label: o.status||'Новый' };
-              const price = o.admin_price || o.total_price || '—';
-              const lead  = o.lead_time || '—';
-              const partsHtml = (o.parts||[]).map(p => `
-                <div class="part-card">
-                  <div>
-                    <div class="part-card-name">${p.name||'—'}</div>
-                    <div class="part-card-meta">${p.tech||''} · ${p.material||''} · ${p.qty||1} шт.${p.dims ? ' · '+p.dims.x+'×'+p.dims.y+'×'+p.dims.z+' мм' : ''}</div>
-                  </div>
-                  <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
-                </div>`).join('');
-              const commentHtml = o.admin_comment ? `
-                <div class="manager-comment">
-                  <div class="manager-comment-label">Комментарий менеджера</div>
-                  ${o.admin_comment}
-                </div>` : '';
-              const actionsHtml = `
-                <div style="display:flex;gap:10px;margin-top:16px;">
-                  <button class="btn btn-primary btn-sm" onclick="reorder('${o.id}');event.stopPropagation()">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
-                    Заказать снова
-                  </button>
-                  <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${o.id}');event.stopPropagation()">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    Скачать PDF
-                  </button>
-                </div>`;
-              return `
-                <tr class="order-row" onclick="toggleDetail('${o.id}')">
-                  <td class="text-mono">#${o.quote_number}</td>
-                  <td class="text-muted">${new Date(o.created_at).toLocaleDateString('ru-RU')}</td>
-                  <td><b>${(o.parts||[]).length}</b> дет.</td>
-                  <td class="text-muted">${lead}</td>
-                  <td style="font-weight:600">${price}</td>
-                  <td><span class="badge ${s.cls}">${s.label}</span></td>
-                  <td style="color:var(--gray-400);font-size:12px" id="arrow-${o.id}">▼</td>
-                </tr>
-                <tr class="order-detail" id="detail-${o.id}">
-                  <td colspan="7">
-                    <div class="order-detail-inner">
-                      <div class="detail-section-title">Состав заказа</div>
-                      <div class="parts-grid">${partsHtml}</div>
-                      ${commentHtml}
-                      ${actionsHtml}
-                    </div>
-                  </td>
-                </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  } catch(e) {
-    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки заказов</h3></div>';
-  }
+    const commentHtml = o.admin_comment ? `
+      <div class="manager-comment">
+        <div class="manager-comment-label">Комментарий менеджера</div>
+        ${o.admin_comment}
+      </div>` : '';
+
+    return `<div class="order-card">
+      <div class="order-card-top">
+        <div class="order-card-thumb">
+          <svg width="48" height="48" fill="none" stroke="#9ca3af" stroke-width="1" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <div class="order-card-body">
+          <div class="order-card-head">
+            <div>
+              <div class="order-card-num">Заказ №${o.quote_number||'—'}</div>
+              <span class="badge ${s.cls}" style="margin-top:6px;display:inline-flex">${s.label}</span>
+            </div>
+            <div class="order-card-date">Оформлен: ${new Date(o.created_at).toLocaleDateString('ru-RU')}</div>
+          </div>
+          <div class="order-card-meta">
+            <div class="order-card-meta-item">Количество<strong>${(o.parts||[]).length} позиц. / ${qty} шт.</strong></div>
+            <div class="order-card-meta-item">Срок<strong>${lead}</strong></div>
+            <div class="order-card-meta-item">Стоимость<strong>${price}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="order-detail" id="detail-${o.id}">
+        ${commentHtml}
+        <div class="detail-section-title">Состав заказа</div>
+        <div class="parts-grid">${partsHtml}</div>
+        <div class="detail-actions">
+          <button class="btn btn-primary btn-sm" onclick="reorder('${o.id}')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+            Заказать снова
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${o.id}')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Скачать PDF
+          </button>
+        </div>
+      </div>
+      <div class="order-card-actions">
+        <div class="order-card-btns">
+          <button class="btn-text" onclick="toggleDetail('${o.id}', this)">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Состав заказа
+          </button>
+        </div>
+        <span style="font-size:12px;color:var(--gray-400)">№${o.quote_number}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
-let allOrders = [];
+function toggleDetail(id, btn) {
+  const det = document.getElementById('detail-' + id);
+  const isOpen = det.classList.contains('open');
+  det.classList.toggle('open', !isOpen);
+  btn.style.color = isOpen ? '' : 'var(--navy)';
+}
 
 function reorder(id) {
   const o = allOrders.find(x => x.id === id);
   if (!o) return;
-  // Сохраняем детали предыдущего заказа как основу нового
   localStorage.setItem('reorderParts', JSON.stringify(o.parts || []));
   location.href = 'quote.html?reorder=1';
 }
@@ -200,55 +230,51 @@ function downloadPDF(id) {
   if (!o) return;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
-  // Заголовок
-  doc.setFontSize(18);
-  doc.setTextColor(7, 31, 42);
+  doc.setFontSize(18); doc.setTextColor(7,31,42);
   doc.text('DetalHub', 14, 20);
-
-  doc.setFontSize(11);
-  doc.setTextColor(100);
+  doc.setFontSize(11); doc.setTextColor(100);
   doc.text(`Заказ #${o.quote_number}`, 14, 28);
   doc.text(`Дата: ${new Date(o.created_at).toLocaleDateString('ru-RU')}`, 14, 34);
-  doc.text(`Статус: ${o.status || '—'}`, 14, 40);
-  doc.text(`Срок: ${o.admin_price ? o.lead_time : (o.lead_time || '—')}`, 14, 46);
-  doc.text(`Сумма: ${o.admin_price || o.total_price || '—'}`, 14, 52);
-
-  // Таблица деталей
+  doc.text(`Статус: ${o.status||'—'}`, 14, 40);
+  doc.text(`Срок: ${o.lead_time||'—'}`, 14, 46);
+  doc.text(`Сумма: ${o.admin_price||o.total_price||'—'}`, 14, 52);
   doc.autoTable({
     startY: 60,
-    head: [['Деталь', 'Технология', 'Материал', 'Кол-во', 'Цена']],
-    body: (o.parts || []).map(p => [
-      p.name || '—',
-      p.tech || '—',
-      p.material || '—',
-      `${p.qty || 1} шт.`,
-      p.price ? p.price.toLocaleString('ru-RU') + ' ₽' : '—'
-    ]),
-    headStyles: { fillColor: [7, 31, 42], textColor: [125, 195, 253] },
-    alternateRowStyles: { fillColor: [246, 248, 251] },
-    styles: { font: 'helvetica', fontSize: 10 }
+    head:[['Деталь','Технология','Материал','Кол-во','Цена']],
+    body:(o.parts||[]).map(p=>[p.name||'—',p.tech||'—',p.material||'—',`${p.qty||1} шт.`,p.price?p.price.toLocaleString('ru-RU')+' ₽':'—']),
+    headStyles:{fillColor:[7,31,42],textColor:[125,195,253]},
+    alternateRowStyles:{fillColor:[246,248,251]},
+    styles:{fontSize:10}
   });
-
-  // Комментарий менеджера
   if (o.admin_comment) {
     const y = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(10);
-    doc.setTextColor(24, 95, 165);
+    doc.setFontSize(10); doc.setTextColor(24,95,165);
     doc.text('Комментарий менеджера:', 14, y);
     doc.setTextColor(100);
-    doc.text(o.admin_comment, 14, y + 6, { maxWidth: 180 });
+    doc.text(o.admin_comment, 14, y+6, {maxWidth:180});
   }
-
   doc.save(`DetalHub_Заказ_${o.quote_number}.pdf`);
 }
 
-function toggleDetail(id) {
-  const row = document.getElementById('detail-' + id);
-  const arrow = document.getElementById('arrow-' + id);
-  const isOpen = row.classList.contains('open');
-  row.classList.toggle('open', !isOpen);
-  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+async function renderOrders() {
+  const cont = document.getElementById('ordersList');
+  cont.innerHTML = '<div class="empty-state"><p>Загружаем заказы...</p></div>';
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    cont.innerHTML = '<div class="empty-state"><h3>Заказов пока нет</h3></div>';
+    return;
+  }
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getOrders', userId })
+    });
+    const data = await r.json();
+    allOrders = (data.orders||[]).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    renderList();
+  } catch(e) {
+    cont.innerHTML = '<div class="empty-state"><h3>Ошибка загрузки заказов</h3><p>'+e.message+'</p></div>';
+  }
 }
 
 renderOrders();
