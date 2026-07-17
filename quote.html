@@ -1007,7 +1007,13 @@ async function calcPrice(p) {
   const electricity   = print_time_h * POWER_KW * ELEC_RATE;
   const depreciation  = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
 
-  p.unit_price = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
+  const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
+
+  // Скидка на партию: 0% при 1 шт → до 35% при 200+ шт
+  // Формула: скидка = 35% × (1 − e^(−qty/40))
+  const MAX_DISCOUNT = 0.35;
+  const batchDiscount = MAX_DISCOUNT * (1 - Math.exp(-p.qty / 40));
+  p.unit_price = Math.max(150, Math.round(base_unit * (1 - batchDiscount)));
   p.price = p.unit_price * p.qty;
 }
 
