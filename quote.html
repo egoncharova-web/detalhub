@@ -671,6 +671,12 @@ const MATS = {
   fdm: ['PLA', 'PETG', 'ABS'],
 };
 
+const COLORS = {
+  'PLA':  ['Черный','Серый','Белый','Фиолетовый','Бирюзовый','Красный','Желтый'],
+  'PETG': ['Черный','Белый','Серый','Светло Серый','Темно Серый','Красный','Желтый','Оранжевый','Морковный','Зеленый','Серебристый','Светло Бежевый','Бежевый','Опаловый Зеленый','Темно Синий','Малиновый','Светло Розовый','Вишневый','Алюминиевый','Темно Коричневый','Светло Коричневый'],
+  'ABS':  ['Черный','Белый','Серый'],
+};
+
 // Себестоимость FDM материалов (руб/кг) — средняя цена по рынку РФ
 const FDM_MAT_COST = { 'PLA': 900, 'PETG': 880, 'ABS': 900 };
 // Плотность FDM материалов (г/см³)
@@ -1125,6 +1131,10 @@ function openSpecEditor(id) {
           <div class="spec-field-label">Материал <span id="se-mat-count" style="color:#9ca3af;font-weight:400;font-size:11px;"></span></div>
           <select class="spec-select" id="se-mat" onchange="seUpdateFins()">${matOpts}</select>
         </div>
+        <div class="spec-field" id="se-color-row" style="${p.tech==='fdm'?'':'display:none'}">
+          <div class="spec-field-label">Цвет</div>
+          <select class="spec-select" id="se-color">${(COLORS[p.material]||['Черный']).map(c=>`<option${c===p.color?' selected':''}>${c}</option>`).join('')}</select>
+        </div>
         <div class="spec-field" id="se-infill-row" style="${p.tech==='fdm'?'':'display:none'}">
           <div class="spec-field-label">Заполнение (infill)</div>
           <select class="spec-select" id="se-infill">
@@ -1231,7 +1241,19 @@ function seUpdateMats() {
   if(cnt) cnt.textContent = `${mats.length} вариантов`;
   const infillRow = document.getElementById('se-infill-row');
   if(infillRow) infillRow.style.display = tech==='fdm' ? '' : 'none';
+  const colorRow = document.getElementById('se-color-row');
+  if(colorRow) colorRow.style.display = tech==='fdm' ? '' : 'none';
+  seUpdateColors();
   seUpdateFins();
+}
+
+function seUpdateColors() {
+  const mat = document.getElementById('se-mat').value;
+  const sel = document.getElementById('se-color'); if(!sel) return;
+  const prev = sel.value;
+  const colors = COLORS[mat]||['Черный'];
+  sel.innerHTML = colors.map(c=>`<option${c===prev?' selected':''}>${c}</option>`).join('');
+  if(!colors.includes(prev)) sel.value = colors[0];
 }
 
 function seUpdateFins() {
@@ -1242,6 +1264,7 @@ function seUpdateFins() {
   const sel  = document.getElementById('se-fin');
   sel.innerHTML = fins.map(f=>`<option value="${f.v}"${f.v===prev?' selected':''}>${f.l}</option>`).join('');
   if(!fins.find(f=>f.v===prev)) sel.value = fins[0].v;
+  seUpdateColors();
 }
 
 function renderSpecViewer(p) {
@@ -1276,6 +1299,7 @@ function saveSpecEditor() {
   p.tech      = document.getElementById('se-tech').value;
   p.material  = document.getElementById('se-mat').value;
   p.infill    = parseInt(document.getElementById('se-infill')?.value||'20')||20;
+  p.color     = document.getElementById('se-color')?.value || (COLORS[p.material]||['Черный'])[0];
   p.finish    = document.getElementById('se-fin').value;
   p.tolerance = document.getElementById('se-tol').value;
   p.threads   = parseInt(document.getElementById('se-threads').value)||0;
@@ -1387,6 +1411,7 @@ function buildCardHTML(p) {
       <div class="pc-specs">
         <div class="spec-row"><span class="spec-label">Технология</span><span class="spec-val"><select onchange="chTech(${JSON.stringify(p.id)},this.value)">${techOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Материал</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'material',this.value)">${matOpts}</select></span></div>
+        ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Цвет</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'color',this.value)">${(COLORS[p.material]||['Черный']).map(c=>`<option${c===p.color?' selected':''}>${c}</option>`).join('')}</select></span></div>`:''}
         ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Заполнение</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'infill',parseInt(this.value))"><option value="20" ${(p.infill||20)===20?'selected':''}>20%</option><option value="50" ${(p.infill||20)===50?'selected':''}>50%</option><option value="80" ${(p.infill||20)===80?'selected':''}>80%</option><option value="100" ${(p.infill||20)===100?'selected':''}>100%</option></select></span></div>`:''}
         <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
@@ -1439,8 +1464,8 @@ function rescalePart(id){
   p.weight=calcWeight(p);
   calcPrice(p).then(()=>{refreshCard(p);updateSummary();});
 }
-function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];if(v==='fdm')p.infill=p.infill||20;const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
-function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){recoverVolume(p);p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];if(v==='fdm'){p.infill=p.infill||20;p.color=(COLORS[p.material]||['Черный'])[0];}const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){recoverVolume(p);p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;const cols=COLORS[v]||['Черный'];if(!cols.includes(p.color))p.color=cols[0];}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function dupPart(id){const p=parts.find(x=>x.id===id);if(!p)return;const n={...p,id:Date.now()+Math.random(),name:'Копия: '+p.name};parts.push(n);appendPartCard(n);updateSummary();}
 function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=>x.id===id);if(p?.localUrl)URL.revokeObjectURL(p.localUrl);parts=parts.filter(x=>x.id!==id);document.getElementById('pw-'+id)?.remove();if(!parts.length){document.getElementById('upload-section').style.display='';document.getElementById('parts-section').style.display='none';}updateSummary();}
