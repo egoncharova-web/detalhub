@@ -654,9 +654,7 @@ const AUTH_URL      = 'https://functions.yandexcloud.net/d4eqjukg4f4n7p4v8j8g';
 
 // ---- REFS ----
 const TECHS = [
-  {v:'fdm', l:'3D-печать FDM'},
-  {v:'sla', l:'3D-печать SLA'},
-  {v:'sls', l:'3D-печать SLS'},
+  {v:'fdm', l:'3D-печать FDM (PLA / PETG / ABS)'},
 ];
 // Группы материалов для определения совместимых отделок
 const MAT_GROUP = m => {
@@ -671,8 +669,6 @@ const MAT_GROUP = m => {
 
 const MATS = {
   fdm: ['PLA', 'PETG', 'ABS'],
-  sla: ['Стандартная смола', 'Прочная смола (ABS-like)', 'Гибкая смола'],
-  sls: ['PA12 — нейлон', 'PA11 — нейлон', 'TPU (эластичный)'],
 };
 
 // Себестоимость FDM материалов (руб/кг)
@@ -684,7 +680,7 @@ const PRINTER_LIFE_H = 5000; // часов ресурса
 const POWER_KW = 0.25;       // кВт (Bambu Lab средн.)
 const ELEC_RATE = 6;         // руб/кВт·ч
 const MARKUP = 1.28;         // наценка 28%
-const PRINT_SPEED_CM3_H = 30; // см³/ч материала
+const PRINT_SPEED_CM3_H = 60; // см³/ч материала (Bambu Lab P1S реальная скорость)
 
 // Отделки: зависят от группы материала и технологии
 function getFinishes(tech, material) {
@@ -1007,8 +1003,8 @@ async function calcPrice(p) {
   const electricity   = print_time_h * POWER_KW * ELEC_RATE;
   const depreciation  = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
 
-  const unit_price = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
-  p.price = unit_price * p.qty;
+  p.unit_price = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
+  p.price = p.unit_price * p.qty;
 }
 
 async function uploadToCloud(file) {
@@ -1246,10 +1242,8 @@ function buildCardHTML(p) {
 
   const statusHTML = p.status==='analysing'
     ? `<span class="chip chip-loading"><span class="spin"></span>Анализируем геометрию...</span>`
-    : (p.status==='manual' || p.tech==='sla' || p.tech==='sls')
+    : p.status==='manual'
     ? `<span class="chip chip-manual">Ручной расчёт — уточним цену в течение 24 ч</span>`
-    : p.status==='step'
-    ? `<span class="chip chip-manual">STEP/STP — габариты уточнит менеджер</span>`
     : `<span class="chip chip-ready">✓ Стоимость рассчитана</span>`;
 
   const analysingPrev = `
@@ -1291,10 +1285,14 @@ function buildCardHTML(p) {
          </div>
        </div>`;
 
-  const priceHTML = p.price>0
-    ? `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`
-    : p.status==='analysing'
+  const priceHTML = p.status==='analysing'
     ? `<span style="color:#9ca3af;font-size:13px;">Рассчитывается...</span>`
+    : p.status==='manual'
+    ? `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`
+    : p.unit_price > 0
+    ? (p.qty > 1
+        ? `<span style="font-size:12px;color:#6b7280;">${p.unit_price.toLocaleString('ru-RU')} ₽ × ${p.qty} шт = </span><span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`
+        : `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`)
     : `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`;
 
   return `<div class="part-card">
@@ -1308,7 +1306,7 @@ function buildCardHTML(p) {
         <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм<br><span style="font-size:11px;color:#f59e0b;">⚠ Убедитесь, что файл экспортирован в мм</span></span></div>
         <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
-        <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" onchange="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
+        <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" oninput="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
         <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
         ${(p.status==='manual'||p.status==='step') ? `
         <div style="margin:10px 18px 14px;padding:12px 14px;background:#fff8ed;border:1px solid #fcd34d;border-radius:8px;">
