@@ -497,7 +497,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </a>
       <a href="quote.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 8l-4-4-4 4M12 4v12"/></svg>
-        <span>Новый заказ</span>
+        <span>Новый запрос</span>
       </a>
       <a href="projects.html" class="nav-link">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
@@ -533,7 +533,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div class="db-topbar-right">
         <a href="quote.html" class="btn btn-primary">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          Новый заказ
+          Новый запрос
         </a>
       </div>
     </div>
@@ -702,7 +702,7 @@ async function renderProjects() {
     const all = projects.sort((a,b)=>b.id-a.id).slice(0,5);
 
     if(!all.length) {
-      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
+      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><p style="font-size:13px;color:#374151;margin-bottom:4px;">Проектов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Загрузите первый чертёж</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый запрос →</a></div>`;
       return;
     }
     const ICONS={cnc_mill:'⚙️',cnc_turn:'🔩',fdm:'🖨️',sla:'🖨️',sls:'🖨️',mjf:'🖨️',laser:'✂️',other:'📋'};
@@ -732,7 +732,7 @@ async function renderOrders() {
     const orders = (data.orders||[]).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,5);
 
     if (!orders.length) {
-      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><p style="font-size:13px;color:#374151;margin-bottom:4px;">Заказов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Оформите первый заказ</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый заказ →</a></div>`;
+      rows.innerHTML=`<div style="padding:36px 20px;text-align:center;"><p style="font-size:13px;color:#374151;margin-bottom:4px;">Заказов пока нет</p><p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Оформите первый заказ</p><a href="quote.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#071f2a;color:#7dc3fd;border-radius:7px;font-size:13px;font-weight:600;text-decoration:none;">Новый запрос →</a></div>`;
       return;
     }
 

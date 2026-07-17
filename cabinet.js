@@ -12,7 +12,7 @@ const LANG = {
     nav_support:   'Поддержка',
     nav_logout:    'Выйти',
     role_client:   'Клиент',
-    new_order:     'Новый заказ',
+    new_order:     'Новый запрос',
   },
   en: {
     nav_dashboard: 'Dashboard',
