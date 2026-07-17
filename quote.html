@@ -888,6 +888,8 @@ async function addToQuote(input) {
       parseGeometry(url, isObj).then(geo => {
         part.dims=geo.dims; part.volume=geo.volume;
         part.weight=calcWeight(part); part.status='ready';
+        const maxDim = Math.max(parseFloat(part.dims.x)||0, parseFloat(part.dims.y)||0, parseFloat(part.dims.z)||0);
+        part.scaleWarning = maxDim > 0 && maxDim < 10;
         refreshCard(part);
         calcPrice(part).then(()=>{ refreshCard(part); updateSummary(); });
       });
@@ -925,6 +927,8 @@ async function startCalculation() {
       parseGeometry(url, isObj).then(geo => {
         part.dims=geo.dims; part.volume=geo.volume;
         part.weight=calcWeight(part); part.status='ready';
+        const maxDim = Math.max(parseFloat(part.dims.x)||0, parseFloat(part.dims.y)||0, parseFloat(part.dims.z)||0);
+        part.scaleWarning = maxDim > 0 && maxDim < 10;
         refreshCard(part);
         calcPrice(part).then(()=>{ refreshCard(part); updateSummary(); });
       });
@@ -1304,7 +1308,9 @@ function buildCardHTML(p) {
         ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Заполнение</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'infill',parseInt(this.value))"><option value="20" ${(p.infill||20)===20?'selected':''}>20%</option><option value="50" ${(p.infill||20)===50?'selected':''}>50%</option><option value="80" ${(p.infill||20)===80?'selected':''}>80%</option><option value="100" ${(p.infill||20)===100?'selected':''}>100%</option></select></span></div>`:''}
         <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
         <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
-        <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм<br><span style="font-size:11px;color:#f59e0b;">⚠ Убедитесь, что файл экспортирован в мм</span></span></div>
+        <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм${p.scaleWarning
+          ? `<br><span style="font-size:11px;color:#dc2626;">⚠ Деталь очень маленькая — возможно, файл экспортирован в сантиметрах.</span><br><button onclick="rescalePart(${JSON.stringify(p.id)})" style="margin-top:4px;font-size:11px;padding:3px 8px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:4px;cursor:pointer;">Пересчитать ×10 (см → мм)</button>`
+          : ''}</span></div>
         <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
         <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" oninput="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
         <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
@@ -1343,6 +1349,14 @@ function refreshCard(p) {
 }
 
 // ---- PARAM CHANGES ----
+function rescalePart(id){
+  const p=parts.find(x=>x.id===id); if(!p) return;
+  p.dims={x:(parseFloat(p.dims.x)*10).toFixed(1),y:(parseFloat(p.dims.y)*10).toFixed(1),z:(parseFloat(p.dims.z)*10).toFixed(1)};
+  p.volume=p.volume*1000;
+  p.scaleWarning=false;
+  p.weight=calcWeight(p);
+  calcPrice(p).then(()=>{refreshCard(p);updateSummary();});
+}
 function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];if(v==='fdm')p.infill=p.infill||20;const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
