@@ -608,8 +608,8 @@
         <div class="s-total"><span>Стоимость</span><span id="s-price">0 ₽</span></div>
         <div class="s-actions">
           <button class="btn-checkout" onclick="checkout()">Оформить заказ →</button>
+          <span id="autosave-indicator" style="font-size:12px;color:#9ca3af;align-self:center;"></span>
           <button class="btn-save" onclick="downloadPDF()">↓ Скачать КП (PDF)</button>
-          <button class="btn-save" onclick="saveProject()">Сохранить проект</button>
         </div>
       </div>
     </div>
@@ -1441,6 +1441,7 @@ function updateSummary(){
   } else {
     warn?.remove();
   }
+  scheduleAutoSave();
 }
 
 // ---- 3D ----
@@ -1609,32 +1610,56 @@ async function checkout(){
   location.href='orders.html';
 }
 
-async function saveProject(){
-  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
+function buildProjectData(status) {
   const userId = localStorage.getItem('userId');
   const totalPrice = parts.reduce((s,p)=>s+p.price,0);
   const totalWeight = parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0).toFixed(1)+' г';
-
-  const projectData = {
+  return {
     action: 'createProject',
     userId,
     quoteNumber: quoteNum,
     totalWeight,
     totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
     leadTime: '3–7 дней',
-    status: 'Черновик',
+    status: status||'Черновик',
     parts: parts.map(p=>({
       name:p.name, tech:p.tech, material:p.material, infill:p.infill||null,
       finish:p.finish, qty:p.qty, price:p.price,
       dims:p.dims, weight:p.weight
     }))
   };
+}
 
+let _autoSaveTimer = null;
+function scheduleAutoSave() {
+  if (!parts.length) return;
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(async () => {
+    const indicator = document.getElementById('autosave-indicator');
+    try {
+      if (indicator) { indicator.textContent = 'Сохранение...'; indicator.style.color='#9ca3af'; }
+      const r = await fetch(AUTH_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(buildProjectData('Черновик'))
+      });
+      const data = await r.json();
+      if (indicator) {
+        indicator.textContent = data.success ? '✓ Сохранено' : '⚠ Не сохранено';
+        indicator.style.color = data.success ? '#16a34a' : '#dc2626';
+        setTimeout(()=>{ if(indicator) indicator.textContent=''; }, 3000);
+      }
+    } catch {
+      if (indicator) { indicator.textContent = '⚠ Ошибка сохранения'; indicator.style.color='#dc2626'; }
+    }
+  }, 1500); // ждём 1.5 сек после последнего изменения
+}
+
+async function saveProject(){
+  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
   try {
     const r = await fetch(AUTH_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(projectData)
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(buildProjectData('Черновик'))
     });
     const data = await r.json();
     if(data.success) {
