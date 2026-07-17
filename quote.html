@@ -703,19 +703,14 @@ function partsPerPlate(p) {
 
 // Отделки: зависят от группы материала и технологии
 function getFinishes(tech, material) {
-  const base = [{v:'standard',l:'Стандарт (как после печати)'}];
-  base.push({v:'sand',l:'Шлифовка поверхности'});
-  base.push({v:'paint',l:'Грунтовка + покраска'});
-  if (tech==='fdm' && /ABS/i.test(material))
+  const base = [{v:'standard',l:'Без постобработки (как после печати)'}];
+  if (tech !== 'fdm') return base;
+  base.push({v:'sand',l:'Шлифовка (наждачная бумага P120–P800)'});
+  base.push({v:'paint',l:'Грунтовка + покраска (аэрозоль)'});
+  if (/ABS/i.test(material))
     base.push({v:'acetone',l:'Полировка парами ацетона (только ABS)'});
-  if (tech==='sls')
-    base.push({v:'dye',l:'Окраска в массе'});
   return base;
 }
-const TOLS = [
-  {v:'std',l:'Стандарт (±0.5 мм)'},{v:'med',l:'Средний (±0.2 мм)'},
-  {v:'fine',l:'Точный (±0.1 мм)'},{v:'ultra',l:'Высокоточный (±0.05 мм)'},
-];
 // Плотность по группе материала (г/см³) — ключи совпадают с MAT_GROUP()
 const DENS_BY_GROUP = {aluminum:2.72,steel:7.85,stainless:7.95,brass:8.50,copper:8.94,titanium:4.43,plastic:1.15};
 function calcDens(material) {
@@ -1106,7 +1101,6 @@ function openSpecEditor(id) {
   const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
   const fins     = getFinishes(p.tech, p.material);
   const finOpts  = fins.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
-  const tolOpts  = TOLS.map(t=>`<option value="${t.v}"${t.v===p.tolerance?' selected':''}>${t.l}</option>`).join('');
   const isStlObj = /\.(stl|obj)$/i.test(p.name);
 
   document.getElementById('spec-editor-content').innerHTML = `
@@ -1153,8 +1147,8 @@ function openSpecEditor(id) {
           <select class="spec-select" id="se-fin">${finOpts}</select>
         </div>
         <div class="spec-field">
-          <div class="spec-field-label">Допуск</div>
-          <select class="spec-select" id="se-tol">${tolOpts}</select>
+          <div class="spec-field-label">Точность</div>
+          <div style="padding:8px 0;font-size:13px;color:#6b7280;">±0.3 мм — стандарт FDM-печати</div>
         </div>
         <div class="spec-field" style="display:flex;gap:24px;">
           <div>
@@ -1301,7 +1295,7 @@ function saveSpecEditor() {
   p.infill    = parseInt(document.getElementById('se-infill')?.value||'20')||20;
   p.color     = document.getElementById('se-color')?.value || (COLORS[p.material]||['Черный'])[0];
   p.finish    = document.getElementById('se-fin').value;
-  p.tolerance = document.getElementById('se-tol').value;
+  p.tolerance = 'std';
   p.threads   = parseInt(document.getElementById('se-threads').value)||0;
   p.inserts   = parseInt(document.getElementById('se-inserts').value)||0;
   p.notes     = document.getElementById('se-notes').value;
@@ -1337,7 +1331,6 @@ function buildCardHTML(p) {
   const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
   const fins     = getFinishes(p.tech, p.material);
   const finOpts  = fins.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
-  const tolOpts  = TOLS.map(t=>`<option value="${t.v}"${t.v===p.tolerance?' selected':''}>${t.l}</option>`).join('');
   const isStl = /\.(stl|obj)$/i.test(p.name);
 
   const statusHTML = p.status==='analysing'
@@ -1414,7 +1407,7 @@ function buildCardHTML(p) {
         ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Цвет</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'color',this.value)">${(COLORS[p.material]||['Черный']).map(c=>`<option${c===p.color?' selected':''}>${c}</option>`).join('')}</select></span></div>`:''}
         ${p.tech==='fdm'?`<div class="spec-row"><span class="spec-label">Заполнение</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'infill',parseInt(this.value))"><option value="20" ${(p.infill||20)===20?'selected':''}>20%</option><option value="50" ${(p.infill||20)===50?'selected':''}>50%</option><option value="80" ${(p.infill||20)===80?'selected':''}>80%</option><option value="100" ${(p.infill||20)===100?'selected':''}>100%</option></select></span></div>`:''}
         <div class="spec-row"><span class="spec-label">Отделка</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'finish',this.value)">${finOpts}</select></span></div>
-        <div class="spec-row"><span class="spec-label">Допуск</span><span class="spec-val"><select onchange="chProp(${JSON.stringify(p.id)},'tolerance',this.value)">${tolOpts}</select></span></div>
+        <div class="spec-row"><span class="spec-label">Точность</span><span class="spec-val" style="color:#6b7280;font-size:12px;">±0.3 мм — стандарт FDM</span></div>
         <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм${p.scaleWarning
           ? `<br><span style="font-size:11px;color:#dc2626;">⚠ Деталь очень маленькая — возможно, файл экспортирован в сантиметрах.</span><br><button onclick="rescalePart(${JSON.stringify(p.id)})" style="margin-top:4px;font-size:11px;padding:3px 8px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:4px;cursor:pointer;">Пересчитать ×10 (см → мм)</button>`
           : ''}</span></div>
