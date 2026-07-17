@@ -1074,7 +1074,8 @@ async function calcPrice(p) {
   const material_cost  = actual_weight_g * (matCostPerKg / 1000);
   const electricity    = print_time_h * POWER_KW * ELEC_RATE;
   const depreciation   = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
-  const operator_cost  = 150 / Math.pow(p.qty, 0.176); // 150₽ при 1шт, 100₽ при 10шт
+  // operator_cost фиксируется при qty=1 — иначе base_unit меняется при смене количества и вся шкала ползёт
+  const operator_cost  = 150;
 
   const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation + operator_cost) * MARKUP));
   const plateCapacity = partsPerPlate(p);
