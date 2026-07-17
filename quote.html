@@ -772,10 +772,12 @@ async function init() {
             infill: p.infill||20,
             finish: p.finish||'none', qty: p.qty||1, price: p.price||0,
             dims: p.dims||{x:'—',y:'—',z:'—'}, weight: p.weight||0,
+            volume: p.volume||0,
             notes: p.notes||'', fileUrl: null, localUrl: null
           };
           parts.push(part);
           appendPartCard(part);
+          calcPrice(part).then(()=>{ refreshCard(part); });
         });
         if (parts.length) {
           document.getElementById('upload-section').style.display='none';
@@ -1580,7 +1582,7 @@ async function checkout(){
         totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
         leadTime: '3–7 дней',
         status: 'Новый',
-        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,infill:p.infill||null,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,notes:p.notes||''})),
+        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,infill:p.infill||null,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,volume:p.volume||0,notes:p.notes||''})),
         note
       })
     });
@@ -1625,7 +1627,7 @@ function buildProjectData(status) {
     parts: parts.map(p=>({
       name:p.name, tech:p.tech, material:p.material, infill:p.infill||null,
       finish:p.finish, qty:p.qty, price:p.price,
-      dims:p.dims, weight:p.weight
+      dims:p.dims, weight:p.weight, volume:p.volume||0
     }))
   };
 }
