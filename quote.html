@@ -1030,14 +1030,26 @@ function getPriceTiers(baseUnit, plateCapacity) {
 
 function recoverVolume(p) {
   if (p.volume > 0) return;
+  // Вариант 1: восстановить из сохранённого веса
   const wStr = String(p.weight || '');
-  if (!wStr || wStr === '—') return;
-  let grams = parseFloat(wStr);
-  if (isNaN(grams) || grams <= 0) return;
-  if (wStr.includes('кг')) grams *= 1000;
-  const density = calcDens(p.material);
-  const qty = p.qty || 1;
-  p.volume = grams / (density * 0.001 * qty); // восстанавливаем mm³ из веса
+  if (wStr && wStr !== '—') {
+    let grams = parseFloat(wStr);
+    if (!isNaN(grams) && grams > 0) {
+      if (wStr.includes('кг')) grams *= 1000;
+      const density = calcDens(p.material);
+      if (density > 0 && (p.qty || 1) > 0) {
+        p.volume = grams / (density * 0.001 * (p.qty || 1));
+        return;
+      }
+    }
+  }
+  // Вариант 2: приблизительная оценка по габаритам (30% от параллелепипеда)
+  const dx = parseFloat(p.dims?.x) || 0;
+  const dy = parseFloat(p.dims?.y) || 0;
+  const dz = parseFloat(p.dims?.z) || 0;
+  if (dx > 0 && dy > 0 && dz > 0) {
+    p.volume = dx * dy * dz * 0.30;
+  }
 }
 
 async function calcPrice(p) {
@@ -1428,7 +1440,7 @@ function rescalePart(id){
   calcPrice(p).then(()=>{refreshCard(p);updateSummary();});
 }
 function chTech(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.tech=v;p.material=(MATS[v]||['Уточнить'])[0];if(v==='fdm')p.infill=p.infill||20;const fins=getFinishes(v,p.material);p.finish=fins[0].v;p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
-function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
+function chProp(id,k,v){const p=parts.find(x=>x.id===id);if(!p)return;p[k]=v;if(k==='material'){recoverVolume(p);p.weight=calcWeight(p);const fins=getFinishes(p.tech,v);if(!fins.find(f=>f.v===p.finish))p.finish=fins[0].v;}calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function chQty(id,v){const p=parts.find(x=>x.id===id);if(!p)return;p.qty=Math.max(1,parseInt(v)||1);p.weight=calcWeight(p);calcPrice(p).then(()=>{refreshCard(p);updateSummary();});}
 function dupPart(id){const p=parts.find(x=>x.id===id);if(!p)return;const n={...p,id:Date.now()+Math.random(),name:'Копия: '+p.name};parts.push(n);appendPartCard(n);updateSummary();}
 function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=>x.id===id);if(p?.localUrl)URL.revokeObjectURL(p.localUrl);parts=parts.filter(x=>x.id!==id);document.getElementById('pw-'+id)?.remove();if(!parts.length){document.getElementById('upload-section').style.display='';document.getElementById('parts-section').style.display='none';}updateSummary();}
