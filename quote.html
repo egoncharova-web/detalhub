@@ -1030,12 +1030,25 @@ function getPriceTiers(baseUnit, plateCapacity) {
   }));
 }
 
+function recoverVolume(p) {
+  if (p.volume > 0) return;
+  const wStr = String(p.weight || '');
+  if (!wStr || wStr === '—') return;
+  let grams = parseFloat(wStr);
+  if (isNaN(grams) || grams <= 0) return;
+  if (wStr.includes('кг')) grams *= 1000;
+  const density = calcDens(p.material);
+  const qty = p.qty || 1;
+  p.volume = grams / (density * 0.001 * qty); // восстанавливаем mm³ из веса
+}
+
 async function calcPrice(p) {
   if (p.tech !== 'fdm') {
     p.price = 0;
     p.status = 'manual';
     return;
   }
+  recoverVolume(p); // восстановить объём из веса если не сохранён
   const volume_cm3 = (p.volume || 0) / 1000; // mm³ → cm³
   if (volume_cm3 <= 0) return; // нет объёма — оставляем существующую цену
 
