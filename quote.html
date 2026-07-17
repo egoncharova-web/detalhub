@@ -681,6 +681,17 @@ const POWER_KW = 0.25;       // кВт (Bambu Lab средн.)
 const ELEC_RATE = 6;         // руб/кВт·ч
 const MARKUP = 1.28;         // наценка 28%
 const PRINT_SPEED_CM3_H = 70; // см³/ч материала (Bambu Lab P2S ~70% от макс 40мм³/с)
+const PLATE_W = 256; // мм — ширина платформы P2S
+const PLATE_D = 256; // мм — глубина платформы P2S
+const PART_GAP = 5;  // мм — зазор между деталями
+
+function partsPerPlate(p) {
+  const dx = parseFloat(p.dims.x) || 50;
+  const dy = parseFloat(p.dims.y) || 50;
+  const cols = Math.floor((PLATE_W + PART_GAP) / (Math.max(dx, 5) + PART_GAP));
+  const rows = Math.floor((PLATE_D + PART_GAP) / (Math.max(dy, 5) + PART_GAP));
+  return Math.max(1, cols * rows);
+}
 
 // Отделки: зависят от группы материала и технологии
 function getFinishes(tech, material) {
@@ -1009,10 +1020,12 @@ async function calcPrice(p) {
 
   const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
 
-  // Скидка на партию: 0% при 1 шт → до 35% при 200+ шт
-  // Формула: скидка = 35% × (1 − e^(−qty/40))
+  // Скидка на партию: растёт до plateCapacity (сколько деталей влезает на платформу)
+  // При qty = plateCapacity скидка ~33%, дальше почти не меняется
+  const plateCapacity = partsPerPlate(p);
+  p.plateCapacity = plateCapacity;
   const MAX_DISCOUNT = 0.35;
-  const batchDiscount = MAX_DISCOUNT * (1 - Math.exp(-p.qty / 40));
+  const batchDiscount = MAX_DISCOUNT * (1 - Math.exp(-p.qty / (plateCapacity / 3)));
   p.unit_price = Math.max(150, Math.round(base_unit * (1 - batchDiscount)));
   p.price = p.unit_price * p.qty;
 }
@@ -1301,8 +1314,8 @@ function buildCardHTML(p) {
     ? `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`
     : p.unit_price > 0
     ? (p.qty > 1
-        ? `<span style="font-size:12px;color:#6b7280;">${p.unit_price.toLocaleString('ru-RU')} ₽ × ${p.qty} шт = </span><span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`
-        : `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span>`)
+        ? `<span style="font-size:12px;color:#6b7280;">${p.unit_price.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = </span><span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span><br><span style="font-size:11px;color:#9ca3af;">на платформе влезает ~${p.plateCapacity||1} шт</span>`
+        : `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span><br><span style="font-size:11px;color:#9ca3af;">на платформе влезает ~${p.plateCapacity||1} шт</span>`)
     : `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`;
 
   return `<div class="part-card">
