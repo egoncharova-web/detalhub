@@ -671,15 +671,15 @@ const MATS = {
   fdm: ['PLA', 'PETG', 'ABS'],
 };
 
-// Себестоимость FDM материалов (руб/кг)
-const FDM_MAT_COST = { 'PLA': 1000, 'PETG': 1200, 'ABS': 1100 };
+// Себестоимость FDM материалов (руб/кг) — средняя цена по рынку РФ
+const FDM_MAT_COST = { 'PLA': 900, 'PETG': 750, 'ABS': 900 };
 // Плотность FDM материалов (г/см³)
 const FDM_DENSITY  = { 'PLA': 1.24, 'PETG': 1.27, 'ABS': 1.05 };
 const PRINTER_COST = 100000; // руб
 const PRINTER_LIFE_H = 5000; // часов ресурса
 const POWER_KW = 0.25;       // кВт (Bambu Lab средн.)
 const ELEC_RATE = 6;         // руб/кВт·ч
-const MARKUP = 1.28;         // наценка 28%
+const MARKUP = 1.30;         // наценка 30% (маржа + налоги)
 const PRINT_SPEED_CM3_H = 70; // см³/ч материала (Bambu Lab P2S ~70% от макс 40мм³/с)
 const PLATE_W = 256; // мм — ширина платформы P2S
 const PLATE_D = 256; // мм — глубина платформы P2S
@@ -997,6 +997,30 @@ function calcWeight(p) {
   return g >= 1000 ? (g/1000).toFixed(2)+' кг' : g.toFixed(1)+' г';
 }
 
+function calcUnitPriceForQty(baseUnit, plateCapacity, qty) {
+  const MAX_DISCOUNT = 0.35;
+  const discount = MAX_DISCOUNT * (1 - Math.exp(-qty / (plateCapacity / 3)));
+  return Math.max(150, Math.round(baseUnit * (1 - discount)));
+}
+
+function getPriceTiers(baseUnit, plateCapacity) {
+  // 4 ступени: 1 шт, ~четверть платформы, ~половина, полная платформа
+  const cap = plateCapacity;
+  const t2 = Math.max(2,  Math.round(cap * 0.25));
+  const t3 = Math.max(t2+1, Math.round(cap * 0.5));
+  const t4 = Math.max(t3+1, cap);
+  const tiers = [
+    { from: 1,    to: t2-1,  qty: 1  },
+    { from: t2,   to: t3-1,  qty: t2 },
+    { from: t3,   to: t4-1,  qty: t3 },
+    { from: t4,   to: null,  qty: t4 },
+  ].filter((t,i,arr) => i===0 || t.from <= t.to || t.to===null);
+  return tiers.map(t => ({
+    ...t,
+    unitPrice: calcUnitPriceForQty(baseUnit, plateCapacity, t.qty)
+  }));
+}
+
 async function calcPrice(p) {
   if (p.tech !== 'fdm') {
     p.price = 0;
@@ -1019,14 +1043,10 @@ async function calcPrice(p) {
   const depreciation  = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
 
   const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
-
-  // Скидка на партию: растёт до plateCapacity (сколько деталей влезает на платформу)
-  // При qty = plateCapacity скидка ~33%, дальше почти не меняется
   const plateCapacity = partsPerPlate(p);
   p.plateCapacity = plateCapacity;
-  const MAX_DISCOUNT = 0.35;
-  const batchDiscount = MAX_DISCOUNT * (1 - Math.exp(-p.qty / (plateCapacity / 3)));
-  p.unit_price = Math.max(150, Math.round(base_unit * (1 - batchDiscount)));
+  p.tiers = getPriceTiers(base_unit, plateCapacity);
+  p.unit_price = calcUnitPriceForQty(base_unit, plateCapacity, p.qty);
   p.price = p.unit_price * p.qty;
 }
 
@@ -1313,9 +1333,19 @@ function buildCardHTML(p) {
     : p.status==='manual'
     ? `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`
     : p.unit_price > 0
-    ? (p.qty > 1
-        ? `<span style="font-size:12px;color:#6b7280;">${p.unit_price.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = </span><span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span><br><span style="font-size:11px;color:#9ca3af;">на платформе влезает ~${p.plateCapacity||1} шт</span>`
-        : `<span class="chip-price">${p.price.toLocaleString('ru-RU')} ₽</span><br><span style="font-size:11px;color:#9ca3af;">на платформе влезает ~${p.plateCapacity||1} шт</span>`)
+    ? (() => {
+        const tiersHTML = (p.tiers||[]).map(t => {
+          const active = p.qty >= t.from && (t.to===null || p.qty <= t.to);
+          const label = t.to===null ? `от ${t.from} шт` : t.from===t.to ? `${t.from} шт` : `${t.from}–${t.to} шт`;
+          const pct = t === (p.tiers||[])[0] ? '' : `<span style="color:#16a34a;font-size:10px;margin-left:4px;">−${Math.round((1-t.unitPrice/(p.tiers[0].unitPrice||1))*100)}%</span>`;
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid ${active?'#bfdbfe':'#f3f4f6'};background:${active?'#eff6ff':'transparent'};border-radius:4px;padding:3px 6px;">
+            <span style="font-size:11px;color:${active?'#1d4ed8':'#6b7280'};font-weight:${active?'700':'400'};">${label}</span>
+            <span style="font-size:11px;color:${active?'#1d4ed8':'#374151'};font-weight:${active?'700':'600'};">${t.unitPrice.toLocaleString('ru-RU')} ₽/шт${pct}</span>
+          </div>`;
+        }).join('');
+        return `<div style="margin-top:4px;">${tiersHTML}</div>
+        <div style="margin-top:6px;font-size:13px;font-weight:700;color:#071f2a;">${p.unit_price.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = <span style="color:#2563eb;">${p.price.toLocaleString('ru-RU')} ₽</span></div>`;
+      })()
     : `<span style="color:#9ca3af;font-size:13px;">По запросу</span>`;
 
   return `<div class="part-card">
