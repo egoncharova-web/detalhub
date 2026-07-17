@@ -680,7 +680,8 @@ const PRINTER_LIFE_H = 5000;   // часов ресурса
 const POWER_KW  = 0.25;        // кВт (Bambu Lab средн.)
 const ELEC_RATE = 6;           // руб/кВт·ч
 const MARKUP    = 1.30;        // наценка 30% (маржа + налоги)
-const OPERATOR_COST_BATCH = 150; // руб на партию — работа мастера (подготовка + снятие)
+// Работа мастера: 150₽/шт при 1 шт, 100₽/шт при 10 шт, плавно убывает
+// Формула: 150 / qty^0.176  (выведена из двух точек: qty=1→150, qty=10→100)
 const PRINT_SPEED_CM3_H = 70; // см³/ч материала (Bambu Lab P2S ~70% от макс 40мм³/с)
 const PLATE_W = 256; // мм — ширина платформы P2S
 const PLATE_D = 256; // мм — глубина платформы P2S
@@ -1042,7 +1043,7 @@ async function calcPrice(p) {
   const material_cost  = actual_weight_g * (matCostPerKg / 1000);
   const electricity    = print_time_h * POWER_KW * ELEC_RATE;
   const depreciation   = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
-  const operator_cost  = OPERATOR_COST_BATCH / p.qty; // 150₽/партию ÷ кол-во
+  const operator_cost  = 150 / Math.pow(p.qty, 0.176); // 150₽ при 1шт, 100₽ при 10шт
 
   const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation + operator_cost) * MARKUP));
   const plateCapacity = partsPerPlate(p);
