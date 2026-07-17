@@ -1005,28 +1005,39 @@ function calcWeight(p) {
   return fmtG(total_g);
 }
 
+// Скидка зависит от количества запусков принтера (плат), а не от количества деталей.
+// Так одинаково работает для маленьких и больших деталей.
+function plateCount(qty, plateCapacity) {
+  return Math.ceil(qty / Math.max(1, plateCapacity));
+}
+
+function discountForPlates(plates) {
+  if (plates >= 7) return 0.20;
+  if (plates >= 4) return 0.13;
+  if (plates >= 2) return 0.07;
+  return 0;
+}
+
 function calcUnitPriceForQty(baseUnit, plateCapacity, qty) {
-  const MAX_DISCOUNT = 0.35;
-  const discount = MAX_DISCOUNT * (1 - Math.exp(-qty / (plateCapacity / 3)));
+  const discount = discountForPlates(plateCount(qty, plateCapacity));
   return Math.max(150, Math.round(baseUnit * (1 - discount)));
 }
 
 function getPriceTiers(baseUnit, plateCapacity) {
-  // 4 ступени: 1 шт, ~четверть платформы, ~половина, полная платформа
-  const cap = plateCapacity;
-  const t2 = Math.max(2,  Math.round(cap * 0.25));
-  const t3 = Math.max(t2+1, Math.round(cap * 0.5));
-  const t4 = Math.max(t3+1, cap);
-  const tiers = [
-    { from: 1,    to: t2-1,  qty: 1  },
-    { from: t2,   to: t3-1,  qty: t2 },
-    { from: t3,   to: t4-1,  qty: t3 },
-    { from: t4,   to: null,  qty: t4 },
-  ].filter((t,i,arr) => i===0 || t.from <= t.to || t.to===null);
-  return tiers.map(t => ({
-    ...t,
-    unitPrice: calcUnitPriceForQty(baseUnit, plateCapacity, t.qty)
-  }));
+  const cap = Math.max(1, plateCapacity);
+  // Границы: 1 плата, 2 платы, 4 платы, 7 плат
+  const t1to = cap;                      // до конца 1-й платы
+  const t2from = cap + 1;               // начало 2-й платы
+  const t2to = cap * 3;                 // конец 3-й платы
+  const t3from = cap * 3 + 1;
+  const t3to = cap * 6;
+  const t4from = cap * 7;
+  return [
+    { from: 1,       to: t1to,   qty: 1,       plates: 1,    discount: 0    },
+    { from: t2from,  to: t2to,   qty: t2from,  plates: 2,    discount: 0.07 },
+    { from: t3from,  to: t3to,   qty: t3from,  plates: 4,    discount: 0.13 },
+    { from: t4from,  to: null,   qty: t4from,  plates: 7,    discount: 0.20 },
+  ].map(t => ({ ...t, unitPrice: Math.max(150, Math.round(baseUnit * (1 - t.discount))) }));
 }
 
 function recoverVolume(p) {
@@ -1388,9 +1399,10 @@ function buildCardHTML(p) {
         const tiersHTML = (p.tiers||[]).map(t => {
           const active = p.qty >= t.from && (t.to===null || p.qty <= t.to);
           const label = t.to===null ? `от ${t.from} шт` : t.from===t.to ? `${t.from} шт` : `${t.from}–${t.to} шт`;
-          const pct = t === (p.tiers||[])[0] ? '' : `<span style="color:#16a34a;font-size:10px;margin-left:4px;">−${Math.round((1-t.unitPrice/(p.tiers[0].unitPrice||1))*100)}%</span>`;
-          return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid ${active?'#bfdbfe':'#f3f4f6'};background:${active?'#eff6ff':'transparent'};border-radius:4px;padding:3px 6px;">
-            <span style="font-size:11px;color:${active?'#1d4ed8':'#6b7280'};font-weight:${active?'700':'400'};">${label}</span>
+          const plateLabel = `<span style="color:#9ca3af;font-size:10px;margin-left:6px;">${t.plates} ${t.plates===1?'запуск':t.plates<5?'запуска':'запусков'}</span>`;
+          const pct = t.discount > 0 ? `<span style="color:#16a34a;font-size:10px;margin-left:4px;">−${Math.round(t.discount*100)}%</span>` : '';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;background:${active?'#eff6ff':'transparent'};border-radius:4px;padding:3px 6px;margin-bottom:2px;">
+            <span style="font-size:11px;color:${active?'#1d4ed8':'#6b7280'};font-weight:${active?'700':'400'};">${label}${plateLabel}</span>
             <span style="font-size:11px;color:${active?'#1d4ed8':'#374151'};font-weight:${active?'700':'600'};">${t.unitPrice.toLocaleString('ru-RU')} ₽/шт${pct}</span>
           </div>`;
         }).join('');
