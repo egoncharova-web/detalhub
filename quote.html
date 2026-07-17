@@ -994,11 +994,16 @@ function parseGeometry(url, isObj) {
   });
 }
 
+function fmtG(g) { return g >= 1000 ? (g/1000).toFixed(2)+' кг' : g.toFixed(1)+' г'; }
+
 function calcWeight(p) {
   if(!p.volume) return '—';
   const d = calcDens(p.material);
-  const g = p.volume * d * 0.001 * p.qty;
-  return g >= 1000 ? (g/1000).toFixed(2)+' кг' : g.toFixed(1)+' г';
+  const unit_g = p.volume * d * 0.001;
+  const total_g = unit_g * p.qty;
+  p.unit_weight_g = unit_g;
+  p.weight_g = total_g;
+  return fmtG(total_g);
 }
 
 function calcUnitPriceForQty(baseUnit, plateCapacity, qty) {
@@ -1365,7 +1370,7 @@ function buildCardHTML(p) {
         <div class="spec-row"><span class="spec-label">Габариты</span><span class="spec-val">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм${p.scaleWarning
           ? `<br><span style="font-size:11px;color:#dc2626;">⚠ Деталь очень маленькая — возможно, файл экспортирован в сантиметрах.</span><br><button onclick="rescalePart(${JSON.stringify(p.id)})" style="margin-top:4px;font-size:11px;padding:3px 8px;background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:4px;cursor:pointer;">Пересчитать ×10 (см → мм)</button>`
           : ''}</span></div>
-        <div class="spec-row"><span class="spec-label">Вес детали</span><span class="spec-val">${p.weight}</span></div>
+        <div class="spec-row"><span class="spec-label">Вес</span><span class="spec-val">${p.weight==='—' ? '—' : p.qty > 1 ? `1 шт: ${fmtG(p.unit_weight_g||0)} / итого ${p.qty} шт: ${fmtG(p.weight_g||0)}` : fmtG(p.weight_g||0)}</span></div>
         <div class="spec-row"><span class="spec-label">Количество</span><span class="spec-val"><input type="number" min="1" value="${p.qty}" style="width:80px;" oninput="chQty(${JSON.stringify(p.id)},this.value)"></span></div>
         <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val">${priceHTML}</span></div>
         ${(p.status==='manual'||p.status==='step') ? `
@@ -1421,12 +1426,11 @@ function delPart(id){if(!confirm('Удалить?'))return;const p=parts.find(x=
 function updateSummary(){
   const total=parts.reduce((s,p)=>s+p.price,0);
   const qty=parts.reduce((s,p)=>s+p.qty,0);
-  const wArr=parts.map(p=>parseFloat(p.weight)).filter(v=>!isNaN(v));
-  const w=wArr.reduce((s,v)=>s+v,0);
+  const w=parts.reduce((s,p)=>s+(p.weight_g||0),0);
   const hasManual=parts.some(p=>p.status==='manual'||p.status==='step');
   document.getElementById('s-parts').textContent=parts.length;
   document.getElementById('s-qty').textContent=qty+' шт.';
-  document.getElementById('s-weight').textContent=wArr.length?(w>=1000?(w/1000).toFixed(2)+' кг':w.toFixed(1)+' г'):'—';
+  document.getElementById('s-weight').textContent=w>0?fmtG(w):'—';
   document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
   document.getElementById('s-lead').textContent=parts.length?'3–7 дней':'—';
 
