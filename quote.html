@@ -672,14 +672,16 @@ const MATS = {
 };
 
 // Себестоимость FDM материалов (руб/кг) — средняя цена по рынку РФ
-const FDM_MAT_COST = { 'PLA': 900, 'PETG': 750, 'ABS': 900 };
+const FDM_MAT_COST = { 'PLA': 900, 'PETG': 880, 'ABS': 900 };
 // Плотность FDM материалов (г/см³)
 const FDM_DENSITY  = { 'PLA': 1.24, 'PETG': 1.27, 'ABS': 1.05 };
-const PRINTER_COST = 100000; // руб
-const PRINTER_LIFE_H = 5000; // часов ресурса
-const POWER_KW = 0.25;       // кВт (Bambu Lab средн.)
-const ELEC_RATE = 6;         // руб/кВт·ч
-const MARKUP = 1.30;         // наценка 30% (маржа + налоги)
+const PRINTER_COST   = 100000; // руб
+const PRINTER_LIFE_H = 5000;   // часов ресурса
+const POWER_KW  = 0.25;        // кВт (Bambu Lab средн.)
+const ELEC_RATE = 6;           // руб/кВт·ч
+const MARKUP    = 1.30;        // наценка 30% (маржа + налоги)
+const OPERATOR_RATE     = 1500;     // руб/час — стоимость работы мастера
+const OPERATOR_TIME_H   = 40 / 60; // 40 мин на партию (подготовка + снятие + контроль)
 const PRINT_SPEED_CM3_H = 70; // см³/ч материала (Bambu Lab P2S ~70% от макс 40мм³/с)
 const PLATE_W = 256; // мм — ширина платформы P2S
 const PLATE_D = 256; // мм — глубина платформы P2S
@@ -1038,11 +1040,12 @@ async function calcPrice(p) {
   const actual_weight_g = solid_weight_g * (0.25 + 0.75 * infill / 100);
   const print_time_h = actual_weight_g / density / PRINT_SPEED_CM3_H;
 
-  const material_cost = actual_weight_g * (matCostPerKg / 1000);
-  const electricity   = print_time_h * POWER_KW * ELEC_RATE;
-  const depreciation  = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
+  const material_cost  = actual_weight_g * (matCostPerKg / 1000);
+  const electricity    = print_time_h * POWER_KW * ELEC_RATE;
+  const depreciation   = print_time_h * (PRINTER_COST / PRINTER_LIFE_H);
+  const operator_cost  = (OPERATOR_RATE * OPERATOR_TIME_H) / p.qty; // 1000₽/партию ÷ кол-во
 
-  const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation) * MARKUP));
+  const base_unit = Math.max(200, Math.round((material_cost + electricity + depreciation + operator_cost) * MARKUP));
   const plateCapacity = partsPerPlate(p);
   p.plateCapacity = plateCapacity;
   p.tiers = getPriceTiers(base_unit, plateCapacity);
