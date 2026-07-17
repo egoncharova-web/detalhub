@@ -148,28 +148,36 @@ function renderList() {
     const lead = o.lead_time || '—';
     const qty = (o.parts||[]).reduce((s,p) => s+(p.qty||1), 0);
 
-    const TECH_LABELS = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',sla:'3D-печать SLA',sls:'3D-печать SLS',mjf:'3D-печать MJF',laser:'Лазерная резка',other:'Прочее'};
+    const TECH_LABELS = {cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',laser:'Лазерная резка',other:'Прочее'};
+    const FINISH_LABELS = {standard:'Без постобработки',sand:'Шлифовка',paint:'Грунтовка + покраска',acetone:'Полировка парами ацетона'};
+    const INFILL_LABELS = {20:'20% — минимальное',50:'50% — среднее',80:'80% — прочное',100:'100% — монолит'};
     const partsHtml = (o.parts||[]).map((p,i) => {
-      const dims = p.dims && p.dims.x && p.dims.x!=='—' ? `${p.dims.x}×${p.dims.y}×${p.dims.z} мм` : null;
+      const isFdm = p.tech === 'fdm';
+      const dims = p.dims && p.dims.x && p.dims.x!=='—' ? `${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм` : null;
+      const weightStr = p.weight && p.weight !== '—' ? (String(p.weight).includes('г') || String(p.weight).includes('кг') ? p.weight : p.weight + ' г') : null;
+      const unitPrice = p.unit_price || (p.price && p.qty ? Math.round(p.price / (p.qty||1)) : null);
       const rows = [
-        ['Технология', TECH_LABELS[p.tech]||p.tech||'—'],
         ['Материал', p.material||'—'],
-        ['Количество', `${p.qty||1} шт.`],
+        isFdm && p.color ? ['Цвет', p.color] : null,
+        isFdm ? ['Заполнение', INFILL_LABELS[p.infill||20] || `${p.infill||20}%`] : null,
+        p.finish ? ['Отделка', FINISH_LABELS[p.finish] || p.finish] : null,
+        isFdm ? ['Точность', '±0.3 мм — стандарт FDM'] : null,
         dims ? ['Габариты', dims] : null,
-        p.weight ? ['Вес', p.weight+' г'] : null,
-        p.finish ? ['Отделка', p.finish] : null,
-        p.tolerance ? ['Допуск', p.tolerance] : null,
-        p.color ? ['Цвет', p.color] : null,
+        weightStr ? ['Вес', p.qty > 1 ? `1 шт: ${weightStr}` : weightStr] : null,
         p.notes ? ['Примечания', p.notes] : null,
       ].filter(Boolean);
-      return `<div class="part-card" style="flex-direction:column;align-items:stretch;gap:8px">
+      const priceStr = p.price
+        ? (p.qty > 1 && unitPrice ? `${unitPrice.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = ${p.price.toLocaleString('ru-RU')} ₽` : `${p.price.toLocaleString('ru-RU')} ₽`)
+        : '—';
+      return `<div class="part-card" style="flex-direction:column;align-items:stretch;gap:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div class="part-card-name">${i+1}. ${p.name||'—'}</div>
-          <div class="part-card-price">${p.price ? p.price.toLocaleString('ru-RU')+' ₽' : '—'}</div>
+          <div style="font-size:11px;color:var(--gray-400);">${TECH_LABELS[p.tech]||p.tech||''} · ${p.qty||1} шт.</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px 16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 20px">
           ${rows.map(([k,v])=>`<div class="part-card-meta"><span style="color:var(--gray-400)">${k}:</span> <span style="color:var(--gray-700);font-weight:500">${v}</span></div>`).join('')}
         </div>
+        <div style="border-top:1px solid var(--gray-100);padding-top:8px;text-align:right;font-size:13px;font-weight:700;color:var(--navy);">${priceStr}</div>
       </div>`;
     }).join('');
 
