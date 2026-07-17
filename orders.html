@@ -225,6 +225,7 @@ function renderList() {
       </div>
     </div>`;
   }).join('')}</div>`;
+  autoOpenFromUrl();
 }
 
 function toggleDetail(id, btn) {
@@ -232,6 +233,16 @@ function toggleDetail(id, btn) {
   const isOpen = det.classList.contains('open');
   det.classList.toggle('open', !isOpen);
   btn.style.color = isOpen ? '' : 'var(--navy)';
+}
+
+function autoOpenFromUrl() {
+  const id = new URLSearchParams(location.search).get('orderId');
+  if (!id) return;
+  const det = document.getElementById('detail-' + id);
+  if (det) {
+    det.classList.add('open');
+    det.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function reorder(id) {

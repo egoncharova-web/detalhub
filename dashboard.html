@@ -712,7 +712,7 @@ async function renderProjects() {
       const qty=(p.parts||[]).reduce((s,pt)=>s+(pt.qty||1),0);
       const s=STATUS[p.status]||{cls:'s-new',text:p.status};
       const tl={cnc_mill:'ЧПУ-фрезерование',cnc_turn:'ЧПУ-токарная',fdm:'3D-печать FDM',laser:'Лазерная резка',other:'Прочее'}[tech]||tech;
-      return `<div class="proj-row" onclick="location.href='projects.html'"><div class="proj-thumb">${ICONS[tech]||'📋'}</div><div><div class="proj-num">КП №${p.quoteNumber||'—'}</div><div class="proj-tech">${tl}</div></div><div class="${s.cls}">${s.text}</div><div style="color:#6b7280;">${qty} шт.</div><div class="proj-val">${p.totalPrice||'—'}</div></div>`;
+      return `<div class="proj-row" onclick="location.href='quote.html?projectId=${p.id}'" style="cursor:pointer;"><div class="proj-thumb">${ICONS[tech]||'📋'}</div><div><div class="proj-num">КП №${p.quoteNumber||'—'}</div><div class="proj-tech">${tl}</div></div><div class="${s.cls}">${s.text}</div><div style="color:#6b7280;">${qty} шт.</div><div class="proj-val">${p.totalPrice||'—'}</div></div>`;
     }).join('');
   } catch(e) {
     rows.innerHTML='';
@@ -748,7 +748,7 @@ async function renderOrders() {
       const qty = (o.parts||[]).reduce((s,p)=>s+(p.qty||1),0);
       const s = STATUS[o.status] || {cls:'s-new', text: o.status||'Новый'};
       const price = o.admin_price || o.total_price || '—';
-      return `<div class="proj-row" onclick="location.href='orders.html'">
+      return `<div class="proj-row" onclick="location.href='orders.html?orderId=${o.id}'" style="cursor:pointer;">
         <div class="proj-thumb">📦</div>
         <div><div class="proj-num">КП №${o.quote_number||'—'}</div><div class="proj-tech">${new Date(o.created_at).toLocaleDateString('ru-RU')}</div></div>
         <div class="${s.cls}">${s.text}</div>
