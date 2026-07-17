@@ -733,7 +733,7 @@ function calcDens(material) {
   return 1.15;
 }
 
-let parts = [], quoteNum = null, pendingFiles = [];
+let parts = [], quoteNum = null, pendingFiles = [], currentProjectId = null;
 const previewStates = {}; // хранит {object, cam, ren, scene} для каждой карточки
 
 // ---- INIT ----
@@ -761,10 +761,10 @@ async function init() {
       const data = await r.json();
       const proj = (data.projects||[]).find(p => p.id === projectId);
       if (proj) {
+        currentProjectId = proj.id;
         quoteNum = proj.quote_number;
         setQuoteNum(quoteNum);
         localStorage.setItem('currentQuote', JSON.stringify({number: quoteNum}));
-        // Загружаем детали проекта
         (proj.parts||[]).forEach(p => {
           const part = {
             id: Date.now() + Math.random(),
@@ -777,7 +777,7 @@ async function init() {
           };
           parts.push(part);
           appendPartCard(part);
-          calcPrice(part).then(()=>{ refreshCard(part); });
+          if (part.volume > 0) calcPrice(part).then(()=>{ refreshCard(part); });
         });
         if (parts.length) {
           document.getElementById('upload-section').style.display='none';
@@ -1037,7 +1037,7 @@ async function calcPrice(p) {
     return;
   }
   const volume_cm3 = (p.volume || 0) / 1000; // mm³ → cm³
-  if (volume_cm3 <= 0) { p.price = 0; return; }
+  if (volume_cm3 <= 0) return; // нет объёма — оставляем существующую цену
 
   const infill = p.infill || 20;
   const density = FDM_DENSITY[p.material] || 1.24;
@@ -1619,7 +1619,21 @@ async function checkout(){
 function buildProjectData(status) {
   const userId = localStorage.getItem('userId');
   const totalPrice = parts.reduce((s,p)=>s+p.price,0);
-  const totalWeight = parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0).toFixed(1)+' г';
+  const totalWeight = fmtG(parts.reduce((s,p)=>s+(p.weight_g||0),0));
+  const partsData = parts.map(p=>({
+    name:p.name, tech:p.tech, material:p.material, infill:p.infill||null,
+    finish:p.finish, qty:p.qty, price:p.price,
+    dims:p.dims, weight:p.weight, volume:p.volume||0
+  }));
+  if (currentProjectId) {
+    return {
+      action: 'updateProject',
+      projectId: currentProjectId,
+      totalWeight,
+      totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
+      parts: partsData
+    };
+  }
   return {
     action: 'createProject',
     userId,
@@ -1628,11 +1642,7 @@ function buildProjectData(status) {
     totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
     leadTime: '3–7 дней',
     status: status||'Черновик',
-    parts: parts.map(p=>({
-      name:p.name, tech:p.tech, material:p.material, infill:p.infill||null,
-      finish:p.finish, qty:p.qty, price:p.price,
-      dims:p.dims, weight:p.weight, volume:p.volume||0
-    }))
+    parts: partsData
   };
 }
 
@@ -1649,10 +1659,11 @@ function scheduleAutoSave() {
         body: JSON.stringify(buildProjectData('Черновик'))
       });
       const data = await r.json();
-      if (indicator) {
-        indicator.textContent = data.success ? '✓ Сохранено' : '⚠ Не сохранено';
-        indicator.style.color = data.success ? '#16a34a' : '#dc2626';
-        setTimeout(()=>{ if(indicator) indicator.textContent=''; }, 3000);
+      if (data.success) {
+        if (data.projectId && !currentProjectId) currentProjectId = data.projectId;
+        if (indicator) { indicator.textContent='✓ Сохранено'; indicator.style.color='#16a34a'; setTimeout(()=>{ if(indicator) indicator.textContent=''; },3000); }
+      } else {
+        if (indicator) { indicator.textContent='⚠ Не сохранено'; indicator.style.color='#dc2626'; }
       }
     } catch {
       if (indicator) { indicator.textContent = '⚠ Ошибка сохранения'; indicator.style.color='#dc2626'; }
