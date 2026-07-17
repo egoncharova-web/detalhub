@@ -790,26 +790,24 @@ async function init() {
     } catch(e) { console.error('Ошибка загрузки проекта:', e); }
   }
 
-  const saved = JSON.parse(localStorage.getItem('currentQuote')||'null');
-  if (saved) {
-    quoteNum = saved.number;
-    setQuoteNum(quoteNum);
-  } else {
-    // Получаем уникальный номер из YDB
-    try {
-      const r = await fetch(AUTH_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'getNextQuoteNumber' })
-      });
-      const data = await r.json();
-      quoteNum = data.quoteNumber || (parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1);
-    } catch {
-      quoteNum = parseInt(localStorage.getItem('lastQuoteNum')||'999') + 1;
-    }
-    localStorage.setItem('lastQuoteNum', quoteNum);
-    localStorage.setItem('currentQuote', JSON.stringify({number:quoteNum}));
-    setQuoteNum(quoteNum);
+  // Номер присваивается только при первом сохранении — не тратим номера впустую
+  setQuoteNum('...');
+}
+
+async function getOrAssignQuoteNum() {
+  if (quoteNum) return quoteNum;
+  try {
+    const r = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'getNextQuoteNumber' })
+    });
+    const data = await r.json();
+    quoteNum = data.quoteNumber;
+  } catch {
+    quoteNum = Date.now(); // запасной вариант если сеть недоступна
   }
+  setQuoteNum(quoteNum);
+  return quoteNum;
 }
 
 function setQuoteNum(n) {
@@ -1629,7 +1627,7 @@ async function checkout(){
   location.href='orders.html';
 }
 
-function buildProjectData(status) {
+async function buildProjectData(status) {
   const userId = localStorage.getItem('userId');
   const totalPrice = parts.reduce((s,p)=>s+p.price,0);
   const totalWeight = fmtG(parts.reduce((s,p)=>s+(p.weight_g||0),0));
@@ -1647,10 +1645,11 @@ function buildProjectData(status) {
       parts: partsData
     };
   }
+  const qNum = await getOrAssignQuoteNum();
   return {
     action: 'createProject',
     userId,
-    quoteNumber: quoteNum,
+    quoteNumber: qNum,
     totalWeight,
     totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
     leadTime: '3–7 дней',
@@ -1669,7 +1668,7 @@ function scheduleAutoSave() {
       if (indicator) { indicator.textContent = 'Сохранение...'; indicator.style.color='#9ca3af'; }
       const r = await fetch(AUTH_URL, {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(buildProjectData('Черновик'))
+        body: JSON.stringify(await buildProjectData('Черновик'))
       });
       const data = await r.json();
       if (data.success) {
