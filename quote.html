@@ -351,42 +351,6 @@
     .content-grid { display:grid; grid-template-columns:1fr 280px; gap:16px; align-items:start; }
 
     /* SPEC EDITOR */
-    #spec-section { display:none; }
-    .spec-editor-grid { display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start; }
-    .spec-editor-left { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
-    .spec-editor-right { position:sticky; top:68px; }
-    .spec-editor-title { font-size:16px; font-weight:700; color:#111; padding:18px 20px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; gap:10px; }
-    .spec-group { padding:16px 20px; border-bottom:1px solid #f3f4f6; }
-    .spec-group-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9ca3af; margin-bottom:12px; }
-    .spec-field { margin-bottom:14px; }
-    .spec-field:last-child { margin-bottom:0; }
-    .spec-field-label { font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; display:flex; justify-content:space-between; }
-    .spec-field-label a { font-size:11px; color:#7dc3fd; font-weight:500; text-decoration:none; }
-    .spec-field-label a:hover { text-decoration:underline; }
-    .spec-select { width:100%; border:1px solid #e5e7eb; border-radius:7px; padding:8px 10px; font-size:13px; font-family:inherit; color:#111; background:#fff; }
-    .spec-select:focus { outline:none; border-color:#7dc3fd; }
-    .spec-input-sm { width:100px; border:1px solid #e5e7eb; border-radius:7px; padding:8px 10px; font-size:13px; font-family:inherit; color:#111; }
-    .spec-input-sm:focus { outline:none; border-color:#7dc3fd; }
-    .spec-checks { display:flex; flex-wrap:wrap; gap:8px; }
-    .spec-check-label { display:flex; align-items:center; gap:6px; font-size:12px; color:#374151; cursor:pointer; }
-    .spec-check-label input { accent-color:#071f2a; width:14px; height:14px; }
-    .spec-radio-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f9fafb; }
-    .spec-radio-row:last-child { border-bottom:none; }
-    .spec-radio-label { display:flex; align-items:center; gap:8px; font-size:13px; color:#374151; cursor:pointer; }
-    .spec-radio-label input { accent-color:#071f2a; width:14px; height:14px; }
-    .spec-radio-price { font-size:12px; font-weight:600; color:#6b7280; }
-    .spec-textarea { width:100%; border:1px solid #e5e7eb; border-radius:7px; padding:10px 12px; font-size:13px; font-family:inherit; color:#111; min-height:80px; resize:vertical; }
-    .spec-textarea:focus { outline:none; border-color:#7dc3fd; }
-    .spec-3d-box { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:12px; }
-    .spec-3d-viewer { height:280px; background:#f2f5f7; position:relative; }
-    .spec-3d-viewer canvas { display:block; width:100%!important; height:100%!important; }
-    .spec-file-row { padding:10px 14px; display:flex; align-items:center; gap:8px; border-top:1px solid #f3f4f6; font-size:12px; }
-    .spec-file-badge { background:#071f2a; color:#7dc3fd; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
-    .spec-bottom-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid #e5e7eb; padding:14px 0; display:flex; gap:10px; margin-top:24px; }
-    .btn-back-quote { display:flex; align-items:center; gap:6px; padding:10px 20px; border:1px solid #e5e7eb; border-radius:8px; background:#fff; font-size:13px; font-weight:600; color:#374151; cursor:pointer; font-family:inherit; transition:all .15s; }
-    .btn-back-quote:hover { background:#f3f4f6; }
-    .btn-save-spec { padding:10px 28px; border:none; border-radius:8px; background:#071f2a; color:#7dc3fd; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s; }
-    .btn-save-spec:hover { background:#0c2d40; }
 
     /* Footer */
     .page-footer {
@@ -619,16 +583,6 @@
 
 <!-- Footer -->
 
-    </div>
-
-    <!-- SPEC EDITOR SECTION -->
-    <div id="spec-section" style="display:none;">
-      <div class="topbar">
-        <span style="font-size:15px;font-weight:600;color:#111;">Редактировать спецификации</span>
-      </div>
-      <div style="padding:28px;">
-        <div id="spec-editor-content"></div>
-      </div>
     </div>
 
   </div>
@@ -1103,230 +1057,22 @@ async function uploadToCloud(file) {
   const d=await resp.json(); return d.fileUrl||d.Location;
 }
 
-// ---- SPEC EDITOR ----
-let currentSpecId = null;
-
-function openSpecEditor(id) {
-  const p = parts.find(x=>x.id===id); if(!p) return;
-  currentSpecId = id;
-  const techOpts = TECHS.map(t=>`<option value="${t.v}"${t.v===p.tech?' selected':''}>${t.l}</option>`).join('');
-  const matOpts  = (MATS[p.tech]||['Уточнить']).map(m=>`<option${m===p.material?' selected':''}>${m}</option>`).join('');
-  const fins     = getFinishes(p.tech, p.material);
-  const finOpts  = fins.map(f=>`<option value="${f.v}"${f.v===p.finish?' selected':''}>${f.l}</option>`).join('');
-  const isStlObj = /\.(stl|obj)$/i.test(p.name);
-
-  document.getElementById('spec-editor-content').innerHTML = `
-  <div class="spec-editor-grid">
-    <div class="spec-editor-left">
-      <div class="spec-editor-title">
-        <svg width="16" height="16" fill="none" stroke="#071f2a" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Спецификации: ${p.name}
-      </div>
-
-      <div class="spec-group">
-        <div class="spec-group-label">Основные параметры</div>
-        <div class="spec-field">
-          <div class="spec-field-label">Количество</div>
-          <input class="spec-input-sm" type="number" min="1" value="${p.qty}" id="se-qty">
-        </div>
-        <div class="spec-field">
-          <div class="spec-field-label">Технология производства</div>
-          <select class="spec-select" id="se-tech" onchange="seUpdateMats()">${techOpts}</select>
-        </div>
-        <div class="spec-field">
-          <div class="spec-field-label">Материал <span id="se-mat-count" style="color:#9ca3af;font-weight:400;font-size:11px;"></span></div>
-          <select class="spec-select" id="se-mat" onchange="seUpdateFins()">${matOpts}</select>
-        </div>
-        <div class="spec-field" id="se-color-row" style="${p.tech==='fdm'?'':'display:none'}">
-          <div class="spec-field-label">Цвет</div>
-          <select class="spec-select" id="se-color">${(COLORS[p.material]||['Черный']).map(c=>`<option${c===p.color?' selected':''}>${c}</option>`).join('')}</select>
-        </div>
-        <div class="spec-field" id="se-infill-row" style="${p.tech==='fdm'?'':'display:none'}">
-          <div class="spec-field-label">Заполнение (infill)</div>
-          <select class="spec-select" id="se-infill">
-            <option value="20" ${(p.infill||20)===20?'selected':''}>20% — минимальное (лёгкое)</option>
-            <option value="50" ${(p.infill||20)===50?'selected':''}>50% — среднее</option>
-            <option value="80" ${(p.infill||20)===80?'selected':''}>80% — прочное</option>
-            <option value="100" ${(p.infill||20)===100?'selected':''}>100% — монолит</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="spec-group">
-        <div class="spec-group-label">Параметры обработки</div>
-        <div class="spec-field">
-          <div class="spec-field-label">Отделка поверхности</div>
-          <select class="spec-select" id="se-fin">${finOpts}</select>
-        </div>
-        <div class="spec-field">
-          <div class="spec-field-label">Точность</div>
-          <div style="padding:8px 0;font-size:13px;color:#6b7280;">±0.3 мм — стандарт FDM-печати</div>
-        </div>
-        <div class="spec-field" style="display:flex;gap:24px;">
-          <div>
-            <div class="spec-field-label">Резьбовых отверстий</div>
-            <input class="spec-input-sm" type="number" min="0" value="${p.threads||0}" id="se-threads">
-          </div>
-          <div>
-            <div class="spec-field-label">Вставок</div>
-            <input class="spec-input-sm" type="number" min="0" value="${p.inserts||0}" id="se-inserts">
-          </div>
-        </div>
-      </div>
-
-      <div class="spec-group">
-        <div class="spec-group-label">Маркировка</div>
-        <div class="spec-checks">
-          <label class="spec-check-label"><input type="checkbox" ${p.marking?.pack?'checked':''} id="se-mark-pack"> Упаковка и этикетирование</label>
-          <label class="spec-check-label"><input type="checkbox" ${p.marking?.engrave?'checked':''} id="se-mark-engrave"> Гравировка</label>
-          <label class="spec-check-label"><input type="checkbox" ${p.marking?.laser?'checked':''} id="se-mark-laser"> Лазерная маркировка</label>
-        </div>
-      </div>
-
-      <div class="spec-group">
-        <div class="spec-group-label">Контроль качества</div>
-        <div class="spec-radio-row"><label class="spec-radio-label"><input type="radio" name="se-inspect" value="none" ${(!p.inspection||p.inspection==='none')?'checked':''}> Без проверки</label><span class="spec-radio-price"></span></div>
-        <div class="spec-radio-row"><label class="spec-radio-label"><input type="radio" name="se-inspect" value="cmm" ${p.inspection==='cmm'?'checked':''}> КИМ (координатно-измерительная машина)</label><span class="spec-radio-price">+12 500 ₽</span></div>
-        <div class="spec-radio-row"><label class="spec-radio-label"><input type="radio" name="se-inspect" value="fair" ${p.inspection==='fair'?'checked':''}> Отчёт FAIR (первый артикул)</label><span class="spec-radio-price">+15 000 ₽</span></div>
-        <div class="spec-radio-row"><label class="spec-radio-label"><input type="radio" name="se-inspect" value="measure" ${p.inspection==='measure'?'checked':''}> Протокол измерений</label><span class="spec-radio-price">+7 500 ₽</span></div>
-      </div>
-
-      <div class="spec-group">
-        <div class="spec-group-label">Дополнительные требования</div>
-        <textarea class="spec-textarea" id="se-notes" placeholder="Дополнительные производственные требования: ожидаемое качество поверхности, область применения, особые характеристики...">${p.notes||''}</textarea>
-      </div>
-    </div>
-
-    <div class="spec-editor-right">
-      <div class="spec-3d-box">
-        <div class="spec-3d-viewer" id="se-viewer">
-          ${isStlObj ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:12px;">Загрузка 3D...</div>' : '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;"><svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg><span style="font-size:12px;color:#9ca3af;">3D-просмотр недоступен</span></div>'}
-        </div>
-        <div class="spec-file-row">
-          <svg width="13" height="13" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          <span style="flex:1;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
-          <span class="spec-file-badge">Основной файл</span>
-        </div>
-        ${p.dims.x!=='—'?`<div style="padding:6px 14px 10px;font-size:11px;color:#9ca3af;">${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм</div>`:''}
-      </div>
-
-      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
-        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;">Характеристики детали</div>
-        <div style="font-size:12px;color:#6b7280;line-height:2;">
-          Вес: <b style="color:#111;">${p.weight}</b><br>
-          Размер файла: <b style="color:#111;">${p.size}</b>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="spec-bottom-bar">
-    <button class="btn-back-quote" onclick="closeSpecEditor()">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      Назад к предложению
-    </button>
-    <button class="btn-save-spec" onclick="saveSpecEditor()">Сохранить спецификации</button>
-  </div>`;
-
-  document.getElementById('parts-section').style.display = 'none';
-  const ss = document.getElementById('spec-section');
-  ss.style.display = 'block';
-  window.scrollTo(0,0);
-
-  if(isStlObj && p.localUrl) {
-    setTimeout(()=>renderSpecViewer(p), 100);
-  }
+// ---- LEAD TIME ----
+function calcLeadTime(parts) {
+  if (!parts.length) return '—';
+  const totalPlates = parts.reduce((sum, p) => {
+    const cap = Math.max(1, p.plateCapacity || 1);
+    return sum + Math.ceil((p.qty || 1) / cap);
+  }, 0);
+  const hasPostProcess = parts.some(p => p.finish && p.finish !== 'standard');
+  const printNights = totalPlates;
+  const prepDays = hasPostProcess ? 2 : 1;
+  const totalDays = printNights + prepDays + 1; // +1 день отправка
+  const to = totalDays + 1;
+  const suffix = to <= 4 ? 'раб. дня' : 'раб. дней';
+  return `${totalDays}–${to} ${suffix}`;
 }
 
-function seUpdateMats() {
-  const tech = document.getElementById('se-tech').value;
-  const mats = MATS[tech]||['Уточнить'];
-  const sel = document.getElementById('se-mat');
-  sel.innerHTML = mats.map(m=>`<option>${m}</option>`).join('');
-  const cnt = document.getElementById('se-mat-count');
-  if(cnt) cnt.textContent = `${mats.length} вариантов`;
-  const infillRow = document.getElementById('se-infill-row');
-  if(infillRow) infillRow.style.display = tech==='fdm' ? '' : 'none';
-  const colorRow = document.getElementById('se-color-row');
-  if(colorRow) colorRow.style.display = tech==='fdm' ? '' : 'none';
-  seUpdateColors();
-  seUpdateFins();
-}
-
-function seUpdateColors() {
-  const mat = document.getElementById('se-mat').value;
-  const sel = document.getElementById('se-color'); if(!sel) return;
-  const prev = sel.value;
-  const colors = COLORS[mat]||['Черный'];
-  sel.innerHTML = colors.map(c=>`<option${c===prev?' selected':''}>${c}</option>`).join('');
-  if(!colors.includes(prev)) sel.value = colors[0];
-}
-
-function seUpdateFins() {
-  const tech = document.getElementById('se-tech').value;
-  const mat  = document.getElementById('se-mat').value;
-  const fins = getFinishes(tech, mat);
-  const prev = document.getElementById('se-fin').value;
-  const sel  = document.getElementById('se-fin');
-  sel.innerHTML = fins.map(f=>`<option value="${f.v}"${f.v===prev?' selected':''}>${f.l}</option>`).join('');
-  if(!fins.find(f=>f.v===prev)) sel.value = fins[0].v;
-  seUpdateColors();
-}
-
-function renderSpecViewer(p) {
-  const c = document.getElementById('se-viewer'); if(!c) return;
-  const mat = new THREE.MeshPhongMaterial({color:0x2e4d5e,specular:0x5a8fa8,shininess:50});
-  const w = c.clientWidth||320, h = 280;
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf2f5f7);
-  const cam = new THREE.PerspectiveCamera(45, w/h, 0.1, 1e6);
-  const ren = new THREE.WebGLRenderer({antialias:true}); ren.setSize(w,h); c.innerHTML=''; c.appendChild(ren.domElement);
-  const ctrl = new THREE.OrbitControls(cam, ren.domElement); ctrl.enableDamping=true; ctrl.enablePan=false;
-  const dl = new THREE.DirectionalLight(0xffffff,1.1); dl.position.set(3,4,5); scene.add(dl);
-  scene.add(new THREE.AmbientLight(0xffffff,0.5));
-
-  function startLoop(obj) {
-    const box = new THREE.Box3().setFromObject(obj);
-    const mx = Math.max(box.max.x-box.min.x, box.max.y-box.min.y, box.max.z-box.min.z);
-    const cx=(box.max.x+box.min.x)/2, cy=(box.max.y+box.min.y)/2, cz=(box.max.z+box.min.z)/2;
-    cam.position.set(cx+mx*1.2, cy+mx*0.9, cz+mx*1.4); ctrl.target.set(cx,cy,cz); ctrl.update();
-    (function loop(){ if(!document.getElementById('se-viewer')) return; requestAnimationFrame(loop); ctrl.update(); ren.render(scene,cam); })();
-  }
-
-  if(/\.obj$/i.test(p.name)) {
-    new THREE.OBJLoader().load(p.localUrl, obj=>{ obj.traverse(c=>{ if(c.isMesh) c.material=mat; }); scene.add(obj); startLoop(obj); });
-  } else {
-    fetch(p.localUrl).then(r=>r.arrayBuffer()).then(buf=>{ const geo=new THREE.STLLoader().parse(buf); const mesh=new THREE.Mesh(geo,mat); scene.add(mesh); startLoop(mesh); });
-  }
-}
-
-function saveSpecEditor() {
-  const p = parts.find(x=>x.id===currentSpecId); if(!p) return;
-  p.qty       = Math.max(1, parseInt(document.getElementById('se-qty').value)||1);
-  p.tech      = document.getElementById('se-tech').value;
-  p.material  = document.getElementById('se-mat').value;
-  p.infill    = parseInt(document.getElementById('se-infill')?.value||'20')||20;
-  p.color     = document.getElementById('se-color')?.value || (COLORS[p.material]||['Черный'])[0];
-  p.finish    = document.getElementById('se-fin').value;
-  p.tolerance = 'std';
-  p.threads   = parseInt(document.getElementById('se-threads').value)||0;
-  p.inserts   = parseInt(document.getElementById('se-inserts').value)||0;
-  p.notes     = document.getElementById('se-notes').value;
-  p.inspection= document.querySelector('input[name="se-inspect"]:checked')?.value||'none';
-  p.marking   = {
-    pack:    document.getElementById('se-mark-pack').checked,
-    engrave: document.getElementById('se-mark-engrave').checked,
-    laser:   document.getElementById('se-mark-laser').checked,
-  };
-  p.weight = calcWeight(p);
-  calcPrice(p).then(()=>{ refreshCard(p); updateSummary(); });
-  closeSpecEditor();
-}
-
-function closeSpecEditor() {
-  document.getElementById('spec-section').style.display = 'none';
-  document.getElementById('parts-section').style.display = 'block';
-  currentSpecId = null;
-}
 
 // ---- PREVIEW ROTATION ----
 function rotatePreview(pid, axis, dir) {
@@ -1440,7 +1186,6 @@ function buildCardHTML(p) {
         <div style="margin-top:5px;">${statusHTML}</div>
       </div>
       <div class="pc-actions">
-        <button class="btn-dup" onclick="openSpecEditor(${JSON.stringify(p.id)})" style="color:#071f2a;border-color:#7dc3fd;">✎ Спецификации</button>
         <button class="btn-dup" onclick="dupPart(${JSON.stringify(p.id)})">Дублировать</button>
         <button class="btn-del" onclick="delPart(${JSON.stringify(p.id)})">Удалить</button>
       </div>
@@ -1486,7 +1231,7 @@ function updateSummary(){
   document.getElementById('s-qty').textContent=qty+' шт.';
   document.getElementById('s-weight').textContent=w>0?fmtG(w):'—';
   document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
-  document.getElementById('s-lead').textContent=parts.length?'3–7 дней':'—';
+  document.getElementById('s-lead').textContent=calcLeadTime(parts);
 
   let warn=document.getElementById('s-manual-warn');
   if(hasManual){
