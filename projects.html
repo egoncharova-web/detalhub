@@ -83,8 +83,7 @@
     </div>
     <div class="page-content">
       <div class="proj-tabs">
-        <button class="proj-tab active" onclick="switchTab('drafts', this)">Запросы</button>
-        <button class="proj-tab" onclick="switchTab('ordered', this)">Заказанные</button>
+        <button class="proj-tab active" onclick="switchTab('drafts', this)">Мои запросы</button>
       </div>
       <a href="quote.html" class="new-proj-btn">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:6px"><path d="M12 5v14M5 12h14"/></svg>
@@ -116,9 +115,7 @@ function switchTab(tab, btn) {
 
 function renderList() {
   const cont = document.getElementById('projectsList');
-  const filtered = currentTab === 'drafts'
-    ? allProjects.filter(p => p.status === 'Черновик' || !p.status)
-    : allProjects.filter(p => p.status !== 'Черновик');
+  const filtered = allProjects.filter(p => p.status !== 'Заказан');
 
   if (!filtered.length) {
     cont.innerHTML = `<div class="empty-state">
