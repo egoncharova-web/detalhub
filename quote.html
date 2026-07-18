@@ -1539,14 +1539,22 @@ function render3DPreview(cid,url,partId){
     ctrl.enableDamping=true; ctrl.dampingFactor=0.1;
     ctrl.enableZoom=true; ctrl.enablePan=false;
     ctrl.target.set(cx,cy,cz); ctrl.update();
-    let alive=true;
     if(previewStates[partId]) previewStates[partId].stop=true;
     previewStates[partId]={stop:false};
+    let thumbnailCaptured=false;
     (function loop(){
       if(previewStates[partId]?.stop) return;
       requestAnimationFrame(loop);
       ctrl.update();
       ren.render(scene,cam);
+      if(!thumbnailCaptured){
+        thumbnailCaptured=true;
+        try{
+          const thumb=ren.domElement.toDataURL('image/jpeg',0.65);
+          const pt=parts.find(x=>x.id===partId);
+          if(pt) pt.thumbnail=thumb;
+        }catch(e){}
+      }
     })();
     const badge=document.createElement('div');
     badge.className='badge-3d';badge.textContent='3D ↗';

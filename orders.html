@@ -196,10 +196,12 @@ function renderList() {
       return `<div class="part-card">
         <div class="pc-inner">
           <div class="pc-preview">
-            <div class="pc-preview-placeholder">
-              <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px;">${i+1} / ${(o.parts||[]).length}</div>
-            </div>
+            ${p.thumbnail
+              ? `<img src="${p.thumbnail}" style="width:100%;height:100%;object-fit:contain;display:block;">`
+              : `<div class="pc-preview-placeholder">
+                  <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  <div style="font-size:11px;font-weight:600;color:#6b7280;margin-top:6px;">${(p.name||'').split('.').pop().toUpperCase()}</div>
+                </div>`}
           </div>
           <div class="pc-specs">
             ${specRows.map(([k,v])=>`<div class="spec-row"><span class="spec-label">${k}</span><span class="spec-val">${v}</span></div>`).join('')}
