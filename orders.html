@@ -236,12 +236,25 @@ function renderList() {
           <div class="order-card-meta">
             <div class="order-card-meta-item">Количество<strong>${(o.parts||[]).length} позиц. / ${qty} шт.</strong></div>
             <div class="order-card-meta-item">Срок<strong>${lead}</strong></div>
-            <div class="order-card-meta-item">Стоимость<strong>${price}</strong></div>
+            <div class="order-card-meta-item">Производство<strong>${o.parts_price || price}</strong></div>
+            ${o.delivery ? `<div class="order-card-meta-item">Доставка<strong>${o.delivery.cost ? o.delivery.cost.toLocaleString('ru-RU')+' ₽' : '—'}</strong></div>` : ''}
+            <div class="order-card-meta-item">Итого<strong style="color:var(--navy)">${price}</strong></div>
           </div>
         </div>
       </div>
       <div class="order-detail" id="detail-${o.id}">
         ${commentHtml}
+        ${o.delivery ? `
+        <div class="detail-section-title">Доставка</div>
+        <div style="background:#fff;border:1px solid var(--gray-200);border-radius:10px;padding:14px 18px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 24px;">
+          <div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Способ</div><div style="font-size:13px;font-weight:600;">${o.delivery.method_label||'СДЭК'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Получатель</div><div style="font-size:13px;font-weight:600;">${o.delivery.name||'—'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Телефон</div><div style="font-size:13px;font-weight:600;">${o.delivery.phone||'—'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Город</div><div style="font-size:13px;font-weight:600;">${o.delivery.city||'—'}</div></div>
+          <div style="grid-column:1/-1"><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Адрес</div><div style="font-size:13px;font-weight:600;">${o.delivery.address||'—'}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Стоимость доставки</div><div style="font-size:13px;font-weight:700;color:var(--navy)">${o.delivery.cost ? o.delivery.cost.toLocaleString('ru-RU')+' ₽' : '—'}</div></div>
+          ${o.delivery.tracking ? `<div><div style="font-size:11px;color:var(--gray-400);margin-bottom:2px;">Трек-номер</div><div style="font-size:13px;font-weight:600;">${o.delivery.tracking}</div></div>` : ''}
+        </div>` : ''}
         <div class="detail-section-title">Состав заказа</div>
         <div class="parts-grid">${partsHtml}</div>
         <div class="detail-actions">

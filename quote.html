@@ -262,6 +262,30 @@
       cursor:pointer; font-family:inherit; transition:background .15s;
     }
     .btn-checkout:hover { background:#0c2d40; }
+
+    /* Delivery modal */
+    .del-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center; }
+    .del-overlay.show { display:flex; }
+    .del-box { background:#fff;border-radius:14px;width:480px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .del-hdr { display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #f3f4f6; }
+    .del-hdr-title { font-size:15px;font-weight:700;color:#111; }
+    .del-close { border:none;background:none;font-size:20px;color:#9ca3af;cursor:pointer;line-height:1; }
+    .del-body { padding:20px; }
+    .del-section { margin-bottom:18px; }
+    .del-label { font-size:12px;font-weight:600;color:#374151;margin-bottom:8px; }
+    .del-methods { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px; }
+    .del-method { border:2px solid #e5e7eb;border-radius:8px;padding:12px;cursor:pointer;transition:all .15s;position:relative; }
+    .del-method.active { border-color:#071f2a;background:#f0f4f7; }
+    .del-method-name { font-size:13px;font-weight:600;color:#111;margin-bottom:2px; }
+    .del-method-desc { font-size:11px;color:#6b7280; }
+    .del-input { width:100%;border:1px solid #e5e7eb;border-radius:7px;padding:9px 12px;font-size:13px;font-family:inherit;color:#111;box-sizing:border-box; }
+    .del-input:focus { outline:none;border-color:#071f2a; }
+    .del-row2 { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .del-cost-box { background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px; }
+    .del-cost-label { font-size:13px;color:#0369a1; }
+    .del-cost-val { font-size:16px;font-weight:700;color:#071f2a; }
+    .del-total-row { display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f9fafb;border-radius:8px;font-size:14px;font-weight:700;color:#111;margin-top:12px; }
+    .del-confirm { width:100%;padding:13px;margin-top:14px;background:linear-gradient(135deg,#071f2a,#0c2d40);color:#7dc3fd;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit; }
     .btn-save {
       width:100%; padding:9px; border:1px solid #e5e7eb;
       border-radius:8px; font-size:13px; font-weight:500; color:#374151;
@@ -569,9 +593,11 @@
         <div class="s-row"><span class="sl">Деталей</span><span class="sv" id="s-parts">0</span></div>
         <div class="s-row"><span class="sl">Количество</span><span class="sv" id="s-qty">0 шт.</span></div>
         <div class="s-row"><span class="sl">Вес</span><span class="sv" id="s-weight">—</span></div>
-        <div class="s-total"><span>Стоимость</span><span id="s-price">0 ₽</span></div>
+        <div class="s-row"><span class="sl">Производство</span><span class="sv" id="s-price">0 ₽</span></div>
+        <div class="s-row"><span class="sl">Доставка</span><span class="sv" id="s-delivery" style="color:#9ca3af;">уточняется</span></div>
+        <div class="s-total"><span>Итого</span><span id="s-total">0 ₽</span></div>
         <div class="s-actions">
-          <button class="btn-checkout" onclick="checkout()">Оформить заказ →</button>
+          <button class="btn-checkout" onclick="openDeliveryModal()">Оформить заказ →</button>
           <span id="autosave-indicator" style="font-size:12px;color:#9ca3af;align-self:center;"></span>
           <button class="btn-save" onclick="downloadPDF()">↓ Скачать КП (PDF)</button>
         </div>
@@ -585,6 +611,60 @@
 
     </div>
 
+  </div>
+</div>
+
+<!-- DELIVERY MODAL -->
+<div class="del-overlay" id="deliveryModal">
+  <div class="del-box">
+    <div class="del-hdr">
+      <span class="del-hdr-title">Доставка</span>
+      <button class="del-close" onclick="closeDeliveryModal()">×</button>
+    </div>
+    <div class="del-body">
+      <div class="del-section">
+        <div class="del-label">Способ доставки</div>
+        <div class="del-methods">
+          <div class="del-method active" id="dm-courier" onclick="selectDeliveryMethod('courier')">
+            <div class="del-method-name">СДЭК — курьер</div>
+            <div class="del-method-desc">До двери, 2–5 дней</div>
+          </div>
+          <div class="del-method" id="dm-pvz" onclick="selectDeliveryMethod('pvz')">
+            <div class="del-method-name">СДЭК — ПВЗ</div>
+            <div class="del-method-desc">До пункта выдачи</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="del-section">
+        <div class="del-label">Получатель</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input class="del-input" id="del-name" placeholder="ФИО получателя" oninput="updateDeliveryCost()">
+          <input class="del-input" id="del-phone" placeholder="Телефон +7..." oninput="updateDeliveryCost()">
+        </div>
+      </div>
+
+      <div class="del-section">
+        <div class="del-label">Адрес доставки</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input class="del-input" id="del-city" placeholder="Город" oninput="updateDeliveryCost()">
+          <input class="del-input" id="del-address" placeholder="Улица, дом, квартира / Адрес ПВЗ" oninput="updateDeliveryCost()">
+        </div>
+      </div>
+
+      <div class="del-cost-box">
+        <span class="del-cost-label">Стоимость доставки</span>
+        <span class="del-cost-val" id="del-cost-val">—</span>
+      </div>
+      <div class="del-total-row">
+        <span>Итого к оплате</span>
+        <span id="del-total-val">—</span>
+      </div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:6px;">
+        Стоимость рассчитана по весу отправления. Тариф СДЭК · оплата при получении не предусмотрена.
+      </div>
+      <button class="del-confirm" id="del-confirm-btn" onclick="confirmDelivery()">Подтвердить и оплатить →</button>
+    </div>
   </div>
 </div>
 
@@ -1057,6 +1137,73 @@ async function uploadToCloud(file) {
   const d=await resp.json(); return d.fileUrl||d.Location;
 }
 
+// ---- DELIVERY ----
+let deliveryMethod = 'courier';
+let deliveryConfirmed = null; // {method, name, phone, city, address, cost}
+
+function calcDeliveryCost(weightG) {
+  const kg = weightG / 1000;
+  if (kg <= 500)  return 350; // <=0.5 kg
+  if (kg <= 2000) return 500;
+  if (kg <= 5000) return 700;
+  return 900;
+}
+
+function calcDeliveryCostFromParts() {
+  const totalG = parts.reduce((s,p)=>s+(p.weight_g||0),0);
+  return calcDeliveryCost(totalG);
+}
+
+function selectDeliveryMethod(m) {
+  deliveryMethod = m;
+  document.getElementById('dm-courier').classList.toggle('active', m==='courier');
+  document.getElementById('dm-pvz').classList.toggle('active', m==='pvz');
+  document.getElementById('del-address').placeholder = m==='courier' ? 'Улица, дом, квартира' : 'Адрес пункта выдачи СДЭК';
+  updateDeliveryCost();
+}
+
+function updateDeliveryCost() {
+  const cost = calcDeliveryCostFromParts();
+  const partsTotal = parts.reduce((s,p)=>s+p.price,0);
+  document.getElementById('del-cost-val').textContent = cost.toLocaleString('ru-RU') + ' ₽';
+  document.getElementById('del-total-val').textContent = (partsTotal + cost).toLocaleString('ru-RU') + ' ₽';
+}
+
+function openDeliveryModal() {
+  if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
+  const userId = localStorage.getItem('userId');
+  if (!userId) { alert('Войдите в аккаунт чтобы оформить заказ'); location.href='auth.html'; return; }
+  updateDeliveryCost();
+  document.getElementById('deliveryModal').classList.add('show');
+}
+
+function closeDeliveryModal() {
+  document.getElementById('deliveryModal').classList.remove('show');
+}
+
+function confirmDelivery() {
+  const name    = document.getElementById('del-name').value.trim();
+  const phone   = document.getElementById('del-phone').value.trim();
+  const city    = document.getElementById('del-city').value.trim();
+  const address = document.getElementById('del-address').value.trim();
+  if (!name || !phone || !city || !address) {
+    alert('Заполните все поля доставки'); return;
+  }
+  deliveryConfirmed = {
+    method: deliveryMethod,
+    method_label: deliveryMethod==='courier' ? 'СДЭК — курьер' : 'СДЭК — ПВЗ',
+    name, phone, city, address,
+    cost: calcDeliveryCostFromParts()
+  };
+  closeDeliveryModal();
+  // обновляем сводку
+  const el = document.getElementById('s-delivery');
+  el.textContent = deliveryConfirmed.cost.toLocaleString('ru-RU') + ' ₽ · ' + deliveryConfirmed.method_label;
+  el.style.color = '';
+  updateSummary();
+  checkout();
+}
+
 // ---- LEAD TIME ----
 function calcLeadTime(parts) {
   if (!parts.length) return '—';
@@ -1227,10 +1374,12 @@ function updateSummary(){
   const qty=parts.reduce((s,p)=>s+p.qty,0);
   const w=parts.reduce((s,p)=>s+(p.weight_g||0),0);
   const hasManual=parts.some(p=>p.status==='manual'||p.status==='step');
+  const deliveryCost = deliveryConfirmed ? deliveryConfirmed.cost : 0;
   document.getElementById('s-parts').textContent=parts.length;
   document.getElementById('s-qty').textContent=qty+' шт.';
   document.getElementById('s-weight').textContent=w>0?fmtG(w):'—';
   document.getElementById('s-price').textContent=total>0?total.toLocaleString('ru-RU')+' ₽':'0 ₽';
+  document.getElementById('s-total').textContent=(total+deliveryCost).toLocaleString('ru-RU')+' ₽';
   document.getElementById('s-lead').textContent=calcLeadTime(parts);
 
   let warn=document.getElementById('s-manual-warn');
@@ -1366,12 +1515,13 @@ document.getElementById('viewerModal').addEventListener('click',e=>{if(e.target=
 
 // ---- ACTIONS ----
 async function checkout(){
-  if(!parts.length){alert('Загрузите хотя бы одну деталь');return;}
   const userId = localStorage.getItem('userId');
   if(!userId){alert('Войдите в аккаунт чтобы оформить заказ');location.href='auth.html';return;}
   const pr=JSON.parse(localStorage.getItem('userProfile')||'{}');
   const note=document.getElementById('order-note')?.value||'';
-  const totalPrice = parts.reduce((s,p)=>s+p.price,0);
+  const partsTotal = parts.reduce((s,p)=>s+p.price,0);
+  const deliveryCost = deliveryConfirmed?.cost || 0;
+  const totalPrice = partsTotal + deliveryCost;
   const totalWeight = parts.reduce((s,p)=>s+(parseFloat(p.weight)||0),0).toFixed(1)+' г';
 
   // Отправляем в Bitrix24
@@ -1391,9 +1541,11 @@ async function checkout(){
         quoteNumber: quoteNum,
         totalWeight,
         totalPrice: totalPrice.toLocaleString('ru-RU')+' ₽',
-        leadTime: '3–7 дней',
+        partsPrice: partsTotal.toLocaleString('ru-RU')+' ₽',
+        leadTime: calcLeadTime(parts),
         status: 'Новый',
-        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,infill:p.infill||null,finish:p.finish,qty:p.qty,price:p.price,dims:p.dims,weight:p.weight,volume:p.volume||0,notes:p.notes||''})),
+        delivery: deliveryConfirmed || null,
+        parts: parts.map(p=>({name:p.name,tech:p.tech,material:p.material,color:p.color||null,infill:p.infill||null,finish:p.finish,qty:p.qty,price:p.price,unit_price:p.unit_price||null,dims:p.dims,weight:p.weight,weight_g:p.weight_g||null,volume:p.volume||0,notes:p.notes||'',thumbnail:p.thumbnail||null,plateCapacity:p.plateCapacity||1})),
         note
       })
     });
