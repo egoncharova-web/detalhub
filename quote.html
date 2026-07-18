@@ -647,8 +647,13 @@
       <div class="del-section">
         <div class="del-label">Адрес доставки</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <input class="del-input" id="del-city" placeholder="Город" oninput="updateDeliveryCost()">
+          <input class="del-input" id="del-city" placeholder="Город" oninput="updateDeliveryCost(); updatePvzLink()">
           <input class="del-input" id="del-address" placeholder="Улица, дом, квартира / Адрес ПВЗ" oninput="updateDeliveryCost()">
+          <a id="pvz-link" href="https://www.cdek.ru/ru/offices/" target="_blank"
+            style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#2563eb;text-decoration:none;font-weight:500;padding:7px 12px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;width:fit-content;transition:background .15s;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            Найти ближайший ПВЗ СДЭК
+          </a>
         </div>
       </div>
 
@@ -1152,6 +1157,15 @@ function calcDeliveryCost(weightG) {
 function calcDeliveryCostFromParts() {
   const totalG = parts.reduce((s,p)=>s+(p.weight_g||0),0);
   return calcDeliveryCost(totalG);
+}
+
+function updatePvzLink() {
+  const city = document.getElementById('del-city').value.trim();
+  const link = document.getElementById('pvz-link');
+  if (!link) return;
+  link.href = city
+    ? `https://www.cdek.ru/ru/offices/?cityName=${encodeURIComponent(city)}`
+    : 'https://www.cdek.ru/ru/offices/';
 }
 
 function selectDeliveryMethod(m) {
