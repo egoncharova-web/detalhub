@@ -11,21 +11,61 @@
     .proj-tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--gray-400); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; }
     .proj-tab.active { color:var(--navy); border-bottom-color:var(--navy); font-weight:600; }
 
-    .order-cards { display:flex; flex-direction:column; gap:12px; }
-    .order-card { background:#fff; border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; }
+    .order-cards { display:flex; flex-direction:column; gap:16px; }
+
+    .order-card {
+      background:#fff;
+      border:1px solid var(--gray-200);
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 1px 4px rgba(7,31,42,.05);
+      transition:box-shadow .18s, border-color .18s;
+    }
+    .order-card:hover { box-shadow:0 4px 16px rgba(7,31,42,.09); border-color:#c5d0d8; }
+
+    .order-card-accent {
+      height:4px;
+      background:var(--gray-200);
+    }
+    .order-card-accent.status-new      { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+    .order-card-accent.status-work     { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .order-card-accent.status-ready    { background:linear-gradient(90deg,#10b981,#34d399); }
+    .order-card-accent.status-sent     { background:linear-gradient(90deg,#6366f1,#818cf8); }
+    .order-card-accent.status-transit  { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
+    .order-card-accent.status-done     { background:linear-gradient(90deg,#071f2a,#1e4060); }
+    .order-card-accent.status-cancel   { background:#e5e7eb; }
+
     .order-card-top { display:flex; align-items:stretch; }
-    .order-card-thumb { width:120px; flex-shrink:0; background:var(--gray-50); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--gray-100); }
-    .order-card-body { flex:1; padding:14px 18px; }
-    .order-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
-    .order-card-num { font-size:14px; font-weight:700; color:var(--navy); }
-    .order-card-date { font-size:12px; color:var(--gray-400); }
-    .order-card-meta { display:flex; gap:24px; margin-top:10px; flex-wrap:wrap; }
-    .order-card-meta-item { font-size:12px; color:var(--gray-400); }
-    .order-card-meta-item strong { display:block; font-size:13px; color:var(--gray-700); font-weight:600; margin-top:2px; }
-    .order-card-actions { display:flex; align-items:center; justify-content:space-between; padding:10px 18px; border-top:1px solid var(--gray-100); background:var(--gray-50); }
+    .order-card-thumb {
+      width:110px; flex-shrink:0;
+      background:linear-gradient(135deg,#f0f4f8,#e8eef4);
+      display:flex; align-items:center; justify-content:center;
+      border-right:1px solid var(--gray-100);
+    }
+    .order-card-body { flex:1; padding:16px 20px; }
+    .order-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .order-card-num { font-size:16px; font-weight:800; color:var(--navy); letter-spacing:-0.3px; }
+    .order-card-date { font-size:11px; color:var(--gray-400); background:var(--gray-50); padding:3px 8px; border-radius:20px; border:1px solid var(--gray-100); }
+
+    .order-card-meta { display:flex; gap:0; margin-top:12px; background:var(--gray-50); border:1px solid var(--gray-100); border-radius:10px; overflow:hidden; }
+    .order-card-meta-item { flex:1; padding:10px 14px; border-right:1px solid var(--gray-100); min-width:0; }
+    .order-card-meta-item:last-child { border-right:none; }
+    .order-card-meta-label { font-size:10px; color:var(--gray-400); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+    .order-card-meta-val { font-size:13px; color:var(--gray-700); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .order-card-meta-val.accent { color:var(--navy); font-size:14px; }
+
+    .order-card-actions {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 20px; border-top:1px solid var(--gray-100);
+      background:var(--gray-50);
+    }
     .order-card-btns { display:flex; gap:12px; }
-    .btn-text { background:none; border:none; font-size:12px; color:var(--gray-400); cursor:pointer; display:flex; align-items:center; gap:5px; padding:0; }
-    .btn-text:hover { color:var(--navy); }
+    .btn-text {
+      background:none; border:none; font-size:12px; color:var(--gray-400);
+      cursor:pointer; display:flex; align-items:center; gap:5px; padding:4px 8px;
+      border-radius:6px; transition:all .15s; font-family:inherit;
+    }
+    .btn-text:hover { color:var(--navy); background:var(--gray-100); }
 
     /* Детали заказа (раскрывается) */
     .order-detail { display:none; border-top:1px solid var(--gray-100); padding:16px 18px; background:#fafbfc; }
@@ -280,25 +320,48 @@ function renderList() {
         ${o.admin_comment}
       </div>` : '';
 
+    const accentCls = {
+      'Новый':'status-new','В работе':'status-work','Ручной расчёт':'status-work',
+      'Готов к отправке':'status-ready','Отправлен':'status-sent','Доставляется':'status-transit',
+      'Выполнен':'status-done','Отменён':'status-cancel'
+    }[o.status] || '';
+    const delivCost = o.delivery?.cost ? o.delivery.cost.toLocaleString('ru-RU')+' ₽' : null;
+
     return `<div class="order-card">
+      <div class="order-card-accent ${accentCls}"></div>
       <div class="order-card-top">
         <div class="order-card-thumb">
-          <svg width="48" height="48" fill="none" stroke="#9ca3af" stroke-width="1" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <svg width="40" height="40" fill="none" stroke="#c5d0da" stroke-width="1.2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
         </div>
         <div class="order-card-body">
           <div class="order-card-head">
-            <div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <div class="order-card-num">Заказ №${o.quote_number||'—'}</div>
-              <span class="badge ${s.cls}" style="margin-top:6px;display:inline-flex">${s.label}</span>
+              <span class="badge ${s.cls}">${s.label}</span>
             </div>
             <div class="order-card-date">Оформлен: ${new Date(o.created_at).toLocaleDateString('ru-RU')}</div>
           </div>
           <div class="order-card-meta">
-            <div class="order-card-meta-item">Количество<strong>${(o.parts||[]).length} позиц. / ${qty} шт.</strong></div>
-            <div class="order-card-meta-item">Срок<strong>${lead}</strong></div>
-            <div class="order-card-meta-item">Производство<strong>${o.parts_price || price}</strong></div>
-            ${o.delivery ? `<div class="order-card-meta-item">Доставка<strong>${o.delivery.cost ? o.delivery.cost.toLocaleString('ru-RU')+' ₽' : '—'}</strong></div>` : ''}
-            <div class="order-card-meta-item">Итого<strong style="color:var(--navy)">${price}</strong></div>
+            <div class="order-card-meta-item">
+              <div class="order-card-meta-label">Состав</div>
+              <div class="order-card-meta-val">${(o.parts||[]).length} поз. / ${qty} шт.</div>
+            </div>
+            <div class="order-card-meta-item">
+              <div class="order-card-meta-label">Срок</div>
+              <div class="order-card-meta-val">${lead}</div>
+            </div>
+            <div class="order-card-meta-item">
+              <div class="order-card-meta-label">Производство</div>
+              <div class="order-card-meta-val">${o.parts_price || price}</div>
+            </div>
+            ${delivCost ? `<div class="order-card-meta-item">
+              <div class="order-card-meta-label">Доставка</div>
+              <div class="order-card-meta-val">${delivCost}</div>
+            </div>` : ''}
+            <div class="order-card-meta-item">
+              <div class="order-card-meta-label">Итого</div>
+              <div class="order-card-meta-val accent">${price}</div>
+            </div>
           </div>
         </div>
       </div>

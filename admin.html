@@ -12,6 +12,12 @@
     .badge-manual::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; margin-right:5px; display:inline-block; }
     .badge-cancel  { background:#fee2e2; color:#b91c1c; }
     .badge-cancel::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; margin-right:5px; display:inline-block; }
+    .badge-ready   { background:#dcfce7; color:#166534; }
+    .badge-ready::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; margin-right:5px; display:inline-block; }
+    .badge-sent    { background:#dbeafe; color:#1d4ed8; }
+    .badge-sent::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; margin-right:5px; display:inline-block; }
+    .badge-transit { background:#ede9fe; color:#6d28d9; }
+    .badge-transit::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.6; margin-right:5px; display:inline-block; }
     .stat-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
     .stat-card { background:#fff; border-radius:10px; padding:16px 20px; border:1px solid var(--gray-200); }
     .stat-val { font-size:26px; font-weight:700; color:var(--navy); }
@@ -89,7 +95,7 @@
         <div class="stat-cards">
           <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Всего заказов</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-new">—</div><div class="stat-label">Новых</div></div>
-          <div class="stat-card"><div class="stat-val" id="stat-work">—</div><div class="stat-label">В работе</div></div>
+          <div class="stat-card"><div class="stat-val" id="stat-work">—</div><div class="stat-label">В работе / В пути</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-done">—</div><div class="stat-label">Выполнено</div></div>
         </div>
         <div class="card">
@@ -99,8 +105,11 @@
               <button class="filter-btn active" onclick="filterOrders('all',this)">Все</button>
               <button class="filter-btn" onclick="filterOrders('Новый',this)">Новые</button>
               <button class="filter-btn" onclick="filterOrders('В работе',this)">В работе</button>
-              <button class="filter-btn" onclick="filterOrders('Готов',this)">Готовы</button>
+              <button class="filter-btn" onclick="filterOrders('Готов к отправке',this)">К отправке</button>
+              <button class="filter-btn" onclick="filterOrders('Отправлен',this)">Отправлен</button>
+              <button class="filter-btn" onclick="filterOrders('Доставляется',this)">В пути</button>
               <button class="filter-btn" onclick="filterOrders('Выполнен',this)">Выполнены</button>
+              <button class="filter-btn" onclick="filterOrders('Отменён',this)">Отменён</button>
             </div>
           </div>
           <div class="table-wrap">
@@ -174,9 +183,9 @@ function showTab(tab) {
 
 function badgeHtml(status) {
   const map = {
-    'Новый':'badge-new', 'В работе':'badge-work', 'Готов':'badge-done',
-    'Выполнен':'badge-done', 'Черновик':'badge-draft',
-    'Ручной расчёт':'badge-manual', 'Отменён':'badge-cancel'
+    'Новый':'badge-new', 'В работе':'badge-work', 'Ручной расчёт':'badge-manual',
+    'Готов к отправке':'badge-ready', 'Отправлен':'badge-sent', 'Доставляется':'badge-transit',
+    'Готов':'badge-done', 'Выполнен':'badge-done', 'Черновик':'badge-draft', 'Отменён':'badge-cancel'
   };
   return `<span class="badge ${map[status]||'badge-draft'}">${status||'—'}</span>`;
 }
@@ -221,9 +230,10 @@ async function loadProjects() {
 }
 
 function updateStats() {
+  const activeStatuses = ['В работе','Ручной расчёт','Готов к отправке','Отправлен','Доставляется'];
   document.getElementById('stat-total').textContent = allOrders.length;
   document.getElementById('stat-new').textContent   = allOrders.filter(o=>o.status==='Новый').length;
-  document.getElementById('stat-work').textContent  = allOrders.filter(o=>o.status==='В работе').length;
+  document.getElementById('stat-work').textContent  = allOrders.filter(o=>activeStatuses.includes(o.status)).length;
   document.getElementById('stat-done').textContent  = allOrders.filter(o=>o.status==='Выполнен'||o.status==='Готов').length;
 }
 
@@ -293,6 +303,17 @@ function openOrder(id) {
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Действия менеджера</div>
+      ${o.delivery ? `<div class="modal-section">
+        <div class="modal-section-title">Доставка</div>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Способ</div><div class="info-val">${o.delivery.method_label||o.delivery.method||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Получатель</div><div class="info-val">${o.delivery.name||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Телефон</div><div class="info-val">${o.delivery.phone||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Город</div><div class="info-val">${o.delivery.city||'—'}</div></div>
+          <div class="info-item" style="grid-column:span 2"><div class="info-label">Адрес</div><div class="info-val">${o.delivery.address||'—'}</div></div>
+          ${o.delivery.tracking ? `<div class="info-item"><div class="info-label">Трек-номер</div><div class="info-val text-mono">${o.delivery.tracking}</div></div>` : ''}
+        </div>
+      </div>` : ''}
       <div class="admin-form">
         <div class="form-row-2">
           <div>
@@ -301,25 +322,33 @@ function openOrder(id) {
               <option ${o.status==='Новый'?'selected':''}>Новый</option>
               <option ${o.status==='В работе'?'selected':''}>В работе</option>
               <option ${o.status==='Ручной расчёт'?'selected':''}>Ручной расчёт</option>
-              <option ${o.status==='Готов'?'selected':''}>Готов</option>
+              <option ${o.status==='Готов к отправке'?'selected':''}>Готов к отправке</option>
+              <option ${o.status==='Отправлен'?'selected':''}>Отправлен</option>
+              <option ${o.status==='Доставляется'?'selected':''}>Доставляется</option>
               <option ${o.status==='Выполнен'?'selected':''}>Выполнен</option>
               <option ${o.status==='Отменён'?'selected':''}>Отменён</option>
             </select>
           </div>
           <div>
-            <label>Цена (инженер)</label>
+            <label>Итоговая цена</label>
             <input type="text" id="admin-price" value="${o.admin_price||o.total_price||''}" placeholder="15 000 ₽">
           </div>
         </div>
-        <div>
-          <label>Срок изготовления</label>
-          <input type="text" id="admin-lead" value="${o.lead_time||''}" placeholder="5–7 рабочих дней">
+        <div class="form-row-2">
+          <div>
+            <label>Срок изготовления</label>
+            <input type="text" id="admin-lead" value="${o.lead_time||''}" placeholder="3–5 рабочих дней">
+          </div>
+          <div>
+            <label>Трек-номер СДЭК</label>
+            <input type="text" id="admin-tracking" value="${o.delivery?.tracking||''}" placeholder="1234567890123">
+          </div>
         </div>
         <div>
-          <label>Комментарий инженера</label>
-          <textarea id="admin-comment" placeholder="Технические замечания...">${o.admin_comment||''}</textarea>
+          <label>Комментарий для клиента</label>
+          <textarea id="admin-comment" placeholder="Виден клиенту в разделе Мои заказы...">${o.admin_comment||''}</textarea>
         </div>
-        <button class="btn-save-modal" onclick="saveOrder('${o.id}')">Сохранить изменения</button>
+        <button class="btn-save-modal" onclick="saveOrder('${o.id}')">💾 Сохранить изменения</button>
       </div>
     </div>`;
   document.getElementById('modal').classList.add('open');
@@ -356,19 +385,23 @@ function openProject(id) {
 }
 
 async function saveOrder(id) {
-  const status  = document.getElementById('admin-status').value;
-  const price   = document.getElementById('admin-price').value;
-  const lead    = document.getElementById('admin-lead').value;
-  const comment = document.getElementById('admin-comment').value;
+  const status   = document.getElementById('admin-status').value;
+  const price    = document.getElementById('admin-price').value;
+  const lead     = document.getElementById('admin-lead').value;
+  const comment  = document.getElementById('admin-comment').value;
+  const tracking = document.getElementById('admin-tracking').value;
   try {
     const r = await fetch(AUTH_URL, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'updateOrderStatus', orderId:id, status, adminPrice:price, leadTime:lead, adminComment:comment })
+      body: JSON.stringify({ action:'updateOrderStatus', orderId:id, status, adminPrice:price, leadTime:lead, adminComment:comment, tracking })
     });
     const data = await r.json();
     if (data.success) {
       const o = allOrders.find(x=>x.id===id);
-      if (o) { o.status=status; o.admin_price=price; o.lead_time=lead; o.admin_comment=comment; }
+      if (o) {
+        o.status=status; o.admin_price=price; o.lead_time=lead; o.admin_comment=comment;
+        if (tracking) { o.delivery = o.delivery || {}; o.delivery.tracking = tracking; }
+      }
       updateStats();
       renderOrders(currentFilter==='all' ? allOrders : allOrders.filter(x=>x.status===currentFilter));
       closeModal();
