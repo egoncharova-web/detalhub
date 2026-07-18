@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Оплата отменена — DetalHub</title>
+  <link rel="stylesheet" href="cabinet.css"/>
+  <style>
+    .pay-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; text-align:center; gap:20px; }
+    .pay-icon { width:72px; height:72px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .pay-title { font-size:24px; font-weight:700; color:#071f2a; }
+    .pay-sub { font-size:14px; color:#6b7280; max-width:360px; line-height:1.6; }
+    .pay-btns { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+    .pay-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; background:#071f2a; color:#7dc3fd; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; }
+    .pay-btn-sec { background:#f3f4f6; color:#374151; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><img src="logo.svg" alt="DetalHub"></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-link">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="projects.html" class="nav-link">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+      Мои проекты
+    </a>
+    <a href="orders.html" class="nav-link">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Мои заказы
+    </a>
+  </nav>
+</aside>
+<main class="main-content">
+  <div class="pay-wrap">
+    <div class="pay-icon">
+      <svg width="36" height="36" fill="none" stroke="#dc2626" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </div>
+    <div class="pay-title">Оплата не завершена</div>
+    <div class="pay-sub">Платёж был отменён или произошла ошибка. Ваш заказ сохранён — вы можете попробовать оплатить снова.</div>
+    <div class="pay-btns">
+      <a href="orders.html" class="pay-btn">Мои заказы</a>
+      <a href="javascript:history.back()" class="pay-btn pay-btn-sec">← Вернуться</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

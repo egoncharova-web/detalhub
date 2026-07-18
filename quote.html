@@ -1649,25 +1649,41 @@ async function checkout(){
       alert('Ошибка сохранения заказа: ' + orderData.error);
       return;
     }
+    const orderId = orderData.orderId;
+
+    // Обновляем статус проекта если заказ создан из проекта
+    const srcProjectId = new URLSearchParams(location.search).get('projectId');
+    if (srcProjectId) {
+      try {
+        await fetch(AUTH_URL, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ action:'updateProjectStatus', projectId: srcProjectId, status:'Заказан' })
+        });
+      } catch(e) {}
+    }
+
+    // Создаём платёж СБП через Тинькофф
+    const payResp = await fetch(AUTH_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'createPayment',
+        orderId,
+        amount: totalPrice,
+        orderNum: quoteNum,
+        description: `Заказ №${quoteNum} — DetalHub`
+      })
+    });
+    const payData = await payResp.json();
+    if (payData.PaymentURL) {
+      localStorage.removeItem('currentQuote');
+      location.href = payData.PaymentURL;
+    } else {
+      alert('Ошибка создания платежа: ' + (payData.error || 'неизвестная ошибка'));
+    }
   }catch(e){
-    alert('Ошибка соединения при сохранении заказа: ' + e.message);
+    alert('Ошибка: ' + e.message);
     return;
   }
-
-  // Обновляем статус проекта если заказ создан из проекта
-  const srcProjectId = new URLSearchParams(location.search).get('projectId');
-  if (srcProjectId) {
-    try {
-      await fetch(AUTH_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'updateProjectStatus', projectId: srcProjectId, status:'Заказан' })
-      });
-    } catch(e) {}
-  }
-
-  localStorage.removeItem('currentQuote');
-  alert('✅ Заказ №'+quoteNum+' оформлен! Мы свяжемся с вами в течение 1 часа.');
-  location.href='orders.html';
 }
 
 async function buildProjectData(status) {
