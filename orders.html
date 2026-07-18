@@ -31,14 +31,36 @@
     .order-detail { display:none; border-top:1px solid var(--gray-100); padding:16px 18px; background:#fafbfc; }
     .order-detail.open { display:block; }
     .detail-section-title { font-size:11px; font-weight:700; color:var(--gray-400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-    .parts-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
-    .part-card { background:#fff; border:1px solid var(--gray-200); border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
-    .part-card-name { font-size:13px; font-weight:600; color:var(--navy); }
-    .part-card-meta { font-size:11px; color:var(--gray-400); margin-top:2px; }
-    .part-card-price { font-size:14px; font-weight:700; color:var(--navy); white-space:nowrap; }
+    .parts-grid { display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
     .manager-comment { background:#e8f4ff; border:1px solid #b3d9f7; border-radius:8px; padding:12px 16px; font-size:13px; color:#185fa5; margin-bottom:14px; }
     .manager-comment-label { font-size:11px; font-weight:700; color:#185fa5; margin-bottom:4px; }
     .detail-actions { display:flex; gap:10px; }
+
+    /* Карточка детали — как в запросе */
+    .part-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
+    .pc-inner { display:grid; grid-template-columns:160px 1fr; }
+    .pc-preview {
+      background:#f2f5f7; border-right:1px solid #e0eaf2;
+      min-height:180px; display:flex; align-items:center;
+      justify-content:center; position:relative; overflow:hidden; align-self:stretch;
+    }
+    .pc-preview-placeholder { text-align:center; color:#9ca3af; }
+    .pc-preview-placeholder svg { display:block; margin:0 auto 8px; }
+    .pc-specs { padding:0; }
+    .spec-row {
+      display:grid; grid-template-columns:140px 1fr;
+      padding:9px 16px; border-bottom:1px solid #f3f4f6;
+      align-items:center; font-size:13px;
+    }
+    .spec-row:last-child { border-bottom:none; }
+    .spec-label { color:#6b7280; font-weight:500; }
+    .spec-val   { color:#111; font-weight:500; }
+    .pc-footer {
+      padding:10px 16px; border-top:1px solid #f3f4f6;
+      background:#f9fafb; display:flex; align-items:center;
+      justify-content:space-between; gap:12px;
+    }
+    .pc-name { font-size:13px; font-weight:600; color:#111; }
   </style>
 </head>
 <body>
@@ -156,28 +178,37 @@ function renderList() {
       const dims = p.dims && p.dims.x && p.dims.x!=='—' ? `${p.dims.x} × ${p.dims.y} × ${p.dims.z} мм` : null;
       const weightStr = p.weight && p.weight !== '—' ? (String(p.weight).includes('г') || String(p.weight).includes('кг') ? p.weight : p.weight + ' г') : null;
       const unitPrice = p.unit_price || (p.price && p.qty ? Math.round(p.price / (p.qty||1)) : null);
-      const rows = [
+      const priceStr = p.price
+        ? (p.qty > 1 && unitPrice ? `${unitPrice.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = <b style="color:#2563eb">${p.price.toLocaleString('ru-RU')} ₽</b>` : `<b style="color:#2563eb">${p.price.toLocaleString('ru-RU')} ₽</b>`)
+        : '—';
+      const specRows = [
+        ['Технология', TECH_LABELS[p.tech]||p.tech||'—'],
         ['Материал', p.material||'—'],
         isFdm && p.color ? ['Цвет', p.color] : null,
-        isFdm ? ['Заполнение', INFILL_LABELS[p.infill||20] || `${p.infill||20}%`] : null,
-        p.finish ? ['Отделка', FINISH_LABELS[p.finish] || p.finish] : null,
+        isFdm ? ['Заполнение', INFILL_LABELS[p.infill||20]||`${p.infill||20}%`] : null,
+        p.finish ? ['Отделка', FINISH_LABELS[p.finish]||p.finish] : null,
         isFdm ? ['Точность', '±0.3 мм — стандарт FDM'] : null,
         dims ? ['Габариты', dims] : null,
         weightStr ? ['Вес', p.qty > 1 ? `1 шт: ${weightStr}` : weightStr] : null,
+        ['Количество', `${p.qty||1} шт.`],
         p.notes ? ['Примечания', p.notes] : null,
       ].filter(Boolean);
-      const priceStr = p.price
-        ? (p.qty > 1 && unitPrice ? `${unitPrice.toLocaleString('ru-RU')} ₽/шт × ${p.qty} шт = ${p.price.toLocaleString('ru-RU')} ₽` : `${p.price.toLocaleString('ru-RU')} ₽`)
-        : '—';
-      return `<div class="part-card" style="flex-direction:column;align-items:stretch;gap:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div class="part-card-name">${i+1}. ${p.name||'—'}</div>
-          <div style="font-size:11px;color:var(--gray-400);">${TECH_LABELS[p.tech]||p.tech||''} · ${p.qty||1} шт.</div>
+      return `<div class="part-card">
+        <div class="pc-inner">
+          <div class="pc-preview">
+            <div class="pc-preview-placeholder">
+              <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px;">${i+1} / ${(o.parts||[]).length}</div>
+            </div>
+          </div>
+          <div class="pc-specs">
+            ${specRows.map(([k,v])=>`<div class="spec-row"><span class="spec-label">${k}</span><span class="spec-val">${v}</span></div>`).join('')}
+            <div class="spec-row"><span class="spec-label" style="font-weight:700;color:#111;">Стоимость</span><span class="spec-val" style="font-size:13px;">${priceStr}</span></div>
+          </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 20px">
-          ${rows.map(([k,v])=>`<div class="part-card-meta"><span style="color:var(--gray-400)">${k}:</span> <span style="color:var(--gray-700);font-weight:500">${v}</span></div>`).join('')}
+        <div class="pc-footer">
+          <div class="pc-name">${p.name||'—'}</div>
         </div>
-        <div style="border-top:1px solid var(--gray-100);padding-top:8px;text-align:right;font-size:13px;font-weight:700;color:var(--navy);">${priceStr}</div>
       </div>`;
     }).join('');
 
