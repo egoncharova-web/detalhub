@@ -130,6 +130,42 @@
           </div>
         </div>
 
+        <!-- Delivery defaults -->
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header"><span class="card-title">Адрес доставки по умолчанию</span></div>
+          <div class="card-body">
+            <div style="background:#e8f4ff;border:1px solid #b3d9f7;border-radius:8px;padding:10px 14px;font-size:12px;color:#185fa5;margin-bottom:16px;">
+              Эти данные автоматически подставятся при оформлении заказа — не придётся вводить каждый раз.
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Получатель</label>
+                <input type="text" class="form-control" id="del_name" placeholder="Иван Иванов">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Телефон получателя</label>
+                <input type="tel" class="form-control" id="del_phone" placeholder="+7 (999) 999-99-99">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Город</label>
+                <input type="text" class="form-control" id="del_city" placeholder="Москва">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Улица, дом, квартира</label>
+                <input type="text" class="form-control" id="del_address" placeholder="ул. Примерная, д. 1, кв. 1">
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="border-top:1px solid var(--gray-100);padding-top:16px;">
+            <button class="btn btn-primary" onclick="saveProfile()" style="padding:10px 28px;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Сохранить
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -144,9 +180,9 @@ function applyProfile(p) {
     const el = document.getElementById(id);
     if (el && p[id]) el.value = p[id];
   });
-  // inn/kpp/address — только localStorage
+  // inn/kpp/address/delivery — только localStorage
   const local = JSON.parse(localStorage.getItem('userProfile')||'{}');
-  ['inn','kpp','address'].forEach(id => {
+  ['inn','kpp','address','del_name','del_phone','del_city','del_address'].forEach(id => {
     const el = document.getElementById(id);
     if (el && local[id]) el.value = local[id];
   });
@@ -185,12 +221,16 @@ async function saveProfile() {
   const phone   = document.getElementById('phone').value.trim();
   const email   = document.getElementById('email').value.trim();
   const company = document.getElementById('company').value.trim();
-  const inn     = document.getElementById('inn').value.trim();
-  const kpp     = document.getElementById('kpp').value.trim();
-  const address = document.getElementById('address').value.trim();
+  const inn         = document.getElementById('inn').value.trim();
+  const kpp         = document.getElementById('kpp').value.trim();
+  const address     = document.getElementById('address').value.trim();
+  const del_name    = document.getElementById('del_name').value.trim();
+  const del_phone   = document.getElementById('del_phone').value.trim();
+  const del_city    = document.getElementById('del_city').value.trim();
+  const del_address = document.getElementById('del_address').value.trim();
 
   // Сохраняем всё в localStorage
-  localStorage.setItem('userProfile', JSON.stringify({ name, phone, email, company, inn, kpp, address }));
+  localStorage.setItem('userProfile', JSON.stringify({ name, phone, email, company, inn, kpp, address, del_name, del_phone, del_city, del_address }));
 
   // name/phone/company — в YDB
   if (userId) {

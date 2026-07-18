@@ -1187,7 +1187,17 @@ function openDeliveryModal() {
   if (!parts.length) { alert('Загрузите хотя бы одну деталь'); return; }
   const userId = localStorage.getItem('userId');
   if (!userId) { alert('Войдите в аккаунт чтобы оформить заказ'); location.href='auth.html'; return; }
+
+  // Автозаполнение из профиля
+  const p = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el && !el.value && val) el.value = val; };
+  setVal('del-name',    p.del_name    || p.name  || '');
+  setVal('del-phone',   p.del_phone   || p.phone || '');
+  setVal('del-city',    p.del_city    || '');
+  setVal('del-address', p.del_address || '');
+
   updateDeliveryCost();
+  updatePvzLink();
   document.getElementById('deliveryModal').classList.add('show');
 }
 
